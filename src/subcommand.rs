@@ -1,0 +1,223 @@
+/*
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under both the MIT license found in the
+ * LICENSE-MIT file in the root directory of this source tree and the Apache
+ * License, Version 2.0 found in the LICENSE-APACHE file in the root directory
+ * of this source tree.
+ */
+
+use std::env::ArgsOs;
+use std::ffi::OsString;
+use std::fmt;
+use std::io::BufReader;
+use std::str::FromStr;
+
+use anyhow::format_err;
+use anyhow::Context as _;
+use sha2::Digest as _;
+use sha2::Sha256;
+use thiserror::Error;
+
+use crate::config::parse_file;
+use crate::config::REQUIRED_HEADER;
+use crate::dotslash_cache::DotslashCache;
+use crate::platform::SUPPORTED_PLATFORM;
+use crate::print_entry_for_url::print_entry_for_url;
+use crate::util::fs_ctx;
+
+#[derive(Debug)]
+pub enum Subcommand {
+    /// Similar to running `b3sum`, though takes exactly one argument and prints
+    /// only the hash
+    B3Sum,
+
+    /// Clean the cache directory
+    Clean,
+
+    /// Create a the artifact entry for DotSlash file from a URL
+    CreateUrlEntry,
+
+    /// Print the cache directory
+    CacheDir,
+
+    /// Parse a DotSlash file and print its data as JSON
+    Parse,
+
+    /// Similar to running `shasum -a 256`, though takes exactly one argument
+    /// and prints only the hash
+    Sha256,
+
+    /// Version
+    Version,
+
+    /// Help
+    Help,
+}
+
+impl fmt::Display for Subcommand {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(match self {
+            Self::B3Sum => "b3sum",
+            Self::Clean => "clean",
+            Self::CreateUrlEntry => "create-url-entry",
+            Self::CacheDir => "cache-dir",
+            Self::Parse => "parse",
+            Self::Sha256 => "sha256",
+            Self::Version => "version",
+            Self::Help => "help",
+        })
+    }
+}
+
+impl FromStr for Subcommand {
+    type Err = SubcommandError;
+
+    fn from_str(name: &str) -> Result<Self, Self::Err> {
+        match name {
+            "b3sum" => Ok(Subcommand::B3Sum),
+            "clean" => Ok(Subcommand::Clean),
+            "create-url-entry" => Ok(Subcommand::CreateUrlEntry),
+            "cache-dir" => Ok(Subcommand::CacheDir),
+            "parse" => Ok(Subcommand::Parse),
+            "sha256" => Ok(Subcommand::Sha256),
+            "version" => Ok(Subcommand::Version),
+            "help" => Ok(Subcommand::Help),
+            _ => Err(SubcommandError::UnknownCommand(name.to_owned())),
+        }
+    }
+}
+
+#[derive(Error, Debug)]
+pub enum SubcommandError {
+    #[error(
+        "no subcommand passed to '--'
+
+See `dotslash --help` for more information."
+    )]
+    MissingCommand,
+
+    #[error(
+        "unknown subcommand passed to '--': `{0}`
+
+See `dotslash --help` for more information."
+    )]
+    UnknownCommand(String),
+
+    #[error("'{0}' command failed")]
+    Other(Subcommand, #[source] anyhow::Error),
+}
+
+pub fn run_subcommand(subcommand: Subcommand, args: &mut ArgsOs) -> Result<(), SubcommandError> {
+    _run_subcommand(&subcommand, args).map_err(|x| SubcommandError::Other(subcommand, x))
+}
+
+fn _run_subcommand(subcommand: &Subcommand, args: &mut ArgsOs) -> anyhow::Result<()> {
+    match subcommand {
+        Subcommand::B3Sum => {
+            let file_arg = take_exactly_one_arg(args)?;
+            // TODO: read from stdin if file_arg is `-`
+            let file = fs_ctx::file_open(file_arg)?;
+            let mut reader = BufReader::new(file);
+            let mut hasher = blake3::Hasher::new();
+            let hex_digest = std::io::copy(&mut reader, &mut hasher)
+                .map(|_size_in_bytes| format!("{:x}", hasher.finalize()))?;
+            println!("{}", hex_digest);
+        }
+
+        Subcommand::Clean => {
+            if args.next().is_some() {
+                return Err(format_err!("expected no arguments but received some"));
+            }
+
+            let dotslash_cache = DotslashCache::new();
+            eprintln!("Cleaning `{}`", dotslash_cache.cache_dir().display());
+            fs_ctx::remove_dir_all(dotslash_cache.cache_dir())?;
+        }
+
+        Subcommand::CreateUrlEntry => {
+            let url = take_exactly_one_arg(args)?;
+            print_entry_for_url(&url)?
+        }
+
+        Subcommand::CacheDir => {
+            if args.next().is_some() {
+                return Err(format_err!("expected no arguments but received some"));
+            }
+
+            let dotslash_cache = DotslashCache::new();
+            println!("{}", dotslash_cache.cache_dir().display());
+        }
+
+        Subcommand::Parse => {
+            let file_arg = take_exactly_one_arg(args)?;
+            let dotslash_data = fs_ctx::read_to_string(file_arg)?;
+            let (original_json, _config_file) =
+                parse_file(&dotslash_data).context("failed to parse file")?;
+            let json =
+                serde_jsonrc::to_string(&original_json).context("failed to serialize value")?;
+            println!("{json}");
+        }
+
+        Subcommand::Version => {
+            if args.next().is_some() {
+                return Err(format_err!("expected no arguments but received some"));
+            }
+
+            println!("DotSlash {}", env!("CARGO_PKG_VERSION"));
+        }
+
+        Subcommand::Help => {
+            if args.next().is_some() {
+                return Err(format_err!("expected no arguments but received some"));
+            }
+
+            eprint!(
+                r##"usage: dotslash DOTSLASH_FILE [OPTIONS]
+
+DOTSLASH_FILE must be a file that starts with `{}`
+and contains a JSON body tells DotSlash how to fetch and run the executable
+that DOTSLASH_FILE represents.
+
+All OPTIONS will be forwarded directly to the executable identified by
+DOTSLASH_FILE.
+
+Supported platform: {}
+
+Your DotSlash cache is: {}
+
+Learn more at {}
+"##,
+                REQUIRED_HEADER,
+                SUPPORTED_PLATFORM,
+                DotslashCache::new().cache_dir().display(),
+                env!("CARGO_PKG_HOMEPAGE"),
+            );
+        }
+
+        Subcommand::Sha256 => {
+            let file_arg = take_exactly_one_arg(args)?;
+            // TODO: read from stdin if file_arg is `-`
+            let file = fs_ctx::file_open(file_arg)?;
+            let mut reader = BufReader::new(file);
+            let mut hasher = Sha256::new();
+            let hex_digest = std::io::copy(&mut reader, &mut hasher)
+                .map(|_size_in_bytes| format!("{:x}", hasher.finalize()))?;
+            println!("{}", hex_digest);
+        }
+    };
+
+    Ok(())
+}
+
+fn take_exactly_one_arg(args: &mut ArgsOs) -> anyhow::Result<OsString> {
+    match (args.next(), args.next()) {
+        (None, _) => Err(format_err!(
+            "expected exactly one argument but received none"
+        )),
+        (Some(_), Some(_)) => Err(format_err!(
+            "expected exactly one argument but received more"
+        )),
+        (Some(arg), None) => Ok(arg),
+    }
+}

@@ -1,0 +1,49 @@
+name: Publish https://dotslash-cli.com
+
+on:
+  # Whenever something under website/ changes, publish a new version of the site.
+  push:
+    branches:
+      - main
+    paths:
+      - 'website/**'
+
+  # Though if the build process for the site evolves to include steps that rely
+  # on paths outside website/, it is helpful to have additional triggers
+  # available. For example, allow ad-hoc pushes to rebuild immediately if the
+  # push-based trigger missed something:
+  workflow_dispatch:
+
+  # Also push every weekday at midnight to ensure changes make it out in in a
+  # timely manner. If the first trigger is doing its job, this should be a noop.
+  schedule:
+    - cron: '0 0 * * 1-5'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+    concurrency:
+      group: ${{ github.workflow }}
+    defaults:
+      run:
+        working-directory: website
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: yarn
+          cache-dependency-path: ./website
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+      - name: Build website
+        run: yarn build
+      - name: Deploy
+        uses: peaceiris/actions-gh-pages@v3
+        if: ${{ github.ref == 'refs/heads/main' }}
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./website/build

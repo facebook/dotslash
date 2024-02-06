@@ -1,0 +1,79 @@
+#!/usr/bin/env dotslash
+
+{
+  "name": "print_argv",
+  "platforms": {
+    "linux-aarch64": {
+      "size": 6951,
+      "hash": "blake3",
+      "digest": "f9ffeb630b2061d1445b73253c48d1306ea99399c3e1d72d8ee3f5cc1d3044bb",
+      "format": "gz",
+      "path": "subdir/print_argv.linux.aarch64",
+      "providers": [
+        {
+          "url": "https://github.com/zertosh/dotslash_fixtures/raw/master/print_argv.linux.aarch64.gz"
+        }
+      ]
+    },
+    "linux-x86_64": {
+      "size": 6574,
+      "hash": "blake3",
+      "digest": "365695a3a37c0d36b898d135d8b97f6eca1c48b67fa336ba2e88810f734f2f0b",
+      "format": "gz",
+      "path": "subdir/print_argv.linux.x86_64",
+      "providers": [
+        {
+          "url": "https://github.com/zertosh/dotslash_fixtures/raw/master/print_argv.linux.x86_64.gz"
+        }
+      ]
+    },
+    "macos-aarch64": {
+      "size": 9354,
+      "hash": "blake3",
+      "digest": "bb0edb19acc655d7d9a6ca4c21f01110e9e185534e08d7cf8c7ca64c15de031d",
+      "format": "gz",
+      "path": "subdir/print_argv.macos.aarch64",
+      "providers": [
+        {
+          "url": "https://github.com/zertosh/dotslash_fixtures/raw/master/print_argv.macos.aarch64.gz"
+        }
+      ]
+    },
+    "macos-x86_64": {
+      "size": 8465,
+      "hash": "blake3",
+      "digest": "6926fb5d60e9caeeb73626431ffa2868e5f0dfd2b681ceeccc89e459872ef12e",
+      "format": "gz",
+      "path": "subdir/print_argv.macos.x86_64",
+      "providers": [
+        {
+          "url": "https://github.com/zertosh/dotslash_fixtures/raw/master/print_argv.macos.x86_64.gz"
+        }
+      ]
+    },
+    "windows-aarch64": {
+      "size": 13941,
+      "hash": "blake3",
+      "digest": "88ea4270ae65ad38aea1b2a63405969ab9bf053d239f7080f6cdf59c0f1c432e",
+      "format": "gz",
+      "path": "subdir/print_argv.windows.aarch64.exe",
+      "providers": [
+        {
+          "url": "https://github.com/zertosh/dotslash_fixtures/raw/master/print_argv.windows.aarch64.exe.gz"
+        }
+      ]
+    },
+    "windows-x86_64": {
+      "size": 14533,
+      "hash": "blake3",
+      "digest": "bd40f2e6bd2a4e7ba19a4f89a0268d301ff9cf4183eb03a6e8657bec36b77e27",
+      "format": "gz",
+      "path": "subdir/print_argv.windows.x86_64.exe",
+      "providers": [
+        {
+          "url": "https://github.com/zertosh/dotslash_fixtures/raw/master/print_argv.windows.x86_64.exe.gz"
+        }
+      ]
+    }
+  }
+}

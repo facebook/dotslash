@@ -1,0 +1,69 @@
+#!/usr/bin/env dotslash
+
+// This is a comment.
+
+{
+  "name": "my_bin",
+  "platforms": {
+    "linux-aarch64": {
+      "size": 123,
+      "hash": "sha256",
+      "digest": "1234567890123456789012345678901234567890123456789012345678901234",
+      "format": "tar.gz",
+      "path": "linux.aarch64",
+      "providers": [
+        {
+          "url": "https://fake/foo"
+        }
+      ],
+    },
+    "linux-x86_64": {
+      "size": 123,
+      "hash": "sha256",
+      "digest": "1234567890123456789012345678901234567890123456789012345678901234",
+      "format": "tar.gz",
+      "path": "linux.x86_64",
+      "providers": [
+        {
+          "url": "https://fake/foo"
+        }
+      ],
+    },
+    "macos-aarch64": {
+      "size": 123,
+      "hash": "sha256",
+      "digest": "1234567890123456789012345678901234567890123456789012345678901234",
+      "format": "tar.gz",
+      "path": "macos.aarch64",
+      "providers": [
+        {
+          "url": "https://fake/foo"
+        }
+      ],
+    },
+    "macos-x86_64": {
+      "size": 123,
+      "hash": "sha256",
+      "digest": "1234567890123456789012345678901234567890123456789012345678901234",
+      "format": "tar.gz",
+      "path": "macos.x86_64",
+      "providers": [
+        {
+          "url": "https://fake/foo"
+        }
+      ],
+    },
+    "windows-x86_64": {
+      "size": 123,
+      "hash": "sha256",
+      "digest": "1234567890123456789012345678901234567890123456789012345678901234",
+      "format": "tar.gz",
+      "path": "windows.x86_64.exe",
+      "providers": [
+        {
+          "url": "https://fake/foo"
+        }
+      ],
+    },
+  }
+}
