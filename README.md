@@ -2,12 +2,12 @@
 
 # DotSlash: simplified executable deployment
 
-![License]
-[![Build Status]][CI]
+![License] [![Build Status]][CI]
 
 [License]:
   https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blueviolet.svg
-[Build Status]: https://github.com/facebook/dotslash/actions/workflows/build.yml/badge.svg?branch=main
+[Build Status]:
+  https://github.com/facebook/dotslash/actions/workflows/build.yml/badge.svg?branch=main
 [CI]: https://github.com/facebook/dotslash/actions/workflows/build.yml
 
 </div>
@@ -45,7 +45,7 @@ exit $?
 With DotSlash, the shell script and the binaries can be replaced with a single
 file named `node`:
 
-```json
+```jsonc
 #!/usr/bin/env dotslash
 
 // The URLs in this file were taken from https://nodejs.org/dist/v18.19.0/
