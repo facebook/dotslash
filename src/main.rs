@@ -18,6 +18,7 @@ mod download;
 mod execution;
 mod fetch_method;
 mod github_release_provider;
+mod gitlab_release_provider;
 mod http_provider;
 mod platform;
 mod print_entry_for_url;
@@ -30,6 +31,7 @@ use std::env;
 use std::process::ExitCode;
 
 use anyhow::format_err;
+use gitlab_release_provider::GitLabReleaseProvider;
 
 use crate::github_release_provider::GitHubReleaseProvider;
 use crate::http_provider::HttpProvider;
@@ -49,6 +51,7 @@ impl ProviderFactory for DefaultProviderFactory {
         match provider_type {
             "http" => Ok(Box::new(HttpProvider {})),
             "github-release" => Ok(Box::new(GitHubReleaseProvider {})),
+            "gitlab-release" => Ok(Box::new(GitLabReleaseProvider {})),
             _ => Err(format_err!("unknown provider type: `{}`", provider_type)),
         }
     }
