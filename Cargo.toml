@@ -2,7 +2,7 @@
 
 [package]
 name = "dotslash"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Michael Bolin <bolinfest@gmail.com>", "Andres Suarez <zertosh@gmail.com>"]
 edition = "2021"
 rust-version = "1.75"
@@ -12,6 +12,7 @@ homepage = "https://dotslash-cli.com"
 repository = "https://github.com/facebook/dotslash"
 license = "MIT OR Apache-2.0"
 keywords = ["cli"]
+include = ["/LICENSE-APACHE", "/LICENSE-MIT", "/README.md", "/src/**", "/tests/**"]
 
 [[test]]
 name = "dotslash_tests_rs"
