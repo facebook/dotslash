@@ -47,12 +47,25 @@ general file distribution feels at odds with that.
 If you are determined to use DotSlash in this way, you can always create an
 executable that writes a specific data payload to a specified output folder!
 
-## DotSlash will fail when URLs go stale
+## DotSlash can fail when URLs go stale
 
-TODO(mbolin): Explain the risks you take on with respect to artifacts
-expiring/no longer being available. @asuarez expressed interest in supporting
-multiple URLs, so maybe wait until that is implemented before writing up this
-section.
+If the artifact referenced by a provider (such as a URL or a GitHub Release) is
+no longer available (or its contents change), executing the DotSlash file will
+fail if the artifact has not already been added to your DotSlash cache. Though
+if the artifact _is_ already in your DotSlash cache, DotSlash will not consult
+the provider again, so the DotSlash file will continue to work until the cache
+is cleared.
+
+This means that when you specify a provider in a DotSlash file, you are
+signaling to your users that you expect the artifact to be fetchable for as long
+as the DotSlash file is meant to be used. Admittedly, it is impossible to
+guarantee that a provider will work 100% of the time, which is one of the
+reasons why DotSlash supports specifying
+[multiple providers](../dotslash-file/#providers) for an artifact, adding some
+amount of redundancy.
+
+Take care to consider the reliability of your providers when creating a DotSlash
+file.
 
 ## Debug Symbols
 
