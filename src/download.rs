@@ -7,6 +7,7 @@
  * of this source tree.
  */
 
+use std::fs::set_permissions;
 use std::fs::File;
 use std::io::BufReader;
 use std::io::BufWriter;
@@ -99,11 +100,31 @@ pub fn download_artifact<P: ProviderFactory>(
                         artifact_entry.path.as_str(),
                     )?;
                     if artifact_entry.readonly {
-                        // Note that if we do `set_readonly(true)` on `temp_dir_to_mv.path()`,
-                        // the `mv_no_clobber()` call fails.
                         make_tree_entries_read_only(temp_dir_to_mv.path())?;
                     }
                     mv_no_clobber(&temp_dir_to_mv, &artifact_location.artifact_directory)?;
+                    if artifact_entry.readonly {
+                        // Note the following appears to work on Linux but not
+                        // macOS:
+                        //
+                        // ```
+                        // /tmp$ mkdir foo
+                        // /tmp$ chmod -w foo
+                        // /tmp$ mv foo bar
+                        // ```
+                        //
+                        // so we have to do the final `chmod -w` after the `mv`.
+                        // While we could also do the full `chmod -R -w` after
+                        // the `mv`, that is a bit riskier because a
+                        // simultaneous invocation of the DotSlash file would be
+                        // able to use the artifact before `chmod -R -w`
+                        // finishes.
+                        let metadata =
+                            fs_ctx::symlink_metadata(&artifact_location.artifact_directory)?;
+                        let mut perms = metadata.permissions();
+                        perms.set_readonly(true);
+                        set_permissions(&artifact_location.artifact_directory, perms)?;
+                    }
                     return Ok(());
                 }
                 Err(e) => warnings.push(format!("warning: failed to verify artifact {:?}", e)),
