@@ -150,6 +150,7 @@ artifact to fetch is as follows:
   "providers": /* array of providers */,
   "format": /* recognized format, such as "tar.gz"; see list below */,
   "path": /* filename or path within an archive */,
+  "readonly": /* `false` disables `chmod -R -w` on the unpacked artifact */,
 }
 ```
 
@@ -406,3 +407,27 @@ Looking at the `hermes` example above:
 At Meta, we have found compression to be a win, but if for some reason you
 prefer to fetch your executable as an uncompressed single file, you can omit the
 `"format"` field, but `"path"` is still required.
+
+## Readonly
+
+There is an optional `readonly` boolean field on an artifact entry. It is not
+intended to be used (it defaults to `true`), but is provided as an escape hatch,
+if necessary.
+
+After DotSlash decompresses an artifact in a temporary folder, it marks all of
+the entries in the folder
+[read-only](https://doc.rust-lang.org/std/fs/struct.Permissions.html#method.set_readonly)
+before moving it into its final location in the cache. The idea is that
+executables should not be modifying the files in the cache, as that sort of
+behavior increases the likelihood of non-determinism.
+
+Of course, it is possible that DotSlash is used to deliver an executable that
+may do something like write to a dotfile alongside the executable when it is
+run. By default, this write will fail when the executable is run via DotSlash
+because the folder is read-only. Ideally, the executable would be redesigned to
+write to `$XDG_STATE_HOME` or whatever is appropriate, but the author of the
+DotSlash file may not be in a position to change that.
+
+In this case, setting `readonly: false` will disable the logic that marks all of
+the entries in the temporary folder read-only before it is moved to its final
+location in the cache.

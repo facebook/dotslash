@@ -70,6 +70,14 @@ cd dotslash
 cargo build --release
 ```
 
+Or with [Sapling](https://sapling-scm.com/docs/introduction/):
+
+```shell
+sl clone https://github.com/facebook/dotslash
+cd dotslash
+cargo build --release
+```
+
 And then you can copy `./target/release/dotslash` (or `dotslash.exe` on Windows)
 to your `PATH`.
 
