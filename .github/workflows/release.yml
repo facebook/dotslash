@@ -41,9 +41,9 @@ jobs:
         shell: bash
         run: gh release upload "${GITHUB_REF#refs/tags/}" "dotslash-macos.${GITHUB_REF#refs/tags/}.tar.gz"
 
-  ubuntu:
+  ubuntu-22_04-x86_64:
     needs: create-release
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
@@ -51,12 +51,35 @@ jobs:
       - run: cargo test
       - run: cargo clippy
       - run: cargo build --release
-      - run: tar -czvf "dotslash-ubuntu.${GITHUB_REF#refs/tags/}.tar.gz" -C target/release dotslash
+      - run: tar -czvf "dotslash-ubuntu-22.04.x86_64.${GITHUB_REF#refs/tags/}.tar.gz" -C target/release dotslash
       - name: upload release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
-        run: gh release upload "${GITHUB_REF#refs/tags/}" "dotslash-ubuntu.${GITHUB_REF#refs/tags/}.tar.gz"
+        run: gh release upload "${GITHUB_REF#refs/tags/}" "dotslash-ubuntu-22.04.x86_64.${GITHUB_REF#refs/tags/}.tar.gz"
+
+  ubuntu-22_04-arm64:
+    needs: create-release
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-unknown-linux-gnu
+      - name: Install aarch64 build tools
+        run: |
+          sudo apt update
+          sudo apt install -y gcc-aarch64-linux-gnu
+      - run: cargo build --target aarch64-unknown-linux-gnu --release
+        env:
+          CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER: aarch64-linux-gnu-gcc
+      - run: tar -czvf "dotslash-ubuntu-22.04.arm64.${GITHUB_REF#refs/tags/}.tar.gz" -C target/aarch64-unknown-linux-gnu/release dotslash
+      - name: upload release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: gh release upload "${GITHUB_REF#refs/tags/}" "dotslash-ubuntu-22.04.arm64.${GITHUB_REF#refs/tags/}.tar.gz"
 
   windows:
     needs: create-release
