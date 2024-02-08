@@ -62,18 +62,6 @@ pub fn download_artifact<P: ProviderFactory>(
         })?;
 
     fs_ctx::create_dir_all(artifact_parent_dir)?;
-    // This must be a sibling to the final artifact_location so that we can
-    // atomically move it into place.
-    let temp_dir_to_mv = fs_ctx::tempdir_in(artifact_parent_dir)?;
-    let fetch_destination: PathBuf = {
-        let fetch_destination = fs_ctx::namedtempfile_new_in(artifact_parent_dir)
-            .context("failed to create fetch temp path")?
-            .into_temp_path();
-        // fetch_destination is dropped after this and is removed from
-        // disk. This is deliberate since we want a unique path and not
-        // necessarily the file.
-        fetch_destination.to_path_buf()
-    };
 
     // We must maintain a reference to the FileLock until the download is complete.
     let file_lock = acquire_download_lock_for_artifact(artifact_location)
@@ -82,6 +70,19 @@ pub fn download_artifact<P: ProviderFactory>(
     // Record warnings: only reported if no provider succeeds.
     let mut warnings = vec![];
     for provider_config in &artifact_entry.providers {
+        // This must be a sibling to the final artifact_location so that we can
+        // atomically move it into place.
+        let temp_dir_to_mv = fs_ctx::tempdir_in(artifact_parent_dir)?;
+        let fetch_destination: PathBuf = {
+            let fetch_destination = fs_ctx::namedtempfile_new_in(artifact_parent_dir)
+                .context("failed to create fetch temp path")?
+                .into_temp_path();
+            // fetch_destination is dropped after this and is removed from
+            // disk. This is deliberate since we want a unique path and not
+            // necessarily the file.
+            fetch_destination.to_path_buf()
+        };
+
         let provider_type = get_provider_type(provider_config)?;
         let provider = provider_factory.get_provider(provider_type)?;
         match provider.fetch_artifact(
@@ -90,7 +91,6 @@ pub fn download_artifact<P: ProviderFactory>(
             &file_lock,
             artifact_entry,
         ) {
-            // If there is a failure, should we create a new temp_dir_to_mv?
             Ok(_) => match verify_artifact(&fetch_destination, artifact_entry) {
                 Ok(_) => {
                     unpack_verified_artifact(
