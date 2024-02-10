@@ -20,6 +20,7 @@ use serde_jsonrc::value::Value;
 use sha2::Digest as _;
 use sha2::Sha256;
 use tar::Archive;
+use xz2::read::XzDecoder;
 use zstd::stream::read::Decoder;
 
 use crate::artifact_location::ArtifactLocation;
@@ -228,6 +229,13 @@ fn unpack_verified_artifact(
             let archive = Archive::new(decoder);
             decompress::unpack(archive, temp_dir_to_mv)?;
         }
+        (Some(DecompressStep::Xz), Some(ArchiveFormat::Tar)) => {
+            let xz_file = fs_ctx::file_open(fetched_artifact)?;
+            let reader = BufReader::new(xz_file);
+            let decoder = XzDecoder::new(reader);
+            let archive = Archive::new(decoder);
+            decompress::unpack(archive, temp_dir_to_mv)?;
+        }
         (decompression, None) => {
             let final_artifact_path = temp_dir_to_mv.join(artifact_entry_path);
             let parent = final_artifact_path.parent().unwrap();
@@ -240,6 +248,14 @@ fn unpack_verified_artifact(
                     // fetched_artifact contains the .gz
                     let gz_file = fs_ctx::file_open(fetched_artifact)?;
                     let mut decoder = flate2::read::GzDecoder::new(gz_file);
+                    let output_file = fs_ctx::file_create(&final_artifact_path)?;
+                    let mut writer = BufWriter::new(output_file);
+                    std::io::copy(&mut decoder, &mut writer)?;
+                }
+                Some(DecompressStep::Xz) => {
+                    // fetched_artifact contains the .xz
+                    let xz_file = fs_ctx::file_open(fetched_artifact)?;
+                    let mut decoder = XzDecoder::new(xz_file);
                     let output_file = fs_ctx::file_create(&final_artifact_path)?;
                     let mut writer = BufWriter::new(output_file);
                     std::io::copy(&mut decoder, &mut writer)?;

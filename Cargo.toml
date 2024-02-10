@@ -32,6 +32,7 @@ sha2 = "0.10.6"
 tar = "0.4.40"
 tempfile = "3.8"
 thiserror = "1.0.49"
+xz2 = { version = "0.1.7", features = ["static"] }
 zstd = { version = "0.13", features = ["experimental", "zstdmt"] }
 
 [dev-dependencies]
