@@ -34,6 +34,7 @@ tempfile = "3.8"
 thiserror = "1.0.49"
 xz2 = { version = "0.1.7", features = ["static"] }
 zstd = { version = "0.13", features = ["experimental", "zstdmt"] }
+zip = { version = "0.6.6", default-features = false, features = ["deflate", "zstd"] }
 
 [dev-dependencies]
 assert_matches = "1.5"

@@ -216,6 +216,16 @@ fn unpack_verified_artifact(
     artifact_entry_path: &str,
 ) -> anyhow::Result<()> {
     match &format.extraction_policy() {
+        (dstep, Some(ArchiveFormat::Zip)) => {
+            if let Some(d) = dstep {
+                // We don't support .zip.gz or similar.
+                return Err(format_err!("zip files cannot be compressed with {:?}", d));
+            }
+            let zip_file = fs_ctx::file_open(fetched_artifact)?;
+            let reader = BufReader::new(zip_file);
+            let mut archive = zip::ZipArchive::new(reader)?;
+            archive.extract(temp_dir_to_mv)?;
+        }
         (None, Some(ArchiveFormat::Tar)) => {
             decompress::untar(fetched_artifact, temp_dir_to_mv, /* is_tar_gz */ false)?;
         }
@@ -307,4 +317,48 @@ pub fn acquire_download_lock_for_artifact(
         }
     }
     Ok(FileLock::default())
+}
+
+#[cfg(test)]
+mod tests {
+    use std::io::Write;
+    use tempfile::tempdir;
+
+    #[cfg(unix)]
+    use std::os::unix::prelude::PermissionsExt;
+
+    use super::*;
+
+    #[test]
+    fn unpack_zip_artifact() -> anyhow::Result<()> {
+        let src_dir = tempdir()?;
+        let artifact = src_dir.path().join("artifact.zip");
+
+        {
+            let opts = zip::write::FileOptions::default();
+
+            let mut zip = zip::ZipWriter::new(fs_ctx::file_create(&artifact)?);
+            zip.add_directory("myprogram-1.2.3", opts)?;
+
+            zip.start_file("myprogram-1.2.3/myprogram", opts.unix_permissions(0o755))?;
+            zip.write_all(b"#!/bin/sh\necho hello world\n")?;
+
+            zip.finish()?;
+        }
+
+        let dst_dir = tempdir()?;
+        unpack_verified_artifact(&artifact, dst_dir.path(), &ArtifactFormat::Zip, "not-used")?;
+
+        let expected_file = dst_dir.path().join("myprogram-1.2.3/myprogram");
+        assert!(expected_file.exists(), "file should exist");
+
+        // On linux, verify that the file is executable.
+        #[cfg(unix)]
+        {
+            let mode = fs_ctx::metadata(&expected_file)?.permissions().mode();
+            assert_eq!(mode & 0o111, 0o111, "file should be executable");
+        }
+
+        Ok(())
+    }
 }

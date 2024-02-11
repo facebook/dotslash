@@ -327,6 +327,7 @@ properties:
 | `tar.xz`  | yes      | xz          |
 | `tar.zst` | yes      | zstd        |
 | `tar`     | yes      | _none_      |
+| `zip`     | yes      | zip         |
 | `gz`      | no       | gzip        |
 | `xz`      | no       | xz          |
 | `zst`     | no       | zstd        |
