@@ -324,9 +324,11 @@ properties:
 | `format`  | Archive? | Decompress? |
 | --------- | -------- | ----------- |
 | `tar.gz`  | yes      | gzip        |
+| `tar.xz`  | yes      | xz          |
 | `tar.zst` | yes      | zstd        |
 | `tar`     | yes      | _none_      |
 | `gz`      | no       | gzip        |
+| `xz`      | no       | xz          |
 | `zst`     | no       | zstd        |
 | _omitted_ | no       | _none_      |
 
