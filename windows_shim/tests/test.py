@@ -14,7 +14,9 @@ import tempfile
 import unittest
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Iterator
+from typing import Final, Iterator, List
+
+EMPTY_STR_LIST: Final[List[str]] = []
 
 try:
     from .fb.ci import set_ci_envs
@@ -162,11 +164,11 @@ class DotSlashWindowsShimTest(unittest.TestCase):
         self.assertEqual(ret.returncode, 0)
 
     def test_args_none_with_period_in_name(self) -> None:
-        shutil.copy(
+        shutil.move(
             self._fixtures / "print_args",
             self._fixtures / "print_args.dotslash",
         )
-        shutil.copy(
+        shutil.move(
             self._fixtures / "print_args.exe",
             self._fixtures / "print_args.dotslash.exe",
         )
@@ -179,6 +181,30 @@ class DotSlashWindowsShimTest(unittest.TestCase):
         self.assertEqual(ret.stderr, "")
         self.assertRegex(ret.stdout, PRINT_ARGS_ARG0)
         self.assertEqual(ret.returncode, 0)
+
+    def test_args_none_with_no_extension(self) -> None:
+        with move_cwd(self._fixtures):
+            shutil.move("print_args.exe", "print_args")
+
+        # This executes because CreateProcessW adds an implicit `.exe`.
+        # PathCchRemoveExtension won't have an extension to remove,
+        # so we'll pass the exetuable to `dotslash`, which will then
+        # fail because it's not an actual DotSlash file.
+        print_args_path = self._fixtures / "print_args"
+        ret = subprocess.run(
+            [print_args_path],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            encoding="utf8",
+        )
+        self.assertEqual(
+            ret.stderr,
+            f"dotslash error: problem with `{print_args_path}`\n"
+            "caused by: failed to read DotSlash file\n"
+            "caused by: stream did not contain valid UTF-8\n",
+        )
+        self.assertEqual(ret.stdout, "")
+        self.assertEqual(ret.returncode, 1)
 
     def test_args_none_with_unc_path(self) -> None:
         ret = subprocess.run(
@@ -247,11 +273,11 @@ class DotSlashWindowsShimTest(unittest.TestCase):
         self.assertEqual(ret.returncode, 0)
 
     def test_args_simple_with_unicode_in_name(self) -> None:
-        shutil.copy(
+        shutil.move(
             self._fixtures / "print_args",
             self._fixtures / "print🍎args",
         )
-        shutil.copy(
+        shutil.move(
             self._fixtures / "print_args.exe",
             self._fixtures / "print🍎args.exe",
         )
@@ -264,6 +290,26 @@ class DotSlashWindowsShimTest(unittest.TestCase):
         self.assertEqual(ret.stderr, "1:a\n2:b\n3:c\n")
         self.assertRegex(ret.stdout, PRINT_ARGS_ARG0)
         self.assertEqual(ret.returncode, 0)
+
+    def test_args_with_space_in_name(self) -> None:
+        with move_cwd(self._fixtures):
+            shutil.move("print_args", "print args")
+            shutil.move("print_args.exe", "print args.exe")
+
+        for (args, stderr) in [
+            (EMPTY_STR_LIST, ""),
+            (["a", "b", "c"], "1:a\n2:b\n3:c\n"),
+        ]:
+            with self.subTest(args=args):
+                ret = subprocess.run(
+                    [str(self._fixtures / "print args.exe"), *args],
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    encoding="utf8",
+                )
+                self.assertEqual(ret.stderr, stderr)
+                self.assertRegex(ret.stdout, PRINT_ARGS_ARG0)
+                self.assertEqual(ret.returncode, 0)
 
     def test_args_simple_relative_path(self) -> None:
         with move_cwd(self._fixtures):
