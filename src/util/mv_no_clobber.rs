@@ -22,7 +22,10 @@ use crate::util::fs_ctx;
 /// If no move is performed because the destination already exists, this function
 /// returns Ok, not Err.
 ///
-/// TODO(T57290904): Use platform-specific syscalls to make this atomic.
+/// TODO(T57290904): When possible, use platform-specific syscalls to make this
+/// atomic. Specifically, the following should be available in newer OS versions:
+///   * Linux: renameat2 with RENAME_NOREPLACE flag
+///   * macOS: renamex_np with RENAME_EXCL flag
 pub fn mv_no_clobber<P: AsRef<Path>, Q: AsRef<Path>>(from: P, to: Q) -> io::Result<()> {
     fn _mv_no_clobber(from: &Path, to: &Path) -> io::Result<()> {
         // If the destination already exists, do nothing.
