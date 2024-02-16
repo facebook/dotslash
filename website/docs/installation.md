@@ -45,6 +45,27 @@ xattr -r -d com.apple.quarantine ~/Downloads/dotslash-macos.*.tar.gz
 
 :::
 
+## GitHub Actions
+
+We provide a GitHub Action to install dotslash for a workflow:
+
+<https://github.com/facebook/install-dotslash>
+
+It can be used from GitHub Actions workflows like so:
+
+```
+name: test suite
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: facebook/install-dotslash@latest
+      - run: ./some_dotslash_file
+```
+
 ## cargo install
 
 If you are familiar with the Rust toolchain, you can also build and install
