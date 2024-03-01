@@ -83,7 +83,7 @@ Thrift compiler from source before they can build their own binary. (At Meta, we
 leverage distributed builds and caching to mitigate the cost of having to build
 common infrastructure such as Thrift.)
 
-While this may be undesriable to the average Thrift service developer at Meta,
+While this may be undesirable to the average Thrift service developer at Meta,
 it is invaluable to the Thrift team and their ability to move the toolchain
 forward. That is, it makes it straightforward to make a local change to the
 Thrift compiler and see what effect it has by rebuilding any project of interest
