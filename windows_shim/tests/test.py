@@ -296,7 +296,7 @@ class DotSlashWindowsShimTest(unittest.TestCase):
             shutil.move("print_args", "print args")
             shutil.move("print_args.exe", "print args.exe")
 
-        for (args, stderr) in [
+        for args, stderr in [
             (EMPTY_STR_LIST, ""),
             (["a", "b", "c"], "1:a\n2:b\n3:c\n"),
         ]:

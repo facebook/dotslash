@@ -38,7 +38,7 @@ def main():
 
 def generate_dotslash_file_for_file_extension(file_extension: str) -> None:
     platforms = {}
-    for (platform_name, platform_id) in platform_configs:
+    for platform_name, platform_id in platform_configs:
         url = f"{GITHUB_REPO}/raw/master/print_argv.{platform_name}{file_extension}"
         entry_json = subprocess.check_output(
             [
