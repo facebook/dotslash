@@ -33,13 +33,13 @@ jobs:
       - run: cargo build --release --target aarch64-apple-darwin
       - run: cargo build --release --target x86_64-apple-darwin
       - run: lipo -create -output dotslash target/aarch64-apple-darwin/release/dotslash target/x86_64-apple-darwin/release/dotslash
-      - run: tar -czvf "dotslash-macos.${GITHUB_REF#refs/tags/}.tar.gz" dotslash
+      - run: tar -czvf dotslash-macos.tar.gz --options gzip:compression-level=9 dotslash
         shell: bash
       - name: upload release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
-        run: gh release upload "${GITHUB_REF#refs/tags/}" "dotslash-macos.${GITHUB_REF#refs/tags/}.tar.gz"
+        run: gh release upload "${GITHUB_REF#refs/tags/}" dotslash-macos.tar.gz
 
   ubuntu-22_04-x86_64:
     needs: create-release
@@ -51,12 +51,12 @@ jobs:
       - run: cargo test
       - run: cargo clippy
       - run: cargo build --release
-      - run: tar -czvf "dotslash-ubuntu-22.04.x86_64.${GITHUB_REF#refs/tags/}.tar.gz" -C target/release dotslash
+      - run: tar -cvf dotslash-ubuntu-22.04.x86_64.tar.gz -I 'gzip -9' -C target/release dotslash
       - name: upload release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
-        run: gh release upload "${GITHUB_REF#refs/tags/}" "dotslash-ubuntu-22.04.x86_64.${GITHUB_REF#refs/tags/}.tar.gz"
+        run: gh release upload "${GITHUB_REF#refs/tags/}" dotslash-ubuntu-22.04.x86_64.tar.gz
 
   ubuntu-22_04-arm64:
     needs: create-release
@@ -74,12 +74,12 @@ jobs:
       - run: cargo build --target aarch64-unknown-linux-gnu --release
         env:
           CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER: aarch64-linux-gnu-gcc
-      - run: tar -czvf "dotslash-ubuntu-22.04.arm64.${GITHUB_REF#refs/tags/}.tar.gz" -C target/aarch64-unknown-linux-gnu/release dotslash
+      - run: tar -cvf dotslash-ubuntu-22.04.aarch64.tar.gz -I 'gzip -9' -C target/aarch64-unknown-linux-gnu/release dotslash
       - name: upload release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
-        run: gh release upload "${GITHUB_REF#refs/tags/}" "dotslash-ubuntu-22.04.arm64.${GITHUB_REF#refs/tags/}.tar.gz"
+        run: gh release upload "${GITHUB_REF#refs/tags/}" dotslash-ubuntu-22.04.aarch64.tar.gz
 
   windows:
     needs: create-release
@@ -91,10 +91,10 @@ jobs:
       - run: cargo test
       - run: cargo clippy
       - run: cargo build --release
-      - run: tar czvf dotslash-windows.%GITHUB_REF:~10%.tar.gz -C target/release dotslash.exe
+      - run: tar czvf dotslash-windows.tar.gz --options gzip:compression-level=9 -C target/release dotslash.exe
         shell: cmd
       - name: upload release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release upload %GITHUB_REF:~10% dotslash-windows.%GITHUB_REF:~10%.tar.gz
+        run: gh release upload %GITHUB_REF:~10% dotslash-windows.tar.gz
         shell: cmd
