@@ -21,7 +21,10 @@ use thiserror::Error;
 
 use crate::config::parse_file;
 use crate::config::REQUIRED_HEADER;
+use crate::default_provider_factory::DefaultProviderFactory;
 use crate::dotslash_cache::DotslashCache;
+use crate::download::download_artifact;
+use crate::locate::locate_artifact;
 use crate::platform::SUPPORTED_PLATFORM;
 use crate::print_entry_for_url::print_entry_for_url;
 use crate::util::fs_ctx;
@@ -40,6 +43,9 @@ pub enum Subcommand {
 
     /// Print the cache directory
     CacheDir,
+
+    /// Fetch the artifact from a URL but do not execute it
+    Fetch,
 
     /// Parse a DotSlash file and print its data as JSON
     Parse,
@@ -62,6 +68,7 @@ impl fmt::Display for Subcommand {
             Self::Clean => "clean",
             Self::CreateUrlEntry => "create-url-entry",
             Self::CacheDir => "cache-dir",
+            Self::Fetch => "fetch",
             Self::Parse => "parse",
             Self::Sha256 => "sha256",
             Self::Version => "version",
@@ -79,6 +86,7 @@ impl FromStr for Subcommand {
             "clean" => Ok(Subcommand::Clean),
             "create-url-entry" => Ok(Subcommand::CreateUrlEntry),
             "cache-dir" => Ok(Subcommand::CacheDir),
+            "fetch" => Ok(Subcommand::Fetch),
             "parse" => Ok(Subcommand::Parse),
             "sha256" => Ok(Subcommand::Sha256),
             "version" => Ok(Subcommand::Version),
@@ -204,6 +212,21 @@ Learn more at {}
             let hex_digest = std::io::copy(&mut reader, &mut hasher)
                 .map(|_size_in_bytes| format!("{:x}", hasher.finalize()))?;
             println!("{}", hex_digest);
+        }
+
+        Subcommand::Fetch => {
+            let file_arg = take_exactly_one_arg(args)?;
+            let dotslash_data = fs_ctx::read_to_string(file_arg)?;
+            let dotslash_cache = DotslashCache::new();
+            let (artifact_entry, artifact_location) =
+                locate_artifact(&dotslash_data, &dotslash_cache)?;
+            if !artifact_location.executable.exists() {
+                let provider_factory = DefaultProviderFactory {};
+                download_artifact(&artifact_entry, &artifact_location, &provider_factory)?;
+                eprintln!("Downloaded {}", artifact_location.executable.display());
+            } else {
+                eprintln!("Already exists: {}", artifact_location.executable.display());
+            }
         }
     };
 

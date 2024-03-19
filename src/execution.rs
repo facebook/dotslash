@@ -18,16 +18,14 @@ use std::process::ExitCode;
 use anyhow::format_err;
 use anyhow::Context as _;
 
-use crate::artifact_location::determine_location;
-use crate::config;
 use crate::dotslash_cache::DotslashCache;
 use crate::download::download_artifact;
-use crate::platform::SUPPORTED_PLATFORM;
+use crate::locate::locate_artifact;
+use crate::locate::update_artifact_mtime;
 use crate::provider::ProviderFactory;
 use crate::subcommand::run_subcommand;
 use crate::subcommand::Subcommand;
 use crate::subcommand::SubcommandError;
-use crate::util::display::ListOf;
 use crate::util::execv;
 
 pub fn run<P: ProviderFactory>(mut args: ArgsOs, provider_factory: &P) -> ExitCode {
@@ -75,34 +73,8 @@ fn run_dotslash_file<P: ProviderFactory>(
         }
     };
 
-    let (_original_json, mut config_file) =
-        config::parse_file(&dotslash_data).context("failed to parse DotSlash file")?;
-
-    let (_platform, artifact_entry) = config_file
-        .platforms
-        .remove_entry(SUPPORTED_PLATFORM)
-        .ok_or_else(|| {
-            format_err!(
-                "expected platform `{}` - but found {}",
-                SUPPORTED_PLATFORM,
-                ListOf::new(config_file.platforms.keys()),
-            )
-        })
-        .context("platform not supported")?;
-
     let dotslash_cache = DotslashCache::new();
-
-    let artifact_location = determine_location(&artifact_entry, &dotslash_cache);
-
-    // Update the mtime to work around tmpwatch and tmpreaper behavior
-    // with old artifacts.
-    //
-    // Not on macOS because something (macOS security?) adds a 50-100ms
-    // delay after modifying the file.
-    //
-    // Not on Windows because of "file used by another process" errors.
-    #[cfg(target_os = "linux")]
-    update_artifact_mtime(&artifact_location.executable);
+    let (artifact_entry, artifact_location) = locate_artifact(&dotslash_data, &dotslash_cache)?;
 
     let mut command = Command::new(&artifact_location.executable);
     command.args(args);
@@ -160,18 +132,6 @@ fn run_dotslash_file<P: ProviderFactory>(
     };
 
     Err(format_err!(execv_error).context(err_context))
-}
-
-/// DotSlash can unpack old artifacts which can be reaped by tools like
-/// tmpwatch or tmpreaper. Those tools work better using the mtime rather than
-/// atime which is why we update the mtime. But this doesn't work on
-/// Windows sometimes.
-#[cfg_attr(windows, allow(dead_code))]
-fn update_artifact_mtime(executable: &Path) {
-    drop(filetime::set_file_mtime(
-        executable,
-        filetime::FileTime::now(),
-    ));
 }
 
 fn is_file_not_found_error(error_from_execv: &io::Error) -> bool {
