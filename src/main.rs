@@ -12,6 +12,7 @@ mod artifact_path;
 mod config;
 mod curl;
 mod decompress;
+mod default_provider_factory;
 mod digest;
 mod dotslash_cache;
 mod download;
@@ -19,6 +20,7 @@ mod execution;
 mod fetch_method;
 mod github_release_provider;
 mod http_provider;
+mod locate;
 mod platform;
 mod print_entry_for_url;
 mod progress;
@@ -29,27 +31,10 @@ mod util;
 use std::env;
 use std::process::ExitCode;
 
-use anyhow::format_err;
-
-use crate::github_release_provider::GitHubReleaseProvider;
-use crate::http_provider::HttpProvider;
-use crate::provider::Provider;
-use crate::provider::ProviderFactory;
+use crate::default_provider_factory::DefaultProviderFactory;
 
 fn main() -> ExitCode {
     let args = env::args_os();
     let provider_factory = DefaultProviderFactory {};
     execution::run(args, &provider_factory)
-}
-
-struct DefaultProviderFactory;
-
-impl ProviderFactory for DefaultProviderFactory {
-    fn get_provider(&self, provider_type: &str) -> anyhow::Result<Box<dyn Provider>> {
-        match provider_type {
-            "http" => Ok(Box::new(HttpProvider {})),
-            "github-release" => Ok(Box::new(GitHubReleaseProvider {})),
-            _ => Err(format_err!("unknown provider type: `{}`", provider_type)),
-        }
-    }
 }
