@@ -88,6 +88,8 @@ fn guess_artifact_format_from_url(url: &[u8]) -> ArtifactFormat {
         ArtifactFormat::TarXz
     } else if url.ends_with(b".tar") {
         ArtifactFormat::Tar
+    } else if url.ends_with(b".zip") {
+        ArtifactFormat::Zip
     } else if url.ends_with(b".gz") {
         ArtifactFormat::Gz
     } else if url.ends_with(b".zst") {
@@ -181,6 +183,7 @@ mod tests {
         test("http://example.com/foo.zst.tar", ArtifactFormat::Tar);
         test("http://example.com/foo.gz.tar", ArtifactFormat::Tar);
 
+        test("http://example.com/foo.zip", ArtifactFormat::Zip);
         test("http://example.com/foo", ArtifactFormat::Plain);
         test("http://example.com/foo.bar", ArtifactFormat::Plain);
         test("http://example.com/foo.zstd", ArtifactFormat::Plain);
