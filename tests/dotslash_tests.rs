@@ -55,18 +55,50 @@ fn http__gz__valid_executable() {
         .arg("def")
         .assert()
         .code(0)
-        .stderr_eq("")
+        .stderr_eq(
+            "\
+1: abc
+2: def
+",
+        )
         .stdout_matches(format!(
             "\
 exe: [DOTSLASHCACHEDIR]/[PACKGZHTTPARCHIVECACHEDIR]/subdir/[PRINTARGVEXECUTABLE]
 0: {argv0}
-1: abc
-2: def
 ",
             argv0 = if cfg!(windows) {
                 "[DOTSLASHCACHEDIR]/[PACKGZHTTPARCHIVECACHEDIR]/subdir/[PRINTARGVEXECUTABLE]"
             } else {
                 "tests/fixtures/http__gz__print_argv"
+            }
+        ));
+}
+
+#[test]
+fn http__xz__valid_executable() {
+    DotSlashTestEnv::try_new()
+        .unwrap()
+        .dotslash_command()
+        .arg("tests/fixtures/http__xz__print_argv")
+        .arg("abc")
+        .arg("def")
+        .assert()
+        .code(0)
+        .stderr_eq(
+            "\
+1: abc
+2: def
+",
+        )
+        .stdout_matches(format!(
+            "\
+exe: [DOTSLASHCACHEDIR]/[PACKXZHTTPARCHIVECACHEDIR]/subdir/[PRINTARGVEXECUTABLE]
+0: {argv0}
+",
+            argv0 = if cfg!(windows) {
+                "[DOTSLASHCACHEDIR]/[PACKXZHTTPARCHIVECACHEDIR]/subdir/[PRINTARGVEXECUTABLE]"
+            } else {
+                "tests/fixtures/http__xz__print_argv"
             }
         ));
 }
@@ -81,13 +113,16 @@ fn http__zst__valid_executable() {
         .arg("def")
         .assert()
         .code(0)
-        .stderr_eq("")
+        .stderr_eq(
+            "\
+1: abc
+2: def
+",
+        )
         .stdout_matches(format!(
             "\
 exe: [DOTSLASHCACHEDIR]/[PACKZSTHTTPARCHIVECACHEDIR]/subdir/[PRINTARGVEXECUTABLE]
 0: {argv0}
-1: abc
-2: def
 ",
             argv0 = if cfg!(windows) {
                 "[DOTSLASHCACHEDIR]/[PACKZSTHTTPARCHIVECACHEDIR]/subdir/[PRINTARGVEXECUTABLE]"
@@ -107,13 +142,16 @@ fn http__plain__valid_executable() {
         .arg("def")
         .assert()
         .code(0)
-        .stderr_eq("")
+        .stderr_eq(
+            "\
+1: abc
+2: def
+",
+        )
         .stdout_matches(format!(
             "\
 exe: [DOTSLASHCACHEDIR]/[PACKPLAINHTTPARCHIVECACHEDIR]/subdir/[PRINTARGVEXECUTABLE]
 0: {argv0}
-1: abc
-2: def
 ",
             argv0 = if cfg!(windows) {
                 "[DOTSLASHCACHEDIR]/[PACKPLAINHTTPARCHIVECACHEDIR]/subdir/[PRINTARGVEXECUTABLE]"
@@ -133,18 +171,50 @@ fn http__tar_gz__valid_executable() {
         .arg("def")
         .assert()
         .code(0)
-        .stderr_eq("")
+        .stderr_eq(
+            "\
+1: abc
+2: def
+",
+        )
         .stdout_matches(format!(
             "\
 exe: [DOTSLASHCACHEDIR]/[PACKTGZHTTPARCHIVECACHEDIR]/subdir/[PRINTARGVEXECUTABLE]
 0: {argv0}
-1: abc
-2: def
 ",
             argv0 = if cfg!(windows) {
                 "[DOTSLASHCACHEDIR]/[PACKTGZHTTPARCHIVECACHEDIR]/subdir/[PRINTARGVEXECUTABLE]"
             } else {
                 "tests/fixtures/http__tar_gz__print_argv"
+            }
+        ));
+}
+
+#[test]
+fn http__tar_xz__valid_executable() {
+    DotSlashTestEnv::try_new()
+        .unwrap()
+        .dotslash_command()
+        .arg("tests/fixtures/http__tar_xz__print_argv")
+        .arg("abc")
+        .arg("def")
+        .assert()
+        .code(0)
+        .stderr_eq(
+            "\
+1: abc
+2: def
+",
+        )
+        .stdout_matches(format!(
+            "\
+exe: [DOTSLASHCACHEDIR]/[PACKTARXZHTTPARCHIVECACHEDIR]/subdir/[PRINTARGVEXECUTABLE]
+0: {argv0}
+",
+            argv0 = if cfg!(windows) {
+                "[DOTSLASHCACHEDIR]/[PACKTARXZHTTPARCHIVECACHEDIR]/subdir/[PRINTARGVEXECUTABLE]"
+            } else {
+                "tests/fixtures/http__tar_xz__print_argv"
             }
         ));
 }
@@ -159,13 +229,16 @@ fn http__tar_zst__valid_executable() {
         .arg("def")
         .assert()
         .code(0)
-        .stderr_eq("")
+        .stderr_eq(
+            "\
+1: abc
+2: def
+",
+        )
         .stdout_matches(format!(
             "\
 exe: [DOTSLASHCACHEDIR]/[PACKTARZSTHTTPARCHIVECACHEDIR]/subdir/[PRINTARGVEXECUTABLE]
 0: {argv0}
-1: abc
-2: def
 ",
             argv0 = if cfg!(windows) {
                 "[DOTSLASHCACHEDIR]/[PACKTARZSTHTTPARCHIVECACHEDIR]/subdir/[PRINTARGVEXECUTABLE]"
@@ -181,7 +254,7 @@ fn http__nonexistent_url() {
         .unwrap()
         .substitution(
             "[PROVIDERURL]",
-            "https://github.com/zertosh/dotslash_fixtures/raw/462625c6bf2671439dce66bd5bc40b05f2ed8819/fake.tar.gz",
+            "https://github.com/zertosh/dotslash_fixtures/raw/5adea95f2eac6509cad9ca87eb770596a1a21379/fake.tar.gz",
         )
         .unwrap()
         .dotslash_command()
@@ -197,7 +270,7 @@ caused by: no providers succeeded. warnings:
 failed to fetch artifact: failed to fetch `[PROVIDERURL]`
 
 Caused by:
-    0: `curl --location --retry 3 --fail --silent --show-error --user-agent [DOTSLASHUSERAGENT] [PROVIDERURL] --output [DOTSLASHCACHEDIR]/dd/.tmp[..]`
+    0: `curl --location --retry 3 --fail --silent --show-error --user-agent [DOTSLASHUSERAGENT] [PROVIDERURL] --output [DOTSLASHCACHEDIR]/cf/.tmp[..]`
     1: 404 Not Found
 ",
         );

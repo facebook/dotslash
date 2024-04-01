@@ -6,6 +6,7 @@
 # License, Version 2.0 found in the LICENSE-APACHE file in the root directory
 # of this source tree.
 
+import argparse
 import json
 import os
 import subprocess
@@ -28,18 +29,30 @@ GITHUB_REPO = "https://github.com/zertosh/dotslash_fixtures"
 DOTSLASH_EXE_NAME = "print_argv"
 
 
-def main():
+def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--commit-hash", required=True)
+    args = parser.parse_args()
+
+    commit_hash: str = args.commit_hash
+
     # TODO(asuarez): Make the artifacts for [".tar", ".tar.gz", ".tar.zst"]
     # available as well?
-    file_extensions = ["", ".gz", ".zst"]
+    file_extensions = ["", ".gz", ".xz", ".zst"]
     for file_extension in file_extensions:
-        generate_dotslash_file_for_file_extension(file_extension)
+        generate_dotslash_file_for_file_extension(
+            commit_hash=commit_hash,
+            file_extension=file_extension,
+        )
 
 
-def generate_dotslash_file_for_file_extension(file_extension: str) -> None:
+def generate_dotslash_file_for_file_extension(
+    commit_hash: str,
+    file_extension: str,
+) -> None:
     platforms = {}
     for platform_name, platform_id in platform_configs:
-        url = f"{GITHUB_REPO}/raw/master/print_argv.{platform_name}{file_extension}"
+        url = f"{GITHUB_REPO}/raw/{commit_hash}/print_argv.{platform_name}{file_extension}"
         entry_json = subprocess.check_output(
             [
                 "cargo",

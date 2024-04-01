@@ -1,0 +1,67 @@
+#!/usr/bin/env dotslash
+
+{
+  "name": "print_argv",
+  "platforms": {
+    "linux-aarch64": {
+      "size": 52960,
+      "hash": "blake3",
+      "digest": "c6d1e53af2e09e838d1041d039cc32f43c8f28eacbfc63f9195d3b4fa6bb8de5",
+      "format": "tar.xz",
+      "path": "subdir/print_argv.linux.aarch64",
+      "providers": [
+        {
+          "url": "https://github.com/zertosh/dotslash_fixtures/raw/5adea95f2eac6509cad9ca87eb770596a1a21379/pack.tar.xz"
+        }
+      ]
+    },
+    "linux-x86_64": {
+      "size": 52960,
+      "hash": "blake3",
+      "digest": "c6d1e53af2e09e838d1041d039cc32f43c8f28eacbfc63f9195d3b4fa6bb8de5",
+      "format": "tar.xz",
+      "path": "subdir/print_argv.linux.x86_64",
+      "providers": [
+        {
+          "url": "https://github.com/zertosh/dotslash_fixtures/raw/5adea95f2eac6509cad9ca87eb770596a1a21379/pack.tar.xz"
+        }
+      ]
+    },
+    "macos-aarch64": {
+      "size": 52960,
+      "hash": "blake3",
+      "digest": "c6d1e53af2e09e838d1041d039cc32f43c8f28eacbfc63f9195d3b4fa6bb8de5",
+      "format": "tar.xz",
+      "path": "subdir/print_argv.macos.aarch64",
+      "providers": [
+        {
+          "url": "https://github.com/zertosh/dotslash_fixtures/raw/5adea95f2eac6509cad9ca87eb770596a1a21379/pack.tar.xz"
+        }
+      ]
+    },
+    "macos-x86_64": {
+      "size": 52960,
+      "hash": "blake3",
+      "digest": "c6d1e53af2e09e838d1041d039cc32f43c8f28eacbfc63f9195d3b4fa6bb8de5",
+      "format": "tar.xz",
+      "path": "subdir/print_argv.macos.x86_64",
+      "providers": [
+        {
+          "url": "https://github.com/zertosh/dotslash_fixtures/raw/5adea95f2eac6509cad9ca87eb770596a1a21379/pack.tar.xz"
+        }
+      ]
+    },
+    "windows-x86_64": {
+      "size": 52960,
+      "hash": "blake3",
+      "digest": "c6d1e53af2e09e838d1041d039cc32f43c8f28eacbfc63f9195d3b4fa6bb8de5",
+      "format": "tar.xz",
+      "path": "subdir/print_argv.windows.x86_64.exe",
+      "providers": [
+        {
+          "url": "https://github.com/zertosh/dotslash_fixtures/raw/5adea95f2eac6509cad9ca87eb770596a1a21379/pack.tar.xz"
+        }
+      ]
+    }
+  }
+}

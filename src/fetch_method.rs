@@ -32,6 +32,9 @@ pub enum ArtifactFormat {
     #[serde(rename = "tar.xz")]
     TarXz,
 
+    #[serde(rename = "xz")]
+    Xz,
+
     #[serde(rename = "zst")]
     Zstd,
 }
@@ -56,6 +59,7 @@ impl ArtifactFormat {
             Self::TarGz => (Some(DecompressStep::Gzip), Some(ArchiveFormat::Tar)),
             Self::TarXz => (Some(DecompressStep::Xz), Some(ArchiveFormat::Tar)),
             Self::TarZstd => (Some(DecompressStep::Zstd), Some(ArchiveFormat::Tar)),
+            Self::Xz => (Some(DecompressStep::Xz), None),
             Self::Zstd => (Some(DecompressStep::Zstd), None),
         }
     }

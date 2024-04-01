@@ -90,6 +90,8 @@ fn guess_artifact_format_from_url(url: &[u8]) -> ArtifactFormat {
         ArtifactFormat::Tar
     } else if url.ends_with(b".gz") {
         ArtifactFormat::Gz
+    } else if url.ends_with(b".xz") {
+        ArtifactFormat::Xz
     } else if url.ends_with(b".zst") {
         ArtifactFormat::Zstd
     } else {

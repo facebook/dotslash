@@ -22,9 +22,11 @@ pub mod ci;
 #[allow(dead_code)]
 mod platform;
 
-const PACK_TGZ_HTTP_ARCHIVE_CACHE_DIR: &str = "dd/c8a0044304752905aef0fc98a3d2e268afef9a";
+const PACK_TGZ_HTTP_ARCHIVE_CACHE_DIR: &str = "cf/df86e55cbbd2455fd1e36468c2b1ff7f8998d4";
 
-const PACK_TAR_ZST_HTTP_ARCHIVE_CACHE_DIR: &str = "4b/6bdee10eb2b03814b531e571a243038039ab11";
+const PACK_TAR_XZ_HTTP_ARCHIVE_CACHE_DIR: &str = "a2/7e95fba3d48794eb41dd0f63634e508ca72621";
+
+const PACK_TAR_ZST_HTTP_ARCHIVE_CACHE_DIR: &str = "ef/ca1937daf58b9c65c54cc9a360450fe5d43835";
 
 const USER_AGENT: &str = concat!(
     "Mozilla/5.0 (compatible; DotSlash/",
@@ -42,30 +44,39 @@ const PRINT_ARGV_EXECUTABLE: &str = platform::if_platform! {
 };
 
 const PACK_GZ_HTTP_ARCHIVE_CACHE_DIR: &str = platform::if_platform! {
-    linux_aarch64 = "58/e7b993168624e049f272fe8c9ec54398534d75",
-    linux_x86_64 = "6a/b7f31e1d66c1216003e479ea9d28c86782be7c",
-    macos_aarch64 = "24/e4881bc26131018e51d1efc98ce0cab149cc80",
-    macos_x86_64 = "76/adaeac4a4c13b02c7fc55dda4e5d923f8d4748",
-    windows_aarch64 = "ec/03a4255d20937d3b1c92a24746a116d9c302ac",
-    windows_x86_64 = "a8/60d484c31d9febb3cf2a235c802534b15cc3e9",
+    linux_aarch64 = "bb/1a78fe5c9fb5a4efd2665d2385853c86733822",
+    linux_x86_64 = "15/8f0652f1ef9276f3c1aa647a2f1ac9f28dde32",
+    macos_aarch64 = "13/676cc4457e6bcc0344c0a823701d4ec2337432",
+    macos_x86_64 = "f4/b9233113f64ded6bf42f0e5c4236ef31552733",
+    windows_aarch64 = "f1/a292555df0a08062bc4632c3d363362491aec2",
+    windows_x86_64 = "b3/c130f6ab98388b2ef7b14dd8f833e96cc4515f",
+};
+
+const PACK_XZ_HTTP_ARCHIVE_CACHE_DIR: &str = platform::if_platform! {
+    linux_aarch64 = "f8/379be6815479ec5466d1d8d0b064e2344b22d2",
+    linux_x86_64 = "26/5d340b2c556a7098aaa82732991bb3f820aa36",
+    macos_aarch64 = "8a/60f78296c051ed9f020cef2df4a41ed76f5cd9",
+    macos_x86_64 = "d6/e288c5470cd5bcba63f1734a3780a1dca53d84",
+    windows_aarch64 = "3b/85c4c3eae3a023918fe1f2aec2926191e6b7d1",
+    windows_x86_64 = "b8/607feb9b08082efd12b02d075ba3ae671cd396",
 };
 
 const PACK_ZST_HTTP_ARCHIVE_CACHE_DIR: &str = platform::if_platform! {
-    linux_aarch64 = "0b/69b2f01fa4a00fb37c5cd2ae7302994f8f2d0a",
-    linux_x86_64 = "4c/9e6ee9f62c1c85199c943a2d3085f253b79751",
-    macos_aarch64 = "32/58bdcd01309061223a73d29d52f72327f77e40",
-    macos_x86_64 = "8d/8956ec0adf9d086d00653621f8ed385310d4eb",
-    windows_aarch64 = "30/44fca3537a5e2fb7bc9f95425c7c8f7b5e0834",
-    windows_x86_64 = "30/d20eeb602cb2fafafcb47a1565d163089cbb40",
+    linux_aarch64 = "88/04463f5ce3ef56616faeddbc9936ae0ed1c2a1",
+    linux_x86_64 = "0d/dcd334203082641b987ebd46a758bb032d8961",
+    macos_aarch64 = "68/2ea5eacaf1881b15876f63b5aba2437ddf4b0d",
+    macos_x86_64 = "26/13225b385a72a4656eac271304b14b9dbf689c",
+    windows_aarch64 = "d1/8ebd85d8164c4adc44073d3e07843c874a74dd",
+    windows_x86_64 = "b3/6c9ca1cfc1c38f8300761ca8b893f7911e053b",
 };
 
 const PACK_PLAIN_HTTP_ARCHIVE_CACHE_DIR: &str = platform::if_platform! {
-    linux_aarch64 = "c5/6831ffb9352968343b4a3db3edc52c50e2a24a",
-    linux_x86_64 = "b3/a8125fdb92bc86d2429ece315e535467288653",
-    macos_aarch64 = "40/1f007e7e2575be3d0a218e6c23b350f78c4a53",
-    macos_x86_64 = "94/7aa11cf9d77f3983d8704fe42b5af20faf604c",
-    windows_aarch64 = "11/3e1afef6d6dbd9d5957686f697eedaeda4de46",
-    windows_x86_64 = "f8/c90362327cce3efc60ea82a121b205235b8cc9",
+    linux_aarch64 = "07/2c58ff3a1560e08b300834964fc8ee60af5aab",
+    linux_x86_64 = "e9/6c95f9ab97c0175a4a86b0da31c98f8e7b1d6f",
+    macos_aarch64 = "c5/4434b1de7f5718a3acd3e2e04924c9abc2fccf",
+    macos_x86_64 = "2b/7c3edc2287dfd5cf2f0b772e92d89dd226ba7e",
+    windows_aarch64 = "8a/26506e13829c5263dac097d73013921bc8301e",
+    windows_x86_64 = "19/0d26175e50e486f87d90ca9d10ac50e3c248fd",
 };
 
 const IO_ERROR_NOT_FOUND: &str = if cfg!(windows) {
@@ -114,12 +125,20 @@ impl DotSlashTestEnv {
             PACK_TGZ_HTTP_ARCHIVE_CACHE_DIR,
         )?;
         substitutions.insert(
+            "[PACKTARXZHTTPARCHIVECACHEDIR]",
+            PACK_TAR_XZ_HTTP_ARCHIVE_CACHE_DIR,
+        )?;
+        substitutions.insert(
             "[PACKTARZSTHTTPARCHIVECACHEDIR]",
             PACK_TAR_ZST_HTTP_ARCHIVE_CACHE_DIR,
         )?;
         substitutions.insert(
             "[PACKGZHTTPARCHIVECACHEDIR]",
             PACK_GZ_HTTP_ARCHIVE_CACHE_DIR,
+        )?;
+        substitutions.insert(
+            "[PACKXZHTTPARCHIVECACHEDIR]",
+            PACK_XZ_HTTP_ARCHIVE_CACHE_DIR,
         )?;
         substitutions.insert(
             "[PACKZSTHTTPARCHIVECACHEDIR]",

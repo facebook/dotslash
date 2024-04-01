@@ -4,68 +4,68 @@
   "name": "print_argv",
   "platforms": {
     "linux-aarch64": {
-      "size": 11792,
+      "size": 11872,
       "hash": "blake3",
-      "digest": "a9b073a7b00a880d50525de3148fd05dc82a22044fb344943099144a01576415",
+      "digest": "6f9ae1662dd3d974a6f01684ab963415009eec0c006aaed500148e04ab940fd8",
       "path": "subdir/print_argv.linux.aarch64",
       "providers": [
         {
-          "url": "https://github.com/zertosh/dotslash_fixtures/raw/master/print_argv.linux.aarch64"
+          "url": "https://github.com/zertosh/dotslash_fixtures/raw/5adea95f2eac6509cad9ca87eb770596a1a21379/print_argv.linux.aarch64"
         }
       ]
     },
     "linux-x86_64": {
-      "size": 11632,
+      "size": 11712,
       "hash": "blake3",
-      "digest": "3781f97a84668c464a40429e87dd548a8b1c700d1e82af97176541cf06e91dcc",
+      "digest": "025d64cb9e77350243b2f594d7a0a9a335ef0c4d6994ee39dd71d551d8179713",
       "path": "subdir/print_argv.linux.x86_64",
       "providers": [
         {
-          "url": "https://github.com/zertosh/dotslash_fixtures/raw/master/print_argv.linux.x86_64"
+          "url": "https://github.com/zertosh/dotslash_fixtures/raw/5adea95f2eac6509cad9ca87eb770596a1a21379/print_argv.linux.x86_64"
         }
       ]
     },
     "macos-aarch64": {
-      "size": 55464,
+      "size": 55800,
       "hash": "blake3",
-      "digest": "ab25c43b2c061b0ef5998e749e55574411c0d49ebf8ed5a4403cad3c077859f6",
+      "digest": "57ce32d91c9bfb9e14aac3225046314fff6b808d43c60c75654142a3e5735b2e",
       "path": "subdir/print_argv.macos.aarch64",
       "providers": [
         {
-          "url": "https://github.com/zertosh/dotslash_fixtures/raw/master/print_argv.macos.aarch64"
+          "url": "https://github.com/zertosh/dotslash_fixtures/raw/5adea95f2eac6509cad9ca87eb770596a1a21379/print_argv.macos.aarch64"
         }
       ]
     },
     "macos-x86_64": {
-      "size": 26352,
+      "size": 26648,
       "hash": "blake3",
-      "digest": "85162bbaf8678b7221d1a8a9a4d640809ced0562f4617fe4f57433a2aa0cb1b4",
+      "digest": "ab6470b9d5528bb9956a0b0e38eeb19fb12809b5ec2c695b6ad98b6c3ddad5bd",
       "path": "subdir/print_argv.macos.x86_64",
       "providers": [
         {
-          "url": "https://github.com/zertosh/dotslash_fixtures/raw/master/print_argv.macos.x86_64"
+          "url": "https://github.com/zertosh/dotslash_fixtures/raw/5adea95f2eac6509cad9ca87eb770596a1a21379/print_argv.macos.x86_64"
         }
       ]
     },
     "windows-aarch64": {
-      "size": 23040,
+      "size": 23552,
       "hash": "blake3",
-      "digest": "b496424961c75de9390f72b47745eae670d8b987158a84bbdf8dbe85b03f6a97",
+      "digest": "898ffab742ec8f6bbfb31516bbd5207b38e8018e8b10e8d2e7474e84bf3bcc19",
       "path": "subdir/print_argv.windows.aarch64.exe",
       "providers": [
         {
-          "url": "https://github.com/zertosh/dotslash_fixtures/raw/master/print_argv.windows.aarch64.exe"
+          "url": "https://github.com/zertosh/dotslash_fixtures/raw/5adea95f2eac6509cad9ca87eb770596a1a21379/print_argv.windows.aarch64.exe"
         }
       ]
     },
     "windows-x86_64": {
       "size": 25088,
       "hash": "blake3",
-      "digest": "90494fa1add8e23ffcc082587af2414a3f3e0a94457f550d94a17d1d78f3ff92",
+      "digest": "77645fa17bdd100f68d2de98f4de5c18cfbaae5c76150d8d1f02998dbde2053a",
       "path": "subdir/print_argv.windows.x86_64.exe",
       "providers": [
         {
-          "url": "https://github.com/zertosh/dotslash_fixtures/raw/master/print_argv.windows.x86_64.exe"
+          "url": "https://github.com/zertosh/dotslash_fixtures/raw/5adea95f2eac6509cad9ca87eb770596a1a21379/print_argv.windows.x86_64.exe"
         }
       ]
     }
