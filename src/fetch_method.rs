@@ -37,17 +37,21 @@ pub enum ArtifactFormat {
 
     #[serde(rename = "zst")]
     Zstd,
+
+    #[serde(rename = "zip")]
+    Zip,
 }
 
+#[derive(Debug)]
 pub enum DecompressStep {
     Gzip,
     Xz,
     Zstd,
 }
 
-/// Currently, only .tar is supported, though we may support .zip in the future.
 pub enum ArchiveFormat {
     Tar,
+    Zip,
 }
 
 impl ArtifactFormat {
@@ -61,6 +65,7 @@ impl ArtifactFormat {
             Self::TarZstd => (Some(DecompressStep::Zstd), Some(ArchiveFormat::Tar)),
             Self::Xz => (Some(DecompressStep::Xz), None),
             Self::Zstd => (Some(DecompressStep::Zstd), None),
+            Self::Zip => (None, Some(ArchiveFormat::Zip)),
         }
     }
 }

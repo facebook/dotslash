@@ -133,6 +133,35 @@ exe: [DOTSLASHCACHEDIR]/[PACKZSTHTTPARCHIVECACHEDIR]/subdir/[PRINTARGVEXECUTABLE
 }
 
 #[test]
+fn http__zip__valid_executable() {
+    DotSlashTestEnv::try_new()
+        .unwrap()
+        .dotslash_command()
+        .arg("tests/fixtures/http__zip__print_argv")
+        .arg("abc")
+        .arg("def")
+        .assert()
+        .code(0)
+        .stderr_eq(
+            "\
+1: abc
+2: def
+",
+        )
+        .stdout_matches(format!(
+            "\
+exe: [DOTSLASHCACHEDIR]/[PACKZIPTHTTPARCHIVECACHEDIR]/subdir/[PRINTARGVEXECUTABLE]
+0: {argv0}
+",
+            argv0 = if cfg!(windows) {
+                "[DOTSLASHCACHEDIR]/[PACKZIPTHTTPARCHIVECACHEDIR]/subdir/[PRINTARGVEXECUTABLE]"
+            } else {
+                "tests/fixtures/http__zip__print_argv"
+            }
+        ));
+}
+
+#[test]
 fn http__plain__valid_executable() {
     DotSlashTestEnv::try_new()
         .unwrap()

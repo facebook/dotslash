@@ -1,0 +1,67 @@
+#!/usr/bin/env dotslash
+
+{
+  "name": "print_argv",
+  "platforms": {
+    "linux-aarch64": {
+      "size": 206651,
+      "hash": "blake3",
+      "digest": "59fe30efdbe0fe8647245ff5247fd13497d0970ac60c7e457d75af0d3f738d8f",
+      "format": "zip",
+      "path": "subdir/print_argv.linux.aarch64",
+      "providers": [
+        {
+          "url": "https://github.com/zertosh/dotslash_fixtures/raw/5adea95f2eac6509cad9ca87eb770596a1a21379/pack.zip"
+        }
+      ]
+    },
+    "linux-x86_64": {
+      "size": 206651,
+      "hash": "blake3",
+      "digest": "59fe30efdbe0fe8647245ff5247fd13497d0970ac60c7e457d75af0d3f738d8f",
+      "format": "zip",
+      "path": "subdir/print_argv.linux.x86_64",
+      "providers": [
+        {
+          "url": "https://github.com/zertosh/dotslash_fixtures/raw/5adea95f2eac6509cad9ca87eb770596a1a21379/pack.zip"
+        }
+      ]
+    },
+    "macos-aarch64": {
+      "size": 206651,
+      "hash": "blake3",
+      "digest": "59fe30efdbe0fe8647245ff5247fd13497d0970ac60c7e457d75af0d3f738d8f",
+      "format": "zip",
+      "path": "subdir/print_argv.macos.aarch64",
+      "providers": [
+        {
+          "url": "https://github.com/zertosh/dotslash_fixtures/raw/5adea95f2eac6509cad9ca87eb770596a1a21379/pack.zip"
+        }
+      ]
+    },
+    "macos-x86_64": {
+      "size": 206651,
+      "hash": "blake3",
+      "digest": "59fe30efdbe0fe8647245ff5247fd13497d0970ac60c7e457d75af0d3f738d8f",
+      "format": "zip",
+      "path": "subdir/print_argv.macos.x86_64",
+      "providers": [
+        {
+          "url": "https://github.com/zertosh/dotslash_fixtures/raw/5adea95f2eac6509cad9ca87eb770596a1a21379/pack.zip"
+        }
+      ]
+    },
+    "windows-x86_64": {
+      "size": 206651,
+      "hash": "blake3",
+      "digest": "59fe30efdbe0fe8647245ff5247fd13497d0970ac60c7e457d75af0d3f738d8f",
+      "format": "zip",
+      "path": "subdir/print_argv.windows.x86_64.exe",
+      "providers": [
+        {
+          "url": "https://github.com/zertosh/dotslash_fixtures/raw/5adea95f2eac6509cad9ca87eb770596a1a21379/pack.zip"
+        }
+      ]
+    }
+  }
+}

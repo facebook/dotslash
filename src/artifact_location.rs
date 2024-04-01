@@ -108,6 +108,12 @@ fn create_key_for_format(entry: &ArtifactEntry) -> Cow<'_, str> {
                 Some(DecompressStep::Zstd) => Cow::Borrowed("tar.zst"),
             }
         }
+        (decompress, Some(ArchiveFormat::Zip)) => {
+            if let Some(d) = decompress {
+                unreachable!("zip's extraction_policy should never return `(Some(_), _)`; {d:?}");
+            }
+            Cow::Borrowed("zip")
+        }
         (decompress, None) => {
             // For a non-archive artifact, the `path` must be part of the cache
             // key. The key has a prefix to distinguish it from the cache keys

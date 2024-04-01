@@ -216,6 +216,15 @@ fn unpack_verified_artifact(
     artifact_entry_path: &str,
 ) -> anyhow::Result<()> {
     match &format.extraction_policy() {
+        (decompression, Some(ArchiveFormat::Zip)) => {
+            if let Some(d) = decompression {
+                unreachable!("zip's extraction_policy should never return `(Some(_), _)`; {d:?}");
+            }
+            let zip_file = fs_ctx::file_open(fetched_artifact)?;
+            let reader = BufReader::new(zip_file);
+            let mut archive = zip::ZipArchive::new(reader)?;
+            archive.extract(temp_dir_to_mv)?;
+        }
         (None, Some(ArchiveFormat::Tar)) => {
             decompress::untar(fetched_artifact, temp_dir_to_mv, /* is_tar_gz */ false)?;
         }

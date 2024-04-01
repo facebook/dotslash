@@ -28,6 +28,8 @@ const PACK_TAR_XZ_HTTP_ARCHIVE_CACHE_DIR: &str = "a2/7e95fba3d48794eb41dd0f63634
 
 const PACK_TAR_ZST_HTTP_ARCHIVE_CACHE_DIR: &str = "ef/ca1937daf58b9c65c54cc9a360450fe5d43835";
 
+const PACK_ZIP_HTTP_ARCHIVE_CACHE_DIR: &str = "04/bcb0761a2e4d35c9c9c15b14e8e5d1f2a29d80";
+
 const USER_AGENT: &str = concat!(
     "Mozilla/5.0 (compatible; DotSlash/",
     env!("CARGO_PKG_VERSION"),
@@ -131,6 +133,10 @@ impl DotSlashTestEnv {
         substitutions.insert(
             "[PACKTARZSTHTTPARCHIVECACHEDIR]",
             PACK_TAR_ZST_HTTP_ARCHIVE_CACHE_DIR,
+        )?;
+        substitutions.insert(
+            "[PACKZIPTHTTPARCHIVECACHEDIR]",
+            PACK_ZIP_HTTP_ARCHIVE_CACHE_DIR,
         )?;
         substitutions.insert(
             "[PACKGZHTTPARCHIVECACHEDIR]",
