@@ -43,6 +43,7 @@ impl FileLock {
                 .read(true)
                 .write(true)
                 .create(true)
+                .truncate(false)
                 .open(path)
                 .map_err(|e| FileLockError::Create(path.to_path_buf(), e))?;
 
