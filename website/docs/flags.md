@@ -39,13 +39,14 @@ $ dotslash -- cache-dir
 /Users/mbolin/Library/Caches/dotslash
 ```
 
-| command                | description                                                       |
-| ---------------------- | ----------------------------------------------------------------- |
-| `b3sum FILE`           | prints the BLAKE3 hash of `FILE`                                  |
-| `cache-dir`            | prints the absolute path to the user's DotSlash cache and exits   |
-| `create-url-entry URL` | generates the DotSlash JSON snippet for the artifact at the URL   |
-| `parse DOTSLASH_FILE`  | parses `DOTSLASH_FILE` and prints the data as pure JSON to stdout |
-| `sha256 FILE`          | prints the SHA-256 hash of `FILE`                                 |
+| command                | description                                                                          |
+| ---------------------- | ------------------------------------------------------------------------------------ |
+| `b3sum FILE`           | prints the BLAKE3 hash of `FILE`                                                     |
+| `cache-dir`            | prints the absolute path to the user's DotSlash cache and exits                      |
+| `create-url-entry URL` | generates the DotSlash JSON snippet for the artifact at the URL                      |
+| `fetch DOTSLASH_FILE`  | fetches the artifact identified by `DOTSLASH_FILE` if it is not already in the cache |
+| `parse DOTSLASH_FILE`  | parses `DOTSLASH_FILE` and prints the data as pure JSON to stdout                    |
+| `sha256 FILE`          | prints the SHA-256 hash of `FILE`                                                    |
 
 ## Environment Variables
 
