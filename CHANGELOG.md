@@ -2,6 +2,19 @@
 
 ## Next (TBD)
 
+- Add your feature here!
+
+## v0.4.0 (2024-04-10)
+
+- Added support for `.zip` archives:
+  <https://github.com/facebook/dotslash/pull/13>
+- Added --fetch subcommand <https://github.com/facebook/dotslash/pull/20>
+- Fixed new clippy lints from Rust 1.77
+  <https://github.com/facebook/dotslash/commit/018ee4cc189a6e7b05b9e53273f5be3cc7a81fd6>
+- Updated various dependencies
+
+## v0.3.0 (2024-03-25)
+
 - Added support for `.tar.xz` archives:
   <https://github.com/facebook/dotslash/pull/12>
 - Ensure the root of the artifact directory is read-only on UNIX:
