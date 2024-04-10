@@ -751,6 +751,34 @@ fn create_url_entry_tar_zst() {
 }
 
 //
+// "fetch" Command
+//
+
+#[test]
+fn fetch_simple() {
+    let test_env = DotSlashTestEnv::try_new().unwrap();
+
+    let assert = test_env
+        .dotslash_command()
+        .arg("--")
+        .arg("fetch")
+        .arg("tests/fixtures/http__tar_gz__print_argv")
+        .assert()
+        .code(0)
+        .stderr_eq("")
+        .stdout_matches(
+            "[DOTSLASHCACHEDIR]/[PACKTGZHTTPARCHIVECACHEDIR]/subdir/[PRINTARGVEXECUTABLE]\n",
+        );
+
+    let artifact = std::str::from_utf8(&assert.get_output().stdout)
+        .unwrap()
+        .trim_end();
+
+    let metadata = std::fs::metadata(artifact).unwrap();
+    assert!(metadata.is_file());
+}
+
+//
 // "parse" Command
 //
 
