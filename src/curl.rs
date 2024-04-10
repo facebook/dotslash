@@ -54,8 +54,12 @@ const CURL_RETRYABLE_EXIT_CODES: &[i32] = &[
 // another error with the HTTP error code being 400 or above.
 // This return code only appears if -f, --fail is used.
 // https://curl.haxx.se/docs/manpage.html#22
+// https://curl.haxx.se/docs/manpage.html#56
 // https://curl.haxx.se/docs/manpage.html#-f
-const CURL_HTTP_RETURNED_ERROR_EXIT_CODE: i32 = 22;
+const CURL_HTTP_RETURNED_ERROR_EXIT_CODES: &[i32] = &[
+    22, // curl <8.7
+    56, // curl >=8.7
+];
 
 enum CurlRequestType<'a> {
     /// String is the argument to use with --output.
@@ -139,10 +143,12 @@ impl CurlError {
     }
 
     fn from_command_output(command: &Command, output: Output) -> CurlError {
-        if output.status.code() == Some(CURL_HTTP_RETURNED_ERROR_EXIT_CODE) {
-            if let Some(http_status) = parse_http_returned_error(&output.stderr) {
-                return CurlError::HttpStatus(command.into(), HttpStatus::from(http_status));
-            };
+        if let Some(exit_code) = output.status.code() {
+            if CURL_HTTP_RETURNED_ERROR_EXIT_CODES.contains(&exit_code) {
+                if let Some(http_status) = parse_http_returned_error(&output.stderr) {
+                    return CurlError::HttpStatus(command.into(), HttpStatus::from(http_status));
+                }
+            }
         }
 
         CurlError::CurlExit(command.into(), CurlExit(output))
