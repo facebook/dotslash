@@ -295,6 +295,9 @@ fn parse_http_returned_error(stderr: &[u8]) -> Option<usize> {
     // "The requested URL returned error: %d\n" (or \r\n on Windows)
     // https://github.com/curl/curl/blob/eab2f95c0de9/lib/http.c#L627-L630
     //
+    // For curl <8.7, the libcurl error code was always 22.
+    // For curl >=8.7, the libcurl error code is 22 for some and 56 for others.
+    //
     // Older versions include a "reason" string after the code for HTTP/1
     // requests. https://github.com/curl/curl/issues/12159
     //
@@ -303,8 +306,12 @@ fn parse_http_returned_error(stderr: &[u8]) -> Option<usize> {
     std::str::from_utf8(stderr)
         .ok()?
         .lines()
-        .next()?
-        .trim_start_matches("curl: (22) The requested URL returned error: ")
+        .next()
+        .map(|line| {
+            None.or_else(|| line.strip_prefix("curl: (22) The requested URL returned error: "))
+                .or_else(|| line.strip_prefix("curl: (56) The requested URL returned error: "))
+                .unwrap_or(line)
+        })?
         .split_ascii_whitespace()
         .next()?
         .parse::<usize>()
@@ -333,6 +340,10 @@ mod tests {
             parse_http_returned_error(
                 b"curl: (22) The requested URL returned error: 429 Too Many Requests\n",
             ),
+            Some(429),
+        );
+        assert_eq!(
+            parse_http_returned_error(b"curl: (56) The requested URL returned error: 429"),
             Some(429),
         );
         assert_eq!(
