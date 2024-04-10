@@ -4,6 +4,11 @@
 
 - Add your feature here!
 
+## v0.4.1 (2024-04-10)
+
+- Fixed macos builds
+  <https://github.com/facebook/dotslash/commit/25cbf80242d8d51d40ae7284738b376e98cbcc1d>
+
 ## v0.4.0 (2024-04-10)
 
 - Added support for `.zip` archives:
