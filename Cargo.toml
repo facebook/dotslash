@@ -3,7 +3,10 @@
 [package]
 name = "dotslash"
 version = "0.4.1"
-authors = ["Michael Bolin <bolinfest@gmail.com>", "Andres Suarez <zertosh@gmail.com>"]
+authors = [
+    "Michael Bolin <bolinfest@gmail.com>",
+    "Andres Suarez <zertosh@gmail.com>",
+]
 edition = "2021"
 rust-version = "1.75"
 description = "Command-line tool to facilitate fetching an executable, caching it, and then running it."
@@ -12,7 +15,13 @@ homepage = "https://dotslash-cli.com"
 repository = "https://github.com/facebook/dotslash"
 license = "MIT OR Apache-2.0"
 keywords = ["cli"]
-include = ["/LICENSE-APACHE", "/LICENSE-MIT", "/README.md", "/src/**", "/tests/**"]
+include = [
+    "/LICENSE-APACHE",
+    "/LICENSE-MIT",
+    "/README.md",
+    "/src/**",
+    "/tests/**",
+]
 
 [[test]]
 name = "dotslash_tests_rs"
@@ -24,12 +33,14 @@ blake3 = { version = "=1.5.0", features = ["traits-preview"] }
 dirs = "2.0"
 dunce = "1.0.2"
 filetime = "0.2.9"
-flate2 = { version = "1.0.33", features = ["rust_backend"], default-features = false }
+flate2 = { version = "1.0.33", features = [
+    "rust_backend",
+], default-features = false }
 fs2 = "0.4"
 serde = { version = "1.0.185", features = ["derive", "rc"] }
 serde_jsonrc = "0.1"
 sha2 = "0.10.6"
-tar = "0.4.40"
+binstall-tar = "0.4.39"
 tempfile = "3.8"
 thiserror = "1.0.49"
 xz2 = { version = "0.1.7", features = ["static"] }
@@ -39,7 +50,10 @@ zstd = { version = "0.13", features = ["experimental", "zstdmt"] }
 [dev-dependencies]
 assert_matches = "1.5"
 buck-resources = "1"
-snapbox = { version = "0.4.16", features = ["color-auto", "diff"], default-features = false }
+snapbox = { version = "0.4.16", features = [
+    "color-auto",
+    "diff",
+], default-features = false }
 
 [target.'cfg(target_os = "linux")'.dependencies]
 nix = "0.25"

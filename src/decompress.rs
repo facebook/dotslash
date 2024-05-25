@@ -45,15 +45,18 @@ pub fn untar(tar_file: &Path, destination_dir: &Path, is_tar_gz: bool) -> io::Re
     let file = fs_ctx::file_open(tar_file)?;
     if is_tar_gz {
         let decoder = flate2::read::GzDecoder::new(file);
-        let archive = tar::Archive::new(decoder);
+        let archive = binstall_tar::Archive::new(decoder);
         unpack(archive, &destination_dir)
     } else {
-        let archive = tar::Archive::new(file);
+        let archive = binstall_tar::Archive::new(file);
         unpack(archive, &destination_dir)
     }
 }
 
-pub fn unpack<R: Read>(mut archive: tar::Archive<R>, destination_dir: &Path) -> io::Result<()> {
+pub fn unpack<R: Read>(
+    mut archive: binstall_tar::Archive<R>,
+    destination_dir: &Path,
+) -> io::Result<()> {
     archive.set_preserve_permissions(true);
     archive.set_preserve_mtime(true);
     archive.unpack(destination_dir)
