@@ -16,10 +16,10 @@ use std::path::PathBuf;
 
 use anyhow::format_err;
 use anyhow::Context as _;
+use binstall_tar::Archive;
 use serde_jsonrc::value::Value;
 use sha2::Digest as _;
 use sha2::Sha256;
-use tar::Archive;
 use xz2::read::XzDecoder;
 use zstd::stream::read::Decoder;
 
