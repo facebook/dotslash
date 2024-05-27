@@ -15,7 +15,7 @@ const darkCodeTheme = require('prism-react-renderer/themes/dracula');
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'throw',
   trailingSlash: true,
-  // TODO: add a favicon once we have an approved logo
+  favicon: 'img/favicon-on-black.svg',
   organizationName: 'facebook',
   projectName: 'dotslash',
   customFields: {
@@ -49,12 +49,19 @@ const darkCodeTheme = require('prism-react-renderer/themes/dracula');
     ({
       navbar: {
         title: 'DotSlash',
+        logo: {
+          alt: 'DotSlash logo',
+          src: 'img/favicon-on-black.svg',
+          style: {
+            'border-radius': '5px',
+          }
+        },
         items: [
           {
             type: 'doc',
             docId: 'index',
             position: 'left',
-            label: 'Introduction',
+            label: 'Docs',
           },
           {
             href: 'https://github.com/facebook/dotslash',
