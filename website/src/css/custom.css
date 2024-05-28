@@ -10,7 +10,10 @@
 
 /* You can override the default Infima variables here. */
 :root {
-  --ifm-color-primary: #008F11;
+  /* Overrides introduced to match logo. */
+  --ifm-hero-background-color: #343434;
+
+  /* Original overrides from Docusaurus template */
   --ifm-color-primary-dark: rgb(33, 175, 144);
   --ifm-color-primary-darker: rgb(31, 165, 136);
   --ifm-color-primary-darkest: rgb(26, 136, 112);
@@ -20,11 +23,27 @@
   --ifm-code-font-size: 95%;
 }
 
+.table-of-contents__link:hover {
+    color: var(--ifm-link-color);
+}
+
 .docusaurus-highlight-code-line {
   background-color: rgba(0, 0, 0, 0.1);
   display: block;
   margin: 0 calc(-1 * var(--ifm-pre-padding));
   padding: 0 var(--ifm-pre-padding);
+}
+
+:root[data-theme='light'] {
+  --ifm-color-primary: #343434;
+  --ifm-link-color: #14C7B8;
+  --ifm-toc-link-hover-color: #14C7B8;
+  --ifm-navbar-link-hover-color: #14C7B8;
+}
+
+.hero--primary {
+  --ifm-hero-background-color: #343434;
+  --ifm-hero-text-color: #fff;
 }
 
 html[data-theme='dark'] .docusaurus-highlight-code-line {
