@@ -38,6 +38,7 @@ zstd = { version = "0.13", features = ["experimental", "zstdmt"] }
 
 [dev-dependencies]
 assert_matches = "1.5"
+buck-resources = "1"
 snapbox = { version = "0.4.16", features = ["color-auto", "diff"], default-features = false }
 
 [target.'cfg(target_os = "linux")'.dependencies]
