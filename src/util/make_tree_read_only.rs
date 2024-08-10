@@ -22,7 +22,7 @@ pub fn make_tree_entries_read_only(folder: &Path) -> anyhow::Result<()> {
 
     for entry in read_dir(folder)? {
         let entry = entry?;
-        let metadata = symlink_metadata(&entry.path())?;
+        let metadata = symlink_metadata(entry.path())?;
         if metadata.is_symlink() {
             continue;
         } else if metadata.is_dir() {
@@ -31,7 +31,7 @@ pub fn make_tree_entries_read_only(folder: &Path) -> anyhow::Result<()> {
 
         let mut perms = metadata.permissions();
         perms.set_readonly(true);
-        set_permissions(&entry.path(), perms)?;
+        set_permissions(entry.path(), perms)?;
     }
 
     Ok(())
