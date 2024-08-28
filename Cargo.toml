@@ -24,7 +24,7 @@ blake3 = { version = "=1.5.0", features = ["traits-preview"] }
 dirs = "2.0"
 dunce = "1.0.2"
 filetime = "0.2.9"
-flate2 = { version = "1.0.26", features = ["rust_backend"], default-features = false }
+flate2 = { version = "1.0.33", features = ["rust_backend"], default-features = false }
 fs2 = "0.4"
 serde = { version = "1.0.185", features = ["derive", "rc"] }
 serde_jsonrc = "0.1"
