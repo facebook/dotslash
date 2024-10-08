@@ -51,3 +51,6 @@ nix = "0.25"
 lto = true
 codegen-units = 1
 strip = true
+
+[lints]
+rust = { unexpected_cfgs = { check-cfg = ["cfg(fbcode_build)"], level = "warn" } }
