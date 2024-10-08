@@ -13,6 +13,7 @@ import os
 import shutil
 import subprocess
 import tempfile
+import time
 import unittest
 from contextlib import contextmanager
 from pathlib import Path
@@ -135,6 +136,11 @@ class DotSlashWindowsShimTest(unittest.TestCase):
 
     def tearDown(self) -> None:
         os.environ["PATH"] = self._original_path
+        for _ in range(3):
+            try:
+                return self._tempdir.cleanup()
+            except PermissionError:
+                time.sleep(1)
         self._tempdir.cleanup()
 
     def test_args_none(self) -> None:
