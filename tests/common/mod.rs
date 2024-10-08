@@ -175,6 +175,7 @@ impl DotSlashTestEnv {
         Ok(self)
     }
 
+    #[allow(dead_code)]
     pub fn dotslash_cache(&self) -> &Path {
         &self.tempdir_path
     }

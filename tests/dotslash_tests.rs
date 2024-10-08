@@ -636,40 +636,39 @@ caused by: expected no arguments but received some
 // "clean" Command
 //
 
-/// TODO: The "clean" command currently has a bug where it will fail if any of
-/// the entries in the cache are read-only. Re-enable this test once that has
-/// been fixed.
-#[ignore]
-#[test]
-fn clean_command_ok() {
-    let test_env = DotSlashTestEnv::try_new().unwrap();
+// TODO: The "clean" command currently has a bug where it will fail if any of
+// the entries in the cache are read-only. Re-enable this test once that has
+// been fixed.
+// #[test]
+// fn clean_command_ok() {
+//     let test_env = DotSlashTestEnv::try_new().unwrap();
 
-    let cache_dir = test_env.dotslash_cache();
+//     let cache_dir = test_env.dotslash_cache();
 
-    // Cache dir exists, but should be empty.
-    assert!(cache_dir.exists());
-    let is_empty = std::fs::read_dir(cache_dir).unwrap().next().is_none();
-    assert!(is_empty);
+//     // Cache dir exists, but should be empty.
+//     assert!(cache_dir.exists());
+//     let is_empty = std::fs::read_dir(cache_dir).unwrap().next().is_none();
+//     assert!(is_empty);
 
-    test_env
-        .dotslash_command()
-        .arg("tests/fixtures/http__tar_gz__print_argv")
-        .assert()
-        .success();
+//     test_env
+//         .dotslash_command()
+//         .arg("tests/fixtures/http__tar_gz__print_argv")
+//         .assert()
+//         .success();
 
-    assert!(cache_dir.exists());
+//     assert!(cache_dir.exists());
 
-    test_env
-        .dotslash_command()
-        .arg("--")
-        .arg("clean")
-        .assert()
-        .code(0)
-        .stdout_eq("")
-        .stderr_matches("Cleaning `[DOTSLASHCACHEDIR]`\n");
+//     test_env
+//         .dotslash_command()
+//         .arg("--")
+//         .arg("clean")
+//         .assert()
+//         .code(0)
+//         .stdout_eq("")
+//         .stderr_matches("Cleaning `[DOTSLASHCACHEDIR]`\n");
 
-    assert!(!cache_dir.exists());
-}
+//     assert!(!cache_dir.exists());
+// }
 
 #[test]
 fn clean_command_extra_args() {
