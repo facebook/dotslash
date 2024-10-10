@@ -81,6 +81,52 @@ jobs:
         shell: bash
         run: gh release upload "${GITHUB_REF#refs/tags/}" "dotslash-ubuntu-22.04.arm64.${GITHUB_REF#refs/tags/}.tar.gz"
 
+  linux-musl-x86_64:
+    needs: create-release
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-unknown-linux-musl
+      - name: Install musl build tools
+        run: |
+          sudo apt update
+          sudo apt install -y musl-tools
+      - run: cargo test
+      - run: cargo clippy
+      - run: cargo build --target x86_64-unknown-linux-musl --release
+      - run: tar -czvf "dotslash-linux-musl.x86_64.${GITHUB_REF#refs/tags/}.tar.gz" -C target/x86_64-unknown-linux-musl/release dotslash
+      - name: upload release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: gh release upload "${GITHUB_REF#refs/tags/}" "dotslash-linux-musl.x86_64.${GITHUB_REF#refs/tags/}.tar.gz"
+
+  linux-musl-arm64:
+    needs: create-release
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-unknown-linux-musl
+      - name: Install aarch64 musl build tools
+        run: |
+          sudo apt update
+          sudo apt install -y musl-tools gcc-aarch64-linux-gnu
+      - run: cargo build --target aarch64-unknown-linux-musl --release
+        env:
+          CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER: aarch64-linux-gnu-gcc
+      - run: tar -czvf "dotslash-linux-musl.arm64.${GITHUB_REF#refs/tags/}.tar.gz" -C target/aarch64-unknown-linux-musl/release dotslash
+      - name: upload release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: gh release upload "${GITHUB_REF#refs/tags/}" "dotslash-linux-musl.arm64.${GITHUB_REF#refs/tags/}.tar.gz"
+
   windows:
     needs: create-release
     runs-on: windows-latest
