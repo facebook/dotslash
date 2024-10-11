@@ -2,7 +2,11 @@
 
 ## Next (TBD)
 
-- Add your feature here!
+## v0.4.2 (2024-10-11)
+
+- Added MUSL Linux releases: <https://github.com/facebook/dotslash/pull/34>
+- Many dependency updates, but key among them is
+  [`tar` 0.4.40 to 0.4.42](https://github.com/facebook/dotslash/commit/4ee240e788eaaa7ddad15a835819fb624d1f11f6).
 
 ## v0.4.1 (2024-04-10)
 
