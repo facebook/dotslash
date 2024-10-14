@@ -113,13 +113,11 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: aarch64-unknown-linux-musl
-      - name: Install aarch64 musl build tools
-        run: |
-          sudo apt update
-          sudo apt install -y musl-tools gcc-aarch64-linux-gnu
-      - run: cargo build --target aarch64-unknown-linux-musl --release
-        env:
-          CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER: aarch64-linux-gnu-gcc
+      - uses: actions-rs/install@v0.1
+        with:
+          crate: cross
+          version: latest
+      - run: cross build --target aarch64-unknown-linux-musl --release
       - run: tar -czvf "dotslash-linux-musl.arm64.${GITHUB_REF#refs/tags/}.tar.gz" -C target/aarch64-unknown-linux-musl/release dotslash
       - name: upload release
         env:
