@@ -2,6 +2,12 @@
 
 ## Next (TBD)
 
+## v0.4.3 (2024-10-13)
+
+- Fix MUSL aarch64 linux releases:
+  <https://github.com/facebook/dotslash/pull/35>
+  - v0.4.2 was never actually published because of this.
+
 ## v0.4.2 (2024-10-11)
 
 - Added MUSL Linux releases: <https://github.com/facebook/dotslash/pull/34>
