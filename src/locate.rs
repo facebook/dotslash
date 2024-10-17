@@ -20,7 +20,7 @@ use crate::dotslash_cache::DotslashCache;
 use crate::platform::SUPPORTED_PLATFORM;
 use crate::util::display::ListOf;
 
-pub(crate) fn locate_artifact(
+pub fn locate_artifact(
     dotslash_data: &str,
     dotslash_cache: &DotslashCache,
 ) -> anyhow::Result<(ArtifactEntry, ArtifactLocation)> {
@@ -58,8 +58,8 @@ pub(crate) fn locate_artifact(
 /// tmpwatch or tmpreaper. Those tools work better using the mtime rather than
 /// atime which is why we update the mtime. But this doesn't work on
 /// Windows sometimes.
-#[cfg_attr(windows, allow(dead_code))]
-pub(crate) fn update_artifact_mtime(executable: &Path) {
+#[cfg_attr(windows, expect(dead_code))]
+pub fn update_artifact_mtime(executable: &Path) {
     drop(filetime::set_file_mtime(
         executable,
         filetime::FileTime::now(),

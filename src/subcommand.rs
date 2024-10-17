@@ -145,7 +145,7 @@ fn _run_subcommand(subcommand: &Subcommand, args: &mut ArgsOs) -> anyhow::Result
 
         Subcommand::CreateUrlEntry => {
             let url = take_exactly_one_arg(args)?;
-            print_entry_for_url(&url)?
+            print_entry_for_url(&url)?;
         }
 
         Subcommand::CacheDir => {

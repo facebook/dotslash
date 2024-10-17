@@ -15,6 +15,7 @@ use std::process::Output;
 
 /// TODO
 #[derive(Debug)]
+#[must_use]
 pub struct CommandDisplay<'a>(&'a Command);
 
 impl<'a> CommandDisplay<'a> {
@@ -37,6 +38,7 @@ impl fmt::Display for CommandDisplay<'_> {
 
 /// TODO
 #[derive(Debug)]
+#[must_use]
 pub struct CommandStderrDisplay<'a>(&'a Output);
 
 impl<'a> CommandStderrDisplay<'a> {

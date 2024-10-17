@@ -169,14 +169,14 @@ impl CurlError {
 }
 
 impl CurlCommand<'_> {
-    pub fn new(url: &OsStr) -> CurlCommand {
+    pub fn new(url: &OsStr) -> CurlCommand<'_> {
         CurlCommand {
             url,
             retry: NUM_TRANSIENT_ERROR_CURL_MAX_ATTEMPTS,
         }
     }
 
-    pub fn get_request(&self, target: &Path, context: &FetchContext) -> Result<(), CurlError> {
+    pub fn get_request(&self, target: &Path, context: &FetchContext<'_>) -> Result<(), CurlError> {
         // Because `target` is ultimately used with Command.args(), we should make
         // it possible to use a non-utf8 value, as unlikely as it is, in practice.
         let output_arg = target.to_str().unwrap();
@@ -211,6 +211,7 @@ impl CurlCommand<'_> {
         Ok(())
     }
 
+    #[expect(clippy::unused_self)]
     fn make_request(&self, curl_command: &mut Command) -> Result<Vec<u8>, CurlError> {
         let mut retries = 1..=NUM_RETRYABLE_CURL_MAX_ATTEMPTS;
         loop {
@@ -248,7 +249,7 @@ impl CurlCommand<'_> {
         }
     }
 
-    fn curl_command(&self, url: &OsStr, request_type: &CurlRequestType) -> Command {
+    fn curl_command(&self, url: &OsStr, request_type: &CurlRequestType<'_>) -> Command {
         let mut curl_command = Command::new("curl");
 
         // https://cygwin.com/cygwin-ug-net/using-cygwinenv.html

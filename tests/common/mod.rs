@@ -19,7 +19,7 @@ use snapbox::Substitutions;
 pub mod ci;
 
 #[path = "../../src/platform.rs"]
-#[allow(dead_code)]
+#[expect(dead_code)]
 mod platform;
 
 const PACK_TGZ_HTTP_ARCHIVE_CACHE_DIR: &str = "cf/df86e55cbbd2455fd1e36468c2b1ff7f8998d4";
@@ -175,7 +175,7 @@ impl DotSlashTestEnv {
         Ok(self)
     }
 
-    #[allow(dead_code)]
+    #[expect(dead_code)]
     pub fn dotslash_cache(&self) -> &Path {
         &self.tempdir_path
     }

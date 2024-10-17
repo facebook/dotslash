@@ -92,12 +92,12 @@ pub fn download_artifact<P: ProviderFactory>(
             &file_lock,
             artifact_entry,
         ) {
-            Ok(_) => match verify_artifact(&fetch_destination, artifact_entry) {
-                Ok(_) => {
+            Ok(()) => match verify_artifact(&fetch_destination, artifact_entry) {
+                Ok(()) => {
                     unpack_verified_artifact(
                         &fetch_destination,
                         temp_dir_to_mv.path(),
-                        &artifact_entry.format,
+                        artifact_entry.format,
                         artifact_entry.path.as_str(),
                     )?;
                     if artifact_entry.readonly {
@@ -212,7 +212,7 @@ fn verify_artifact(
 fn unpack_verified_artifact(
     fetched_artifact: &Path,
     temp_dir_to_mv: &Path,
-    format: &ArtifactFormat,
+    format: ArtifactFormat,
     artifact_entry_path: &str,
 ) -> anyhow::Result<()> {
     match &format.extraction_policy() {

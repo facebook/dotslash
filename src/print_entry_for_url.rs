@@ -28,7 +28,7 @@ type LooseArtifactEntry = ArtifactEntry<String>;
 
 /// This function creates an approximate ArtifactEntry for the specified URL
 /// and writes it to stdout as pretty-printed JSON.
-pub(crate) fn print_entry_for_url(url: &OsStr) -> anyhow::Result<()> {
+pub fn print_entry_for_url(url: &OsStr) -> anyhow::Result<()> {
     let curl_cmd = CurlCommand::new(url);
     let url = url
         .to_str()

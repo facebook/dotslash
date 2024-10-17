@@ -26,7 +26,8 @@ pub fn make_tree_entries_read_only(folder: &Path) -> io::Result<()> {
         let metadata = symlink_metadata(entry.path())?;
         if metadata.is_symlink() {
             continue;
-        } else if metadata.is_dir() {
+        }
+        if metadata.is_dir() {
             make_tree_entries_read_only(&entry.path())?;
         }
 

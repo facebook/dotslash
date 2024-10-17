@@ -32,7 +32,7 @@ fn main() {
         Ok(exit_code) => std::process::exit(exit_code.code().unwrap_or(1)),
         Err(err) => {
             if err.kind() == io::ErrorKind::NotFound {
-                eprintln!("dotslash-windows-shim: dotslash executable not found.")
+                eprintln!("dotslash-windows-shim: dotslash executable not found.");
             } else {
                 eprintln!("dotslash-windows-shim: `{}`.", err);
             };

@@ -10,7 +10,7 @@
 use serde::Deserialize;
 use serde::Serialize;
 
-#[derive(Default, Deserialize, Serialize, Debug, PartialEq, Eq)]
+#[derive(Copy, Clone, Default, Deserialize, Serialize, Debug, PartialEq, Eq)]
 pub enum ArtifactFormat {
     /// Artifact is a single file with no compression applied.
     #[default]
@@ -55,7 +55,7 @@ pub enum ArchiveFormat {
 }
 
 impl ArtifactFormat {
-    pub fn extraction_policy(&self) -> (Option<DecompressStep>, Option<ArchiveFormat>) {
+    pub fn extraction_policy(self) -> (Option<DecompressStep>, Option<ArchiveFormat>) {
         match self {
             Self::Plain => (None, None),
             Self::Gz => (Some(DecompressStep::Gzip), None),

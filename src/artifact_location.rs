@@ -78,7 +78,7 @@ pub fn determine_location(
         .join(key_prefix)
         .join(key_rest);
 
-    let mut executable = artifact_directory.to_owned();
+    let mut executable = artifact_directory.clone();
     executable.extend(Path::new(artifact_entry.path.as_str()));
     let lock_path = dotslash_cache.locks_dir(key_prefix).join(key_rest);
 

@@ -76,7 +76,6 @@ fn get_dotslash_cache() -> PathBuf {
 
     // `dirs` returns the preferred cache directory for the user and the
     // platform based on these rules: https://docs.rs/dirs/*/dirs/fn.cache_dir.html
-    #[cfg_attr(windows, allow(clippy::let_and_return))]
     let cache_dir = match dirs::cache_dir() {
         Some(cache_dir) => cache_dir.join("dotslash"),
         None => panic!("could not find DotSlash root - specify $DOTSLASH_CACHE"),
@@ -109,7 +108,7 @@ fn get_dotslash_cache() -> PathBuf {
     cache_dir
 }
 
-#[cfg_attr(windows, allow(dead_code))]
+#[cfg_attr(windows, expect(dead_code))]
 fn named_cache_dir_at<P: Into<PathBuf>>(dir: P) -> PathBuf {
     let mut name = OsString::from("dotslash-");
 

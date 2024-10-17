@@ -88,7 +88,7 @@ pub fn display_progress(
 
 fn should_end_progress(recv: &mpsc::Receiver<()>) -> bool {
     match recv.try_recv() {
-        Ok(_) | Err(mpsc::TryRecvError::Disconnected) => true,
+        Ok(()) | Err(mpsc::TryRecvError::Disconnected) => true,
         Err(mpsc::TryRecvError::Empty) => false,
     }
 }

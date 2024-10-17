@@ -14,7 +14,7 @@ use crate::http_provider::HttpProvider;
 use crate::provider::Provider;
 use crate::provider::ProviderFactory;
 
-pub(crate) struct DefaultProviderFactory;
+pub struct DefaultProviderFactory;
 
 impl ProviderFactory for DefaultProviderFactory {
     fn get_provider(&self, provider_type: &str) -> anyhow::Result<Box<dyn Provider>> {

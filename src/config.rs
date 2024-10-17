@@ -51,6 +51,7 @@ fn readonly_default_as_true() -> bool {
     true
 }
 
+#[expect(clippy::trivially_copy_pass_by_ref)]
 fn is_true(b: &bool) -> bool {
     *b
 }
