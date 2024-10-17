@@ -43,7 +43,6 @@ pub fn chmodx<P: AsRef<Path>>(path: P) -> io::Result<()> {
 mod tests {
     use std::fs;
 
-    use assert_matches::assert_matches;
     use tempfile::NamedTempFile;
 
     use super::*;
@@ -62,9 +61,8 @@ mod tests {
                 before,
             );
 
-            let result = chmodx(&temp_path);
+            chmodx(&temp_path)?;
 
-            assert_matches!(result, Ok(()));
             assert_eq!(
                 fs::metadata(&temp_path)?.permissions().mode() & 0o777,
                 after,

@@ -169,21 +169,6 @@ mod tests {
             source.raw_os_error(),
             if cfg!(windows) { Some(3) } else { Some(2) },
         );
-
-        let chain = anyhow::Chain::new(&err)
-            .map(|x| format!("{}", &x))
-            .collect::<Vec<_>>();
-        assert_eq!(
-            chain,
-            &[
-                "failed to get metadata for `path/to/fake/file`",
-                if cfg!(windows) {
-                    "The system cannot find the path specified. (os error 3)"
-                } else {
-                    "No such file or directory (os error 2)"
-                },
-            ],
-        );
     }
 
     #[test]

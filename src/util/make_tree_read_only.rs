@@ -7,6 +7,7 @@
  * of this source tree.
  */
 
+use std::io;
 use std::path::Path;
 
 use crate::util::fs_ctx::read_dir;
@@ -17,7 +18,7 @@ use crate::util::fs_ctx::symlink_metadata;
 /// recursively makes all entries within it read-only, but it does *not* change
 /// the permissions on the folder itself. Symlinks are not followed and no
 /// attempt is made to change their permissions.
-pub fn make_tree_entries_read_only(folder: &Path) -> anyhow::Result<()> {
+pub fn make_tree_entries_read_only(folder: &Path) -> io::Result<()> {
     debug_assert!(folder.is_dir());
 
     for entry in read_dir(folder)? {
