@@ -9,7 +9,6 @@
 
 use std::collections::HashMap;
 
-use anyhow::format_err;
 use anyhow::Context as _;
 use serde::Deserialize;
 use serde::Serialize;
@@ -72,7 +71,9 @@ pub fn parse_file(data: &str) -> anyhow::Result<(Value, ConfigFile)> {
             rest.strip_prefix("\r\n")
                 .or_else(|| rest.strip_prefix('\n'))
         })
-        .with_context(|| format_err!("DotSlash file must start with `{REQUIRED_HEADER}`"))?;
+        .with_context(|| {
+            anyhow::format_err!("DotSlash file must start with `{REQUIRED_HEADER}`")
+        })?;
 
     let value = serde_jsonrc::from_str::<Value>(data)?;
     let config_file = ConfigFile::deserialize(&value)?;

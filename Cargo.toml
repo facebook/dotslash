@@ -21,6 +21,7 @@ path = "tests/dotslash_tests.rs"
 [dependencies]
 anyhow = "1.0.86"
 blake3 = { version = "=1.5.0", features = ["traits-preview"] }
+digest = "0.10"
 dirs = "2.0"
 dunce = "1.0.2"
 filetime = "0.2.9"

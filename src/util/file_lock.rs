@@ -10,7 +10,6 @@
 //! Wrapper around `fs2::lock_exclusive`.
 
 use std::fs::File;
-use std::fs::OpenOptions;
 use std::io;
 use std::path::Path;
 use std::path::PathBuf;
@@ -39,7 +38,7 @@ impl FileLock {
         P: AsRef<Path>,
     {
         fn inner(path: &Path) -> Result<FileLock, FileLockError> {
-            let lock_file = OpenOptions::new()
+            let lock_file = File::options()
                 .read(true)
                 .write(true)
                 .create(true)

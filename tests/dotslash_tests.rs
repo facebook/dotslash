@@ -13,6 +13,8 @@ mod common;
 
 use std::ffi::OsString;
 
+use tempfile::NamedTempFile;
+
 use crate::common::ci;
 use crate::common::DotSlashTestEnv;
 
@@ -576,7 +578,7 @@ caused by: expected no arguments but received some
 
 #[test]
 fn b3sum_command_ok() -> anyhow::Result<()> {
-    let tempfile = tempfile::NamedTempFile::new()?;
+    let tempfile = NamedTempFile::new()?;
     std::fs::write(tempfile.path(), "DotSlash Rulez!\n")?;
 
     DotSlashTestEnv::try_new()
@@ -841,7 +843,7 @@ caused by: [IOERRORNOTFOUND]
 
 #[test]
 fn sha256_command_ok() -> anyhow::Result<()> {
-    let tempfile = tempfile::NamedTempFile::new()?;
+    let tempfile = NamedTempFile::new()?;
     std::fs::write(tempfile.path(), "DotSlash Rulez!\n")?;
 
     DotSlashTestEnv::try_new()

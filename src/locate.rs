@@ -9,7 +9,6 @@
 
 use std::path::Path;
 
-use anyhow::format_err;
 use anyhow::Context as _;
 
 use crate::artifact_location::determine_location;
@@ -31,7 +30,7 @@ pub fn locate_artifact(
         .platforms
         .remove_entry(SUPPORTED_PLATFORM)
         .ok_or_else(|| {
-            format_err!(
+            anyhow::format_err!(
                 "expected platform `{}` - but found {}",
                 SUPPORTED_PLATFORM,
                 ListOf::new(config_file.platforms.keys()),

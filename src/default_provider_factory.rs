@@ -7,8 +7,6 @@
  * of this source tree.
  */
 
-use anyhow::format_err;
-
 use crate::github_release_provider::GitHubReleaseProvider;
 use crate::http_provider::HttpProvider;
 use crate::provider::Provider;
@@ -21,7 +19,9 @@ impl ProviderFactory for DefaultProviderFactory {
         match provider_type {
             "http" => Ok(Box::new(HttpProvider {})),
             "github-release" => Ok(Box::new(GitHubReleaseProvider {})),
-            _ => Err(format_err!("unknown provider type: `{}`", provider_type)),
+            _ => Err(anyhow::format_err!(
+                "unknown provider type: `{provider_type}`",
+            )),
         }
     }
 }

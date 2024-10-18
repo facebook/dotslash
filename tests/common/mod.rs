@@ -13,7 +13,9 @@ use std::path::PathBuf;
 
 use anyhow::Context as _;
 use snapbox::cmd::Command;
+use snapbox::Assert;
 use snapbox::Substitutions;
+use tempfile::TempDir;
 
 #[cfg_attr(fbcode_build, path = "fb/ci.rs")]
 pub mod ci;
@@ -91,7 +93,7 @@ pub struct DotSlashTestEnv {
     current_dir: PathBuf,
     substitutions: Substitutions,
     tempdir_path: PathBuf,
-    _tempdir: tempfile::TempDir,
+    _tempdir: TempDir,
 }
 
 impl DotSlashTestEnv {
@@ -119,7 +121,7 @@ impl DotSlashTestEnv {
             .context("current_dir is not UTF-8")?
             .to_owned();
 
-        let mut substitutions = snapbox::Substitutions::new();
+        let mut substitutions = Substitutions::new();
         substitutions.insert("[DOTSLASHCACHEDIR]", tempdir_str)?;
         substitutions.insert("[CURRENTDIR]", current_dir_str)?;
         substitutions.insert(
@@ -181,7 +183,7 @@ impl DotSlashTestEnv {
     }
 
     pub fn dotslash_command(&self) -> Command {
-        let assert = snapbox::Assert::new().substitutions(self.substitutions.clone());
+        let assert = Assert::new().substitutions(self.substitutions.clone());
         Command::new(ci::dotslash_bin())
             .current_dir(&self.current_dir)
             .env("DOTSLASH_CACHE", &self.tempdir_path)

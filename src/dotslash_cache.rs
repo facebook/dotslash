@@ -135,7 +135,7 @@ fn named_cache_dir_at<P: Into<PathBuf>>(dir: P) -> PathBuf {
 #[cfg(unix)]
 fn is_safe_to_own(path: &Path) -> bool {
     use std::io;
-    use std::os::unix::fs::MetadataExt;
+    use std::os::unix::fs::MetadataExt as _;
 
     for ancestor in path.ancestors() {
         // Use `symlink_metadata` and not `metadata` because we're not

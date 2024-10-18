@@ -13,9 +13,8 @@ use std::fmt;
 use std::io::BufReader;
 use std::str::FromStr;
 
-use anyhow::format_err;
 use anyhow::Context as _;
-use sha2::Digest as _;
+use digest::Digest as _;
 use sha2::Sha256;
 use thiserror::Error;
 
@@ -135,7 +134,9 @@ fn _run_subcommand(subcommand: &Subcommand, args: &mut ArgsOs) -> anyhow::Result
 
         Subcommand::Clean => {
             if args.next().is_some() {
-                return Err(format_err!("expected no arguments but received some"));
+                return Err(anyhow::format_err!(
+                    "expected no arguments but received some",
+                ));
             }
 
             let dotslash_cache = DotslashCache::new();
@@ -150,7 +151,9 @@ fn _run_subcommand(subcommand: &Subcommand, args: &mut ArgsOs) -> anyhow::Result
 
         Subcommand::CacheDir => {
             if args.next().is_some() {
-                return Err(format_err!("expected no arguments but received some"));
+                return Err(anyhow::format_err!(
+                    "expected no arguments but received some",
+                ));
             }
 
             let dotslash_cache = DotslashCache::new();
@@ -182,7 +185,9 @@ fn _run_subcommand(subcommand: &Subcommand, args: &mut ArgsOs) -> anyhow::Result
 
         Subcommand::Version => {
             if args.next().is_some() {
-                return Err(format_err!("expected no arguments but received some"));
+                return Err(anyhow::format_err!(
+                    "expected no arguments but received some",
+                ));
             }
 
             println!("DotSlash {}", env!("CARGO_PKG_VERSION"));
@@ -190,7 +195,9 @@ fn _run_subcommand(subcommand: &Subcommand, args: &mut ArgsOs) -> anyhow::Result
 
         Subcommand::Help => {
             if args.next().is_some() {
-                return Err(format_err!("expected no arguments but received some"));
+                return Err(anyhow::format_err!(
+                    "expected no arguments but received some",
+                ));
             }
 
             eprint!(
@@ -233,10 +240,10 @@ Learn more at {}
 
 fn take_exactly_one_arg(args: &mut ArgsOs) -> anyhow::Result<OsString> {
     match (args.next(), args.next()) {
-        (None, _) => Err(format_err!(
+        (None, _) => Err(anyhow::format_err!(
             "expected exactly one argument but received none"
         )),
-        (Some(_), Some(_)) => Err(format_err!(
+        (Some(_), Some(_)) => Err(anyhow::format_err!(
             "expected exactly one argument but received more"
         )),
         (Some(arg), None) => Ok(arg),

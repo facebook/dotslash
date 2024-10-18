@@ -14,8 +14,8 @@ use std::io::IsTerminal as _;
 use std::str::FromStr;
 
 use anyhow::Context as _;
-use serde_jsonrc::json;
-use sha2::Digest as _;
+use digest::Digest as _;
+use tempfile::NamedTempFile;
 
 use crate::artifact_path::ArtifactPath;
 use crate::config::ArtifactEntry;
@@ -38,7 +38,7 @@ pub fn print_entry_for_url(url: &OsStr) -> anyhow::Result<()> {
         content_length: 0,
         show_progress: std::io::stderr().is_terminal(),
     };
-    let tempfile = tempfile::NamedTempFile::new()?;
+    let tempfile = NamedTempFile::new()?;
     curl_cmd
         .get_request(tempfile.path(), &fetch_context)
         .with_context(|| format!("failed to fetch `{}`", url))?;
@@ -72,7 +72,7 @@ fn serialize_entry(url: &str, size: u64, hex_digest: impl Into<String>) -> anyho
         digest: hex_digest.into().try_into()?,
         format,
         path: ArtifactPath::from_str("TODO: specify the appropriate `path` for this artifact")?,
-        providers: vec![json!({"url": url})],
+        providers: vec![serde_jsonrc::json!({"url": url})],
         readonly: true,
     };
     let entry_json = serde_jsonrc::to_string_pretty(&entry)?;
@@ -126,7 +126,7 @@ mod tests {
                     "TODO: specify the appropriate `path` for this artifact"
                 )
                 .unwrap(),
-                providers: vec![json!({"url": url})],
+                providers: vec![serde_jsonrc::json!({"url": url})],
                 readonly: true,
             },
             entry,

@@ -126,6 +126,11 @@ pub fn rename<P: AsRef<Path>, Q: AsRef<Path>>(from: P, to: Q) -> io::Result<()> 
     fs::rename(&from, &to).map_err(|source| wrap2(source, "rename from", from, "to", to))
 }
 
+#[cfg_attr(not(dotslash_internal), expect(dead_code))]
+pub fn remove_file<P: AsRef<Path>>(path: P) -> io::Result<()> {
+    fs::remove_file(&path).map_err(|source| wrap1(source, "remove file", path))
+}
+
 pub fn remove_dir_all<P: AsRef<Path>>(path: P) -> io::Result<()> {
     fs::remove_dir_all(&path).map_err(|source| wrap1(source, "remove dir all", path))
 }

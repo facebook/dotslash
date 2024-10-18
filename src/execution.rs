@@ -15,7 +15,6 @@ use std::path::Path;
 use std::process::Command;
 use std::process::ExitCode;
 
-use anyhow::format_err;
 use anyhow::Context as _;
 
 use crate::dotslash_cache::DotslashCache;
@@ -36,7 +35,7 @@ pub fn run<P: ProviderFactory>(mut args: ArgsOs, provider_factory: &P) -> ExitCo
         match run_dotslash_file(&file_arg, args, provider_factory) {
             Ok(()) => return ExitCode::SUCCESS,
             Err(err) if err.is::<SubcommandError>() => err,
-            Err(err) => err.context(format_err!(
+            Err(err) => err.context(format!(
                 "problem with `{}`",
                 dunce::canonicalize(&file_arg)
                     .unwrap_or_else(|_| dunce::simplified(file_arg.as_ref()).to_owned())
@@ -44,7 +43,7 @@ pub fn run<P: ProviderFactory>(mut args: ArgsOs, provider_factory: &P) -> ExitCo
             )),
         }
     } else {
-        format_err!("must specify the path to a DotSlash file")
+        anyhow::format_err!("must specify the path to a DotSlash file")
     };
 
     eprintln!("dotslash error: {}", err);
@@ -132,7 +131,7 @@ fn run_dotslash_file<P: ProviderFactory>(
         format!("failed to execute `{}`", executable.display())
     };
 
-    Err(format_err!(execv_error).context(err_context))
+    Err(execv_error).context(err_context)
 }
 
 enum DotSlashFlagResult {

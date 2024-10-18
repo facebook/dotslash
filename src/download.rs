@@ -7,17 +7,15 @@
  * of this source tree.
  */
 
-use std::fs::set_permissions;
 use std::fs::File;
 use std::io::BufReader;
 use std::io::BufWriter;
 use std::path::Path;
 use std::path::PathBuf;
 
-use anyhow::format_err;
 use anyhow::Context as _;
+use digest::Digest as _;
 use serde_jsonrc::value::Value;
-use sha2::Digest as _;
 use sha2::Sha256;
 use tar::Archive;
 use xz2::read::XzDecoder;
@@ -121,7 +119,7 @@ pub fn download_artifact<P: ProviderFactory>(
                             fs_ctx::symlink_metadata(&artifact_location.artifact_directory)?;
                         let mut perms = metadata.permissions();
                         perms.set_readonly(true);
-                        set_permissions(&artifact_location.artifact_directory, perms)?;
+                        fs_ctx::set_permissions(&artifact_location.artifact_directory, perms)?;
                     }
                     return Ok(());
                 }
@@ -131,7 +129,7 @@ pub fn download_artifact<P: ProviderFactory>(
         }
     }
 
-    Err(format_err!(
+    Err(anyhow::format_err!(
         "no providers succeeded. warnings:\n{}",
         warnings.join("\n")
     ))
@@ -183,7 +181,7 @@ fn verify_artifact(
     drop(file);
 
     if size_in_bytes != artifact_entry.size {
-        return Err(format_err!(
+        return Err(anyhow::format_err!(
             "fetched artifact `{}` has incorrect size: {} bytes vs expected {} bytes",
             artifact_temp_location.display(),
             size_in_bytes,
@@ -193,7 +191,7 @@ fn verify_artifact(
 
     let digest = Digest::try_from(digest)?;
     if digest != artifact_entry.digest {
-        return Err(format_err!(
+        return Err(anyhow::format_err!(
             "fetched artifact `{}` has incorrect digest: {} vs expected {}",
             artifact_temp_location.display(),
             digest,
