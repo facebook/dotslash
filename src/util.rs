@@ -14,6 +14,7 @@ mod execv;
 mod file_lock;
 pub mod fs_ctx;
 mod http_status;
+mod is_not_found_error;
 mod make_tree_read_only;
 mod mv_no_clobber;
 
@@ -26,5 +27,6 @@ pub use self::execv::execv;
 pub use self::file_lock::FileLock;
 pub use self::file_lock::FileLockError;
 pub use self::http_status::HttpStatus;
+pub use self::is_not_found_error::is_not_found_error;
 pub use self::make_tree_read_only::make_tree_entries_read_only;
 pub use self::mv_no_clobber::mv_no_clobber;

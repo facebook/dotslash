@@ -15,6 +15,8 @@ use std::path::PathBuf;
 #[cfg(unix)]
 use nix::unistd::getuid;
 
+use crate::util;
+
 pub const DOTSLASH_CACHE_ENV: &str = "DOTSLASH_CACHE";
 
 #[derive(Debug)]
@@ -144,14 +146,7 @@ fn is_safe_to_own(path: &Path) -> bool {
             Ok(meta) => {
                 return getuid().as_raw() == meta.uid();
             }
-            Err(ref e) if e.kind() == io::ErrorKind::NotFound => {
-                continue;
-            }
-            // We tried to check `/a/b/c` but `/a/b` exists and it is not a
-            // directory (could be a file). For the purposes of ownership,
-            // we'll treat this case as if the path does not exist so we can
-            // keep checking.
-            Err(ref e) if e.raw_os_error() == Some(nix::errno::Errno::ENOTDIR as i32) => {
+            Err(ref e) if util::is_not_found_error(e) => {
                 continue;
             }
             Err(ref e) if e.kind() == io::ErrorKind::PermissionDenied => {

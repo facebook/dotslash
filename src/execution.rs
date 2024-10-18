@@ -85,7 +85,7 @@ fn run_dotslash_file<P: ProviderFactory>(
 
     let error = util::execv(&mut command);
 
-    if !is_file_not_found_error(&error) {
+    if !util::is_not_found_error(&error) {
         return Err(error).context(format!(
             "failed to execute `{}`",
             artifact_location.executable.display()
@@ -112,7 +112,7 @@ fn run_dotslash_file<P: ProviderFactory>(
 
     let executable = Path::new(command.get_program());
 
-    let err_context = if is_file_not_found_error(&execv_error) {
+    let err_context = if util::is_not_found_error(&execv_error) {
         if executable.exists() {
             // On Unix, if an interpreter in a shebang does not exist, the
             // exec returns ENOENT. It is unclear under what other
@@ -133,35 +133,6 @@ fn run_dotslash_file<P: ProviderFactory>(
     };
 
     Err(format_err!(execv_error).context(err_context))
-}
-
-fn is_file_not_found_error(error_from_execv: &io::Error) -> bool {
-    // If execv fails with ENOENT, that means we need to fetch the artifact.
-    // This is the most likely error returned by execv.
-    if error_from_execv.kind() == io::ErrorKind::NotFound {
-        return true;
-    }
-
-    // On Windows, the following is already covered by the NotFound check above.
-    #[cfg(unix)]
-    if let Some(raw_os_error) = error_from_execv.raw_os_error() {
-        // Note that this can happen if the program passed to execv is:
-        //
-        // ~/.cache/dotslash/obj/ha/xx/abc/extract/my_tool
-        //
-        // but the following is a regular file:
-        //
-        // ~/.cache/dotslash/obj/ha/xx/abc/extract
-        //
-        // This could happen if a previous release of DotSlash wrote this entry in the cache in
-        // a different way that is not consistent with the current directory structure. We
-        // should attempt to fetch the artifact again in this case.
-        if raw_os_error == nix::errno::Errno::ENOTDIR as i32 {
-            return true;
-        }
-    }
-
-    false
 }
 
 enum DotSlashFlagResult {
