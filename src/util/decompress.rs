@@ -11,6 +11,9 @@ use std::io;
 use std::io::Read;
 use std::path::Path;
 
+use flate2::read::GzDecoder;
+use tar::Archive;
+
 use crate::util::fs_ctx;
 
 /// Attempts to extract the tar archive into the specified directory.
@@ -44,16 +47,16 @@ pub fn untar(tar_file: &Path, destination_dir: &Path, is_tar_gz: bool) -> io::Re
     let destination_dir = fs_ctx::canonicalize(destination_dir)?;
     let file = fs_ctx::file_open(tar_file)?;
     if is_tar_gz {
-        let decoder = flate2::read::GzDecoder::new(file);
-        let archive = tar::Archive::new(decoder);
+        let decoder = GzDecoder::new(file);
+        let archive = Archive::new(decoder);
         unpack(archive, &destination_dir)
     } else {
-        let archive = tar::Archive::new(file);
+        let archive = Archive::new(file);
         unpack(archive, &destination_dir)
     }
 }
 
-pub fn unpack<R: Read>(mut archive: tar::Archive<R>, destination_dir: &Path) -> io::Result<()> {
+pub fn unpack<R: Read>(mut archive: Archive<R>, destination_dir: &Path) -> io::Result<()> {
     archive.set_preserve_permissions(true);
     archive.set_preserve_mtime(true);
     archive.unpack(destination_dir)

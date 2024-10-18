@@ -11,7 +11,6 @@ mod artifact_location;
 mod artifact_path;
 mod config;
 mod curl;
-mod decompress;
 mod default_provider_factory;
 mod digest;
 mod dotslash_cache;

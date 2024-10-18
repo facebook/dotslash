@@ -9,6 +9,7 @@
 
 #[cfg(unix)]
 mod chmodx;
+pub mod decompress;
 mod display;
 mod execv;
 mod file_lock;
