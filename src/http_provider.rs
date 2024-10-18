@@ -18,7 +18,7 @@ use crate::config::ArtifactEntry;
 use crate::curl::CurlCommand;
 use crate::curl::FetchContext;
 use crate::provider::Provider;
-use crate::util::file_lock::FileLock;
+use crate::util::FileLock;
 
 pub struct HttpProvider {}
 

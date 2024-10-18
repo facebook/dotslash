@@ -18,7 +18,7 @@ use crate::config;
 use crate::config::ArtifactEntry;
 use crate::dotslash_cache::DotslashCache;
 use crate::platform::SUPPORTED_PLATFORM;
-use crate::util::display::ListOf;
+use crate::util::ListOf;
 
 pub fn locate_artifact(
     dotslash_data: &str,

@@ -27,7 +27,7 @@ use crate::provider::ProviderFactory;
 use crate::subcommand::run_subcommand;
 use crate::subcommand::Subcommand;
 use crate::subcommand::SubcommandError;
-use crate::util::execv;
+use crate::util;
 
 pub fn run<P: ProviderFactory>(mut args: ArgsOs, provider_factory: &P) -> ExitCode {
     // If there is an argument, check whether it is a valid DotSlash file.
@@ -83,7 +83,7 @@ fn run_dotslash_file<P: ProviderFactory>(
     #[cfg(unix)]
     std::os::unix::process::CommandExt::arg0(&mut command, file_arg);
 
-    let error = execv::execv(&mut command);
+    let error = util::execv(&mut command);
 
     if !is_file_not_found_error(&error) {
         return Err(error).context(format!(
@@ -108,7 +108,7 @@ fn run_dotslash_file<P: ProviderFactory>(
     update_artifact_mtime(&artifact_location.executable);
 
     // Now that we have fetched the artifact, try to execv again.
-    let execv_error = execv::execv(&mut command);
+    let execv_error = util::execv(&mut command);
 
     let executable = Path::new(command.get_program());
 

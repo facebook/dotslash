@@ -8,11 +8,23 @@
  */
 
 #[cfg(unix)]
-pub mod chmodx;
-pub mod display;
-pub mod execv;
-pub mod file_lock;
+mod chmodx;
+mod display;
+mod execv;
+mod file_lock;
 pub mod fs_ctx;
-pub mod http_status;
-pub mod make_tree_read_only;
-pub mod mv_no_clobber;
+mod http_status;
+mod make_tree_read_only;
+mod mv_no_clobber;
+
+#[cfg(unix)]
+pub use self::chmodx::chmodx;
+pub use self::display::CommandDisplay;
+pub use self::display::CommandStderrDisplay;
+pub use self::display::ListOf;
+pub use self::execv::execv;
+pub use self::file_lock::FileLock;
+pub use self::file_lock::FileLockError;
+pub use self::http_status::HttpStatus;
+pub use self::make_tree_read_only::make_tree_entries_read_only;
+pub use self::mv_no_clobber::mv_no_clobber;

@@ -32,13 +32,10 @@ use crate::fetch_method::ArchiveFormat;
 use crate::fetch_method::ArtifactFormat;
 use crate::fetch_method::DecompressStep;
 use crate::provider::ProviderFactory;
-#[cfg(unix)]
-use crate::util::chmodx::chmodx;
-use crate::util::file_lock::FileLock;
-use crate::util::file_lock::FileLockError;
+use crate::util;
 use crate::util::fs_ctx;
-use crate::util::make_tree_read_only::make_tree_entries_read_only;
-use crate::util::mv_no_clobber::mv_no_clobber;
+use crate::util::FileLock;
+use crate::util::FileLockError;
 
 pub const DEFAULT_PROVDIER_TYPE: &str = "http";
 
@@ -101,9 +98,9 @@ pub fn download_artifact<P: ProviderFactory>(
                         artifact_entry.path.as_str(),
                     )?;
                     if artifact_entry.readonly {
-                        make_tree_entries_read_only(temp_dir_to_mv.path())?;
+                        util::make_tree_entries_read_only(temp_dir_to_mv.path())?;
                     }
-                    mv_no_clobber(&temp_dir_to_mv, &artifact_location.artifact_directory)?;
+                    util::mv_no_clobber(&temp_dir_to_mv, &artifact_location.artifact_directory)?;
                     if artifact_entry.readonly {
                         // Note the following appears to work on Linux but not
                         // macOS:
@@ -285,7 +282,7 @@ fn unpack_verified_artifact(
 
             // Change the file permissions, so can't overwrite file by accident.
             #[cfg(unix)]
-            chmodx(final_artifact_path).context("failed to make path executable")?;
+            util::chmodx(final_artifact_path).context("failed to make path executable")?;
         }
     };
 

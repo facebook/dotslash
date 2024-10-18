@@ -12,7 +12,7 @@ use std::path::Path;
 use serde_jsonrc::value::Value;
 
 use crate::config::ArtifactEntry;
-use crate::util::file_lock::FileLock;
+use crate::util::FileLock;
 
 pub trait Provider {
     /// When called, the provider should fetch the artifact as specified by the

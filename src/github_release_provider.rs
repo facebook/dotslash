@@ -16,7 +16,7 @@ use serde_jsonrc::value::Value;
 
 use crate::config::ArtifactEntry;
 use crate::provider::Provider;
-use crate::util::file_lock::FileLock;
+use crate::util::FileLock;
 
 pub struct GitHubReleaseProvider {}
 

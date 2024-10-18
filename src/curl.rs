@@ -20,9 +20,9 @@ use std::time::Duration;
 use thiserror::Error;
 
 use crate::progress::display_progress;
-use crate::util::display::CommandDisplay;
-use crate::util::display::CommandStderrDisplay;
-use crate::util::http_status::HttpStatus;
+use crate::util::CommandDisplay;
+use crate::util::CommandStderrDisplay;
+use crate::util::HttpStatus;
 
 const NUM_RETRYABLE_CURL_MAX_ATTEMPTS: u8 = 3;
 const NUM_TRANSIENT_ERROR_CURL_MAX_ATTEMPTS: u64 = 3;

@@ -10,9 +10,7 @@
 use std::io;
 use std::path::Path;
 
-use crate::util::fs_ctx::read_dir;
-use crate::util::fs_ctx::set_permissions;
-use crate::util::fs_ctx::symlink_metadata;
+use crate::util::fs_ctx;
 
 /// Takes the specified `folder` (which must point to a directory) and
 /// recursively makes all entries within it read-only, but it does *not* change
@@ -21,9 +19,9 @@ use crate::util::fs_ctx::symlink_metadata;
 pub fn make_tree_entries_read_only(folder: &Path) -> io::Result<()> {
     debug_assert!(folder.is_dir());
 
-    for entry in read_dir(folder)? {
+    for entry in fs_ctx::read_dir(folder)? {
         let entry = entry?;
-        let metadata = symlink_metadata(entry.path())?;
+        let metadata = fs_ctx::symlink_metadata(entry.path())?;
         if metadata.is_symlink() {
             continue;
         }
@@ -33,7 +31,7 @@ pub fn make_tree_entries_read_only(folder: &Path) -> io::Result<()> {
 
         let mut perms = metadata.permissions();
         perms.set_readonly(true);
-        set_permissions(entry.path(), perms)?;
+        fs_ctx::set_permissions(entry.path(), perms)?;
     }
 
     Ok(())
