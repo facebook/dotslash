@@ -19,7 +19,7 @@ use std::time::Duration;
 
 use thiserror::Error;
 
-use crate::progress::display_progress;
+use crate::util;
 use crate::util::CommandDisplay;
 use crate::util::CommandStderrDisplay;
 use crate::util::HttpStatus;
@@ -189,7 +189,7 @@ impl CurlCommand<'_> {
         // done it is compared to content_length.
         let handler = if context.show_progress {
             eprintln!("Downloading {}...", context.artifact_name);
-            Some(display_progress(context.content_length, target))
+            Some(util::display_progress(context.content_length, target))
         } else {
             None
         };

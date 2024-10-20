@@ -22,7 +22,6 @@ mod http_provider;
 mod locate;
 mod platform;
 mod print_entry_for_url;
-mod progress;
 mod provider;
 mod subcommand;
 mod util;

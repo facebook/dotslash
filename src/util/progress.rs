@@ -10,16 +10,18 @@
 use std::fs::File;
 use std::path::Path;
 use std::sync::mpsc;
+use std::sync::mpsc::Receiver;
+use std::sync::mpsc::Sender;
+use std::sync::mpsc::TryRecvError;
 use std::thread;
-use std::time;
+use std::thread::JoinHandle;
+use std::time::Duration;
 
 /// A bit less than 80 chars so it fits on standard terminals.
 const NUM_PROGRESS_BAR_CHARS: u8 = 70;
 
-pub fn display_progress(
-    content_length: u64,
-    output_path: &Path,
-) -> (mpsc::Sender<()>, thread::JoinHandle<()>) {
+#[must_use]
+pub fn display_progress(content_length: u64, output_path: &Path) -> (Sender<()>, JoinHandle<()>) {
     let path = output_path.to_path_buf();
 
     // Channel to inform the progress thread that the download has finished
@@ -33,7 +35,7 @@ pub fn display_progress(
         eprint!("[{}]", " ".repeat(NUM_PROGRESS_BAR_CHARS as usize));
 
         // Poll for the creation of the file.
-        let short_pause = time::Duration::from_millis(10);
+        let short_pause = Duration::from_millis(10);
         let output_file = loop {
             if should_end_progress(&recv) {
                 return;
@@ -45,7 +47,7 @@ pub fn display_progress(
             thread::sleep(short_pause);
         };
 
-        let pause = time::Duration::from_millis(100);
+        let pause = Duration::from_millis(100);
         loop {
             let attr = output_file.metadata().unwrap();
             let size = attr.len();
@@ -86,9 +88,9 @@ pub fn display_progress(
     (send, handle)
 }
 
-fn should_end_progress(recv: &mpsc::Receiver<()>) -> bool {
+fn should_end_progress(recv: &Receiver<()>) -> bool {
     match recv.try_recv() {
-        Ok(()) | Err(mpsc::TryRecvError::Disconnected) => true,
-        Err(mpsc::TryRecvError::Empty) => false,
+        Ok(()) | Err(TryRecvError::Disconnected) => true,
+        Err(TryRecvError::Empty) => false,
     }
 }
