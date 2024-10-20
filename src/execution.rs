@@ -20,8 +20,6 @@ use anyhow::Context as _;
 use crate::dotslash_cache::DotslashCache;
 use crate::download::download_artifact;
 use crate::locate::locate_artifact;
-#[cfg(unix)]
-use crate::locate::update_artifact_mtime;
 use crate::provider::ProviderFactory;
 use crate::subcommand::run_subcommand;
 use crate::subcommand::Subcommand;
@@ -103,8 +101,9 @@ fn run_dotslash_file<P: ProviderFactory>(
 
     // Since we just unpacked the executable for the first time, we can
     // afford to pay the macOS cost mentioned above.
-    #[cfg(unix)]
-    update_artifact_mtime(&artifact_location.executable);
+    if cfg!(unix) {
+        let _ = util::update_mtime(&artifact_location.executable);
+    }
 
     // Now that we have fetched the artifact, try to execv again.
     let execv_error = util::execv(&mut command);

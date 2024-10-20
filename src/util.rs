@@ -18,6 +18,7 @@ mod http_status;
 mod is_not_found_error;
 mod make_tree_read_only;
 mod mv_no_clobber;
+mod update_mtime;
 
 #[cfg(unix)]
 pub use self::chmodx::chmodx;
@@ -31,3 +32,4 @@ pub use self::http_status::HttpStatus;
 pub use self::is_not_found_error::is_not_found_error;
 pub use self::make_tree_read_only::make_tree_entries_read_only;
 pub use self::mv_no_clobber::mv_no_clobber;
+pub use self::update_mtime::update_mtime;
