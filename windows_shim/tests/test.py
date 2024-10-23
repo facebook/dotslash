@@ -106,7 +106,7 @@ def move_cwd(path: Path) -> Iterator[None]:
 PRINT_ARGS_ARG0 = r"^0:.+\\print_args\.windows\.(aarch64|x86_64)\.exe$"
 
 
-class DotSlashWindowsShimTest(unittest.TestCase):
+class DotslashWindowsShimTest(unittest.TestCase):
     def setUp(self) -> None:
         self.maxDiff = None
 

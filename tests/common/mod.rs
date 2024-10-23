@@ -89,14 +89,14 @@ const IO_ERROR_NOT_FOUND: &str = if cfg!(windows) {
     "No such file or directory (os error 2)"
 };
 
-pub struct DotSlashTestEnv {
+pub struct DotslashTestEnv {
     current_dir: PathBuf,
     substitutions: Substitutions,
     tempdir_path: PathBuf,
     _tempdir: TempDir,
 }
 
-impl DotSlashTestEnv {
+impl DotslashTestEnv {
     pub fn try_new() -> anyhow::Result<Self> {
         let tempdir = tempfile::Builder::new()
             .prefix("dotslash_tests-")
@@ -160,7 +160,7 @@ impl DotSlashTestEnv {
         substitutions.insert("[IOERRORNOTFOUND]", IO_ERROR_NOT_FOUND)?;
         substitutions.insert("[DOTSLASHUSERAGENT]", USER_AGENT)?;
 
-        Ok(DotSlashTestEnv {
+        Ok(DotslashTestEnv {
             current_dir,
             substitutions,
             tempdir_path,

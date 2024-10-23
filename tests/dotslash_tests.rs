@@ -16,7 +16,7 @@ use std::ffi::OsString;
 use tempfile::NamedTempFile;
 
 use crate::common::ci;
-use crate::common::DotSlashTestEnv;
+use crate::common::DotslashTestEnv;
 
 #[cfg(unix)]
 fn non_utf8_osstring() -> OsString {
@@ -49,7 +49,7 @@ fn test_non_utf8_osstring() {
 
 #[test]
 fn http__gz__valid_executable() {
-    DotSlashTestEnv::try_new()
+    DotslashTestEnv::try_new()
         .unwrap()
         .dotslash_command()
         .arg("tests/fixtures/http__gz__print_argv")
@@ -78,7 +78,7 @@ exe: [DOTSLASHCACHEDIR]/[PACKGZHTTPARCHIVECACHEDIR]/subdir/[PRINTARGVEXECUTABLE]
 
 #[test]
 fn http__xz__valid_executable() {
-    DotSlashTestEnv::try_new()
+    DotslashTestEnv::try_new()
         .unwrap()
         .dotslash_command()
         .arg("tests/fixtures/http__xz__print_argv")
@@ -107,7 +107,7 @@ exe: [DOTSLASHCACHEDIR]/[PACKXZHTTPARCHIVECACHEDIR]/subdir/[PRINTARGVEXECUTABLE]
 
 #[test]
 fn http__zst__valid_executable() {
-    DotSlashTestEnv::try_new()
+    DotslashTestEnv::try_new()
         .unwrap()
         .dotslash_command()
         .arg("tests/fixtures/http__zst__print_argv")
@@ -136,7 +136,7 @@ exe: [DOTSLASHCACHEDIR]/[PACKZSTHTTPARCHIVECACHEDIR]/subdir/[PRINTARGVEXECUTABLE
 
 #[test]
 fn http__zip__valid_executable() {
-    DotSlashTestEnv::try_new()
+    DotslashTestEnv::try_new()
         .unwrap()
         .dotslash_command()
         .arg("tests/fixtures/http__zip__print_argv")
@@ -165,7 +165,7 @@ exe: [DOTSLASHCACHEDIR]/[PACKZIPTHTTPARCHIVECACHEDIR]/subdir/[PRINTARGVEXECUTABL
 
 #[test]
 fn http__plain__valid_executable() {
-    DotSlashTestEnv::try_new()
+    DotslashTestEnv::try_new()
         .unwrap()
         .dotslash_command()
         .arg("tests/fixtures/http__plain__print_argv")
@@ -194,7 +194,7 @@ exe: [DOTSLASHCACHEDIR]/[PACKPLAINHTTPARCHIVECACHEDIR]/subdir/[PRINTARGVEXECUTAB
 
 #[test]
 fn http__tar_gz__valid_executable() {
-    DotSlashTestEnv::try_new()
+    DotslashTestEnv::try_new()
         .unwrap()
         .dotslash_command()
         .arg("tests/fixtures/http__tar_gz__print_argv")
@@ -223,7 +223,7 @@ exe: [DOTSLASHCACHEDIR]/[PACKTGZHTTPARCHIVECACHEDIR]/subdir/[PRINTARGVEXECUTABLE
 
 #[test]
 fn http__tar_xz__valid_executable() {
-    DotSlashTestEnv::try_new()
+    DotslashTestEnv::try_new()
         .unwrap()
         .dotslash_command()
         .arg("tests/fixtures/http__tar_xz__print_argv")
@@ -252,7 +252,7 @@ exe: [DOTSLASHCACHEDIR]/[PACKTARXZHTTPARCHIVECACHEDIR]/subdir/[PRINTARGVEXECUTAB
 
 #[test]
 fn http__tar_zst__valid_executable() {
-    DotSlashTestEnv::try_new()
+    DotslashTestEnv::try_new()
         .unwrap()
         .dotslash_command()
         .arg("tests/fixtures/http__tar_zst__print_argv")
@@ -281,7 +281,7 @@ exe: [DOTSLASHCACHEDIR]/[PACKTARZSTHTTPARCHIVECACHEDIR]/subdir/[PRINTARGVEXECUTA
 
 #[test]
 fn http__nonexistent_url() {
-    DotSlashTestEnv::try_new()
+    DotslashTestEnv::try_new()
         .unwrap()
         .substitution(
             "[PROVIDERURL]",
@@ -313,7 +313,7 @@ Caused by:
 
 #[test]
 fn command_missing() {
-    DotSlashTestEnv::try_new()
+    DotslashTestEnv::try_new()
         .unwrap()
         .dotslash_command()
         .arg("--")
@@ -330,7 +330,7 @@ See `dotslash --help` for more information.
 
 #[test]
 fn command_no_match() {
-    DotSlashTestEnv::try_new()
+    DotslashTestEnv::try_new()
         .unwrap()
         .dotslash_command()
         .arg("--")
@@ -349,7 +349,7 @@ See `dotslash --help` for more information.
 
 #[test]
 fn dotslash_file_arg_missing() {
-    DotSlashTestEnv::try_new()
+    DotslashTestEnv::try_new()
         .unwrap()
         .dotslash_command()
         .assert()
@@ -360,7 +360,7 @@ fn dotslash_file_arg_missing() {
 
 #[test]
 fn dotslash_file_not_found() {
-    DotSlashTestEnv::try_new()
+    DotslashTestEnv::try_new()
         .unwrap()
         .dotslash_command()
         .arg("path/to/fake/file")
@@ -378,7 +378,7 @@ caused by: [IOERRORNOTFOUND]
 
 #[test]
 fn dotslash_file_is_a_directory() {
-    DotSlashTestEnv::try_new()
+    DotslashTestEnv::try_new()
         .unwrap()
         .substitution(
             "[IOERROR]",
@@ -405,7 +405,7 @@ caused by: [IOERROR]
 
 #[test]
 fn dotslash_file_name_is_non_utf8() {
-    DotSlashTestEnv::try_new()
+    DotslashTestEnv::try_new()
         .unwrap()
         .dotslash_command()
         .arg(non_utf8_osstring())
@@ -444,7 +444,7 @@ Learn more at https://dotslash-cli.com
 
 #[test]
 fn help_command_ok() {
-    DotSlashTestEnv::try_new()
+    DotslashTestEnv::try_new()
         .unwrap()
         .dotslash_command()
         .arg("--")
@@ -457,7 +457,7 @@ fn help_command_ok() {
 
 #[test]
 fn help_flag_ok() {
-    DotSlashTestEnv::try_new()
+    DotslashTestEnv::try_new()
         .unwrap()
         .dotslash_command()
         .arg("--help")
@@ -469,7 +469,7 @@ fn help_flag_ok() {
 
 #[test]
 fn help_command_extra_args() {
-    DotSlashTestEnv::try_new()
+    DotslashTestEnv::try_new()
         .unwrap()
         .dotslash_command()
         .arg("--")
@@ -488,7 +488,7 @@ caused by: expected no arguments but received some
 
 #[test]
 fn help_flag_extra_args() {
-    DotSlashTestEnv::try_new()
+    DotslashTestEnv::try_new()
         .unwrap()
         .dotslash_command()
         .arg("--help")
@@ -512,7 +512,7 @@ const VERSION_STDOUT: &str = concat!("DotSlash ", env!("CARGO_PKG_VERSION"), "\n
 
 #[test]
 fn version_command_ok() {
-    DotSlashTestEnv::try_new()
+    DotslashTestEnv::try_new()
         .unwrap()
         .dotslash_command()
         .arg("--")
@@ -525,7 +525,7 @@ fn version_command_ok() {
 
 #[test]
 fn version_flag_ok() {
-    DotSlashTestEnv::try_new()
+    DotslashTestEnv::try_new()
         .unwrap()
         .dotslash_command()
         .arg("--version")
@@ -537,7 +537,7 @@ fn version_flag_ok() {
 
 #[test]
 fn version_command_extra_args() {
-    DotSlashTestEnv::try_new()
+    DotslashTestEnv::try_new()
         .unwrap()
         .dotslash_command()
         .arg("--")
@@ -556,7 +556,7 @@ caused by: expected no arguments but received some
 
 #[test]
 fn version_flag_extra_args() {
-    DotSlashTestEnv::try_new()
+    DotslashTestEnv::try_new()
         .unwrap()
         .dotslash_command()
         .arg("--version")
@@ -581,7 +581,7 @@ fn b3sum_command_ok() -> anyhow::Result<()> {
     let tempfile = NamedTempFile::new()?;
     std::fs::write(tempfile.path(), "DotSlash Rulez!\n")?;
 
-    DotSlashTestEnv::try_new()
+    DotslashTestEnv::try_new()
         .unwrap()
         .dotslash_command()
         .arg("--")
@@ -600,7 +600,7 @@ fn b3sum_command_ok() -> anyhow::Result<()> {
 
 #[test]
 fn cache_dir_command_ok() {
-    DotSlashTestEnv::try_new()
+    DotslashTestEnv::try_new()
         .unwrap()
         .dotslash_command()
         .arg("--")
@@ -617,7 +617,7 @@ fn cache_dir_command_ok() {
 
 #[test]
 fn cache_dir_command_extra_args() {
-    DotSlashTestEnv::try_new()
+    DotslashTestEnv::try_new()
         .unwrap()
         .dotslash_command()
         .arg("--")
@@ -640,7 +640,7 @@ caused by: expected no arguments but received some
 
 #[test]
 fn clean_command_ok() {
-    let test_env = DotSlashTestEnv::try_new().unwrap();
+    let test_env = DotslashTestEnv::try_new().unwrap();
 
     let cache_dir = test_env.dotslash_cache();
 
@@ -671,7 +671,7 @@ fn clean_command_ok() {
 
 #[test]
 fn clean_command_extra_args() {
-    DotSlashTestEnv::try_new()
+    DotslashTestEnv::try_new()
         .unwrap()
         .dotslash_command()
         .arg("--")
@@ -694,7 +694,7 @@ caused by: expected no arguments but received some
 
 #[test]
 fn create_url_entry_tar_gz() {
-    DotSlashTestEnv::try_new()
+    DotslashTestEnv::try_new()
         .unwrap()
         .dotslash_command()
         .arg("--")
@@ -722,7 +722,7 @@ fn create_url_entry_tar_gz() {
 
 #[test]
 fn create_url_entry_tar_zst() {
-    DotSlashTestEnv::try_new()
+    DotslashTestEnv::try_new()
         .unwrap()
         .dotslash_command()
         .arg("--")
@@ -754,7 +754,7 @@ fn create_url_entry_tar_zst() {
 
 #[test]
 fn fetch_simple() {
-    let test_env = DotSlashTestEnv::try_new().unwrap();
+    let test_env = DotslashTestEnv::try_new().unwrap();
 
     let assert = test_env
         .dotslash_command()
@@ -782,7 +782,7 @@ fn fetch_simple() {
 
 #[test]
 fn parse_command_ok() {
-    DotSlashTestEnv::try_new()
+    DotslashTestEnv::try_new()
         .unwrap()
         .dotslash_command()
         .arg("--")
@@ -796,7 +796,7 @@ fn parse_command_ok() {
 
 #[test]
 fn parse_command_extra_args() {
-    DotSlashTestEnv::try_new()
+    DotslashTestEnv::try_new()
         .unwrap()
         .dotslash_command()
         .arg("--")
@@ -816,7 +816,7 @@ caused by: expected exactly one argument but received more
 
 #[test]
 fn parse_command_non_existent_file() {
-    DotSlashTestEnv::try_new()
+    DotslashTestEnv::try_new()
         .unwrap()
         .dotslash_command()
         .arg("--")
@@ -843,7 +843,7 @@ fn sha256_command_ok() -> anyhow::Result<()> {
     let tempfile = NamedTempFile::new()?;
     std::fs::write(tempfile.path(), "DotSlash Rulez!\n")?;
 
-    DotSlashTestEnv::try_new()
+    DotslashTestEnv::try_new()
         .unwrap()
         .dotslash_command()
         .arg("--")

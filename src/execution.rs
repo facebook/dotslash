@@ -62,9 +62,9 @@ fn run_dotslash_file<P: ProviderFactory>(
         Err(err) => {
             if err.kind() == io::ErrorKind::NotFound {
                 match try_parse_file_arg_as_flag(file_arg, &mut args) {
-                    DotSlashFlagResult::Success => return Ok(()),
-                    DotSlashFlagResult::Failure(err) => return Err(err.into()),
-                    DotSlashFlagResult::NoMatch => {}
+                    DotslashFlagResult::Success => return Ok(()),
+                    DotslashFlagResult::Failure(err) => return Err(err.into()),
+                    DotslashFlagResult::NoMatch => {}
                 }
             }
             return Err(err).context("failed to read DotSlash file");
@@ -133,7 +133,7 @@ fn run_dotslash_file<P: ProviderFactory>(
     Err(execv_error).context(err_context)
 }
 
-enum DotSlashFlagResult {
+enum DotslashFlagResult {
     /// Arguments were well-formed and the flag was handled successfully.
     Success,
     /// Arguments were ill-formed or there was an error processing the subcommand.
@@ -145,7 +145,7 @@ enum DotSlashFlagResult {
 /// Called when opening file_arg returns ENOENT in [run_dotslash_file()]. In general, we do not
 /// attempt to support sophisticated arg parsing in DotSlash itself because normally arguments
 /// should be passed transparently to the underlying executable.
-fn try_parse_file_arg_as_flag(file_arg: &OsStr, args: &mut ArgsOs) -> DotSlashFlagResult {
+fn try_parse_file_arg_as_flag(file_arg: &OsStr, args: &mut ArgsOs) -> DotslashFlagResult {
     let subcommand = match file_arg.as_encoded_bytes() {
         b"--help" => Subcommand::Help,
         b"--version" => Subcommand::Version,
@@ -153,18 +153,18 @@ fn try_parse_file_arg_as_flag(file_arg: &OsStr, args: &mut ArgsOs) -> DotSlashFl
             if let Some(subcommand_arg) = args.next() {
                 match subcommand_arg.to_string_lossy().parse::<Subcommand>() {
                     Ok(subcommand) => subcommand,
-                    Err(err) => return DotSlashFlagResult::Failure(err),
+                    Err(err) => return DotslashFlagResult::Failure(err),
                 }
             } else {
-                return DotSlashFlagResult::Failure(SubcommandError::MissingCommand);
+                return DotslashFlagResult::Failure(SubcommandError::MissingCommand);
             }
         }
-        _ => return DotSlashFlagResult::NoMatch,
+        _ => return DotslashFlagResult::NoMatch,
     };
 
     if let Err(err) = run_subcommand(subcommand, args) {
-        DotSlashFlagResult::Failure(err)
+        DotslashFlagResult::Failure(err)
     } else {
-        DotSlashFlagResult::Success
+        DotslashFlagResult::Success
     }
 }
