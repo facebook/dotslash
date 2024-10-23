@@ -18,9 +18,9 @@ mod http_status;
 mod is_not_found_error;
 #[cfg(unix)]
 mod is_path_safe_to_own;
-mod make_tree_read_only;
 mod mv_no_clobber;
 mod progress;
+mod tree_perms;
 mod update_mtime;
 
 #[cfg(unix)]
@@ -35,7 +35,8 @@ pub use self::http_status::HttpStatus;
 pub use self::is_not_found_error::is_not_found_error;
 #[cfg(unix)]
 pub use self::is_path_safe_to_own::is_path_safe_to_own;
-pub use self::make_tree_read_only::make_tree_entries_read_only;
 pub use self::mv_no_clobber::mv_no_clobber;
 pub use self::progress::display_progress;
+pub use self::tree_perms::make_tree_entries_read_only;
+pub use self::tree_perms::make_tree_entries_writable;
 pub use self::update_mtime::update_mtime;

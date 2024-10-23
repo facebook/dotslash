@@ -177,7 +177,6 @@ impl DotSlashTestEnv {
         Ok(self)
     }
 
-    #[expect(dead_code)]
     pub fn dotslash_cache(&self) -> &Path {
         &self.tempdir_path
     }

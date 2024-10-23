@@ -26,6 +26,7 @@ use crate::download::download_artifact;
 use crate::locate::locate_artifact;
 use crate::platform::SUPPORTED_PLATFORM;
 use crate::print_entry_for_url::print_entry_for_url;
+use crate::util;
 use crate::util::fs_ctx;
 
 #[derive(Debug)]
@@ -141,6 +142,9 @@ fn _run_subcommand(subcommand: &Subcommand, args: &mut ArgsOs) -> anyhow::Result
 
             let dotslash_cache = DotslashCache::new();
             eprintln!("Cleaning `{}`", dotslash_cache.cache_dir().display());
+            // Make sure nothing is read-only first.
+            let _ = util::make_tree_entries_writable(dotslash_cache.cache_dir());
+            // Then delete the contents.
             fs_ctx::remove_dir_all(dotslash_cache.cache_dir())?;
         }
 
