@@ -16,6 +16,8 @@ mod file_lock;
 pub mod fs_ctx;
 mod http_status;
 mod is_not_found_error;
+#[cfg(unix)]
+mod is_path_safe_to_own;
 mod make_tree_read_only;
 mod mv_no_clobber;
 mod progress;
@@ -31,6 +33,8 @@ pub use self::file_lock::FileLock;
 pub use self::file_lock::FileLockError;
 pub use self::http_status::HttpStatus;
 pub use self::is_not_found_error::is_not_found_error;
+#[cfg(unix)]
+pub use self::is_path_safe_to_own::is_path_safe_to_own;
 pub use self::make_tree_read_only::make_tree_entries_read_only;
 pub use self::mv_no_clobber::mv_no_clobber;
 pub use self::progress::display_progress;

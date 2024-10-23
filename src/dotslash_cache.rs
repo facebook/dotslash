@@ -13,7 +13,7 @@ use std::path::Path;
 use std::path::PathBuf;
 
 #[cfg(unix)]
-use nix::unistd::getuid;
+use nix::unistd;
 
 use crate::util;
 
@@ -101,7 +101,7 @@ fn get_dotslash_cache() -> PathBuf {
     //
     // i.e., `$USER` is reliable in the presence of sudo but `$HOME` is not.
     #[cfg(unix)]
-    if !is_safe_to_own(&cache_dir) {
+    if !util::is_path_safe_to_own(&cache_dir) {
         let temp_dir = env::temp_dir();
         // e.g. $TEMP/dotslash-UID
         return named_cache_dir_at(temp_dir);
@@ -116,7 +116,7 @@ fn named_cache_dir_at<P: Into<PathBuf>>(dir: P) -> PathBuf {
 
     // e.g. dotslash-UID
     #[cfg(unix)]
-    name.push(getuid().as_raw().to_string());
+    name.push(unistd::getuid().as_raw().to_string());
 
     // e.g. dotslash-$USERNAME
     #[cfg(windows)]
@@ -127,37 +127,4 @@ fn named_cache_dir_at<P: Into<PathBuf>>(dir: P) -> PathBuf {
     dir.push(name);
 
     dir
-}
-
-// A path is considered "safe to own" if:
-// (1) it exists and we own it, or,
-// (2) it doesn't exist and we own the nearest parent that does exist.
-#[cfg(unix)]
-fn is_safe_to_own(path: &Path) -> bool {
-    use std::io;
-    use std::os::unix::fs::MetadataExt as _;
-
-    for ancestor in path.ancestors() {
-        // Use `symlink_metadata` and not `metadata` because we're not
-        // interested in following symlinks. If the path is a broken
-        // symlink we want to still check the owner on that, instead of
-        // treating it like a "NotFound".
-        match ancestor.symlink_metadata() {
-            Ok(meta) => {
-                return getuid().as_raw() == meta.uid();
-            }
-            Err(ref e) if util::is_not_found_error(e) => {
-                continue;
-            }
-            Err(ref e) if e.kind() == io::ErrorKind::PermissionDenied => {
-                return false;
-            }
-            // Not sure how this can happen.
-            Err(_) => {
-                return false;
-            }
-        }
-    }
-
-    false
 }
