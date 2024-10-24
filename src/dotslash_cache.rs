@@ -15,6 +15,7 @@ use std::path::PathBuf;
 #[cfg(unix)]
 use nix::unistd;
 
+#[cfg(unix)]
 use crate::util;
 
 pub const DOTSLASH_CACHE_ENV: &str = "DOTSLASH_CACHE";
