@@ -18,7 +18,6 @@ use tar::Archive;
 use xz2::bufread::XzDecoder;
 #[cfg(not(dotslash_internal))]
 use zip::ZipArchive;
-#[cfg(not(dotslash_internal))]
 use zstd::stream::read::Decoder as ZstdDecoder;
 
 use crate::util::fs_ctx;
@@ -29,7 +28,6 @@ pub enum ArchiveType {
     TarGz,
     #[cfg(not(dotslash_internal))]
     TarXz,
-    #[cfg(not(dotslash_internal))]
     TarZstd,
     #[cfg(not(dotslash_internal))]
     Zip,
@@ -83,7 +81,6 @@ pub fn unpack_file(
             let decoder = XzDecoder::new(reader);
             unpack_tar(decoder, &destination_dir)
         }
-        #[cfg(not(dotslash_internal))]
         ArchiveType::TarZstd => {
             let decoder = ZstdDecoder::with_buffer(reader)?;
             unpack_tar(decoder, &destination_dir)
