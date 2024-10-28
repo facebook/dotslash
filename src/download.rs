@@ -15,11 +15,11 @@ use std::path::PathBuf;
 
 use anyhow::Context as _;
 use digest::Digest as _;
+use flate2::bufread::GzDecoder;
 use serde_jsonrc::value::Value;
 use sha2::Sha256;
-use tar::Archive;
-use xz2::read::XzDecoder;
-use zstd::stream::read::Decoder;
+use xz2::bufread::XzDecoder;
+use zstd::stream::read::Decoder as ZstdDecoder;
 
 use crate::artifact_location::ArtifactLocation;
 use crate::config::ArtifactEntry;
@@ -30,8 +30,9 @@ use crate::fetch_method::ArtifactFormat;
 use crate::fetch_method::DecompressStep;
 use crate::provider::ProviderFactory;
 use crate::util;
-use crate::util::decompress;
 use crate::util::fs_ctx;
+use crate::util::unarchive;
+use crate::util::unarchive::ArchiveType;
 use crate::util::FileLock;
 use crate::util::FileLockError;
 
@@ -211,34 +212,23 @@ fn unpack_verified_artifact(
     artifact_entry_path: &str,
 ) -> anyhow::Result<()> {
     match &format.extraction_policy() {
-        (decompression, Some(ArchiveFormat::Zip)) => {
-            if let Some(d) = decompression {
-                unreachable!("zip's extraction_policy should never return `(Some(_), _)`; {d:?}");
-            }
-            let zip_file = fs_ctx::file_open(fetched_artifact)?;
-            let reader = BufReader::new(zip_file);
-            let mut archive = zip::ZipArchive::new(reader)?;
-            archive.extract(temp_dir_to_mv)?;
+        (Some(d), Some(ArchiveFormat::Zip)) => {
+            unreachable!("zip's extraction_policy should never return `(Some(_), _)`; {d:?}");
+        }
+        (None, Some(ArchiveFormat::Zip)) => {
+            unarchive::unpack_file(fetched_artifact, temp_dir_to_mv, ArchiveType::Zip)?;
         }
         (None, Some(ArchiveFormat::Tar)) => {
-            decompress::untar(fetched_artifact, temp_dir_to_mv, /* is_tar_gz */ false)?;
+            unarchive::unpack_file(fetched_artifact, temp_dir_to_mv, ArchiveType::Tar)?;
         }
         (Some(DecompressStep::Gzip), Some(ArchiveFormat::Tar)) => {
-            decompress::untar(fetched_artifact, temp_dir_to_mv, /* is_tar_gz */ true)?;
+            unarchive::unpack_file(fetched_artifact, temp_dir_to_mv, ArchiveType::TarGz)?;
         }
         (Some(DecompressStep::Zstd), Some(ArchiveFormat::Tar)) => {
-            let zst_file = fs_ctx::file_open(fetched_artifact)?;
-            let reader = BufReader::new(zst_file);
-            let decoder = Decoder::new(reader)?;
-            let archive = Archive::new(decoder);
-            decompress::unpack(archive, temp_dir_to_mv)?;
+            unarchive::unpack_file(fetched_artifact, temp_dir_to_mv, ArchiveType::TarZstd)?;
         }
         (Some(DecompressStep::Xz), Some(ArchiveFormat::Tar)) => {
-            let xz_file = fs_ctx::file_open(fetched_artifact)?;
-            let reader = BufReader::new(xz_file);
-            let decoder = XzDecoder::new(reader);
-            let archive = Archive::new(decoder);
-            decompress::unpack(archive, temp_dir_to_mv)?;
+            unarchive::unpack_file(fetched_artifact, temp_dir_to_mv, ArchiveType::TarXz)?;
         }
         (decompression, None) => {
             let final_artifact_path = temp_dir_to_mv.join(artifact_entry_path);
@@ -251,7 +241,8 @@ fn unpack_verified_artifact(
                 Some(DecompressStep::Gzip) => {
                     // fetched_artifact contains the .gz
                     let gz_file = fs_ctx::file_open(fetched_artifact)?;
-                    let mut decoder = flate2::read::GzDecoder::new(gz_file);
+                    let reader = BufReader::new(gz_file);
+                    let mut decoder = GzDecoder::new(reader);
                     let output_file = fs_ctx::file_create(&final_artifact_path)?;
                     let mut writer = BufWriter::new(output_file);
                     std::io::copy(&mut decoder, &mut writer)?;
@@ -259,7 +250,8 @@ fn unpack_verified_artifact(
                 Some(DecompressStep::Xz) => {
                     // fetched_artifact contains the .xz
                     let xz_file = fs_ctx::file_open(fetched_artifact)?;
-                    let mut decoder = XzDecoder::new(xz_file);
+                    let reader = BufReader::new(xz_file);
+                    let mut decoder = XzDecoder::new(reader);
                     let output_file = fs_ctx::file_create(&final_artifact_path)?;
                     let mut writer = BufWriter::new(output_file);
                     std::io::copy(&mut decoder, &mut writer)?;
@@ -268,7 +260,7 @@ fn unpack_verified_artifact(
                     // fetched_artifact contains the .zst
                     let zst_file = fs_ctx::file_open(fetched_artifact)?;
                     let reader = BufReader::new(zst_file);
-                    let mut decoder = Decoder::new(reader)?;
+                    let mut decoder = ZstdDecoder::with_buffer(reader)?;
                     let output_file = fs_ctx::file_create(&final_artifact_path)?;
                     let mut writer = BufWriter::new(output_file);
                     std::io::copy(&mut decoder, &mut writer)?;

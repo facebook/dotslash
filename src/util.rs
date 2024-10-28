@@ -9,7 +9,6 @@
 
 #[cfg(unix)]
 mod chmodx;
-pub mod decompress;
 mod display;
 mod execv;
 mod file_lock;
@@ -21,6 +20,7 @@ mod is_path_safe_to_own;
 mod mv_no_clobber;
 mod progress;
 mod tree_perms;
+pub mod unarchive;
 mod update_mtime;
 
 #[cfg(unix)]
