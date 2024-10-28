@@ -63,7 +63,7 @@ fn http__gz__valid_executable() {
 2: def
 ",
         )
-        .stdout_matches(format!(
+        .stdout_eq(format!(
             "\
 exe: [DOTSLASHCACHEDIR]/[PACKGZHTTPARCHIVECACHEDIR]/subdir/[PRINTARGVEXECUTABLE]
 0: {argv0}
@@ -92,7 +92,7 @@ fn http__xz__valid_executable() {
 2: def
 ",
         )
-        .stdout_matches(format!(
+        .stdout_eq(format!(
             "\
 exe: [DOTSLASHCACHEDIR]/[PACKXZHTTPARCHIVECACHEDIR]/subdir/[PRINTARGVEXECUTABLE]
 0: {argv0}
@@ -121,7 +121,7 @@ fn http__zst__valid_executable() {
 2: def
 ",
         )
-        .stdout_matches(format!(
+        .stdout_eq(format!(
             "\
 exe: [DOTSLASHCACHEDIR]/[PACKZSTHTTPARCHIVECACHEDIR]/subdir/[PRINTARGVEXECUTABLE]
 0: {argv0}
@@ -150,7 +150,7 @@ fn http__zip__valid_executable() {
 2: def
 ",
         )
-        .stdout_matches(format!(
+        .stdout_eq(format!(
             "\
 exe: [DOTSLASHCACHEDIR]/[PACKZIPTHTTPARCHIVECACHEDIR]/subdir/[PRINTARGVEXECUTABLE]
 0: {argv0}
@@ -179,7 +179,7 @@ fn http__plain__valid_executable() {
 2: def
 ",
         )
-        .stdout_matches(format!(
+        .stdout_eq(format!(
             "\
 exe: [DOTSLASHCACHEDIR]/[PACKPLAINHTTPARCHIVECACHEDIR]/subdir/[PRINTARGVEXECUTABLE]
 0: {argv0}
@@ -208,7 +208,7 @@ fn http__tar_gz__valid_executable() {
 2: def
 ",
         )
-        .stdout_matches(format!(
+        .stdout_eq(format!(
             "\
 exe: [DOTSLASHCACHEDIR]/[PACKTGZHTTPARCHIVECACHEDIR]/subdir/[PRINTARGVEXECUTABLE]
 0: {argv0}
@@ -237,7 +237,7 @@ fn http__tar_xz__valid_executable() {
 2: def
 ",
         )
-        .stdout_matches(format!(
+        .stdout_eq(format!(
             "\
 exe: [DOTSLASHCACHEDIR]/[PACKTARXZHTTPARCHIVECACHEDIR]/subdir/[PRINTARGVEXECUTABLE]
 0: {argv0}
@@ -266,7 +266,7 @@ fn http__tar_zst__valid_executable() {
 2: def
 ",
         )
-        .stdout_matches(format!(
+        .stdout_eq(format!(
             "\
 exe: [DOTSLASHCACHEDIR]/[PACKTARZSTHTTPARCHIVECACHEDIR]/subdir/[PRINTARGVEXECUTABLE]
 0: {argv0}
@@ -293,7 +293,7 @@ fn http__nonexistent_url() {
         .assert()
         .code(1)
         .stdout_eq("")
-        .stderr_matches(
+        .stderr_eq(
             "\
 dotslash error: problem with `[CURRENTDIR]/tests/fixtures/http__nonexistent_url`
 caused by: failed to download artifact into cache `[DOTSLASHCACHEDIR]` artifact location `[DOTSLASHCACHEDIR]/[PACKTGZHTTPARCHIVECACHEDIR]`
@@ -320,7 +320,7 @@ fn command_missing() {
         .assert()
         .code(1)
         .stdout_eq("")
-        .stderr_matches(
+        .stderr_eq(
             "dotslash error: no subcommand passed to '--'
 
 See `dotslash --help` for more information.
@@ -338,7 +338,7 @@ fn command_no_match() {
         .assert()
         .code(1)
         .stdout_eq("")
-        .stderr_matches(
+        .stderr_eq(
             "\
 dotslash error: unknown subcommand passed to '--': `fake`
 
@@ -355,7 +355,7 @@ fn dotslash_file_arg_missing() {
         .assert()
         .code(1)
         .stdout_eq("")
-        .stderr_matches("dotslash error: must specify the path to a DotSlash file\n");
+        .stderr_eq("dotslash error: must specify the path to a DotSlash file\n");
 }
 
 #[test]
@@ -367,7 +367,7 @@ fn dotslash_file_not_found() {
         .assert()
         .code(1)
         .stdout_eq("")
-        .stderr_matches(
+        .stderr_eq(
             "\
 dotslash error: problem with `path/to/fake/file`
 caused by: failed to read DotSlash file
@@ -394,7 +394,7 @@ fn dotslash_file_is_a_directory() {
         .assert()
         .code(1)
         .stdout_eq("")
-        .stderr_matches(
+        .stderr_eq(
             "\
 dotslash error: problem with `[CURRENTDIR]/tests/fixtures`
 caused by: failed to read DotSlash file
@@ -412,7 +412,7 @@ fn dotslash_file_name_is_non_utf8() {
         .assert()
         .code(1)
         .stdout_eq("")
-        .stderr_matches(
+        .stderr_eq(
             "\
 dotslash error: problem with `a/\u{FFFD}/c`
 caused by: failed to read DotSlash file
@@ -452,7 +452,7 @@ fn help_command_ok() {
         .assert()
         .code(0)
         .stdout_eq("")
-        .stderr_matches(HELP_STDERR);
+        .stderr_eq(HELP_STDERR);
 }
 
 #[test]
@@ -464,7 +464,7 @@ fn help_flag_ok() {
         .assert()
         .code(0)
         .stdout_eq("")
-        .stderr_matches(HELP_STDERR);
+        .stderr_eq(HELP_STDERR);
 }
 
 #[test]
@@ -478,7 +478,7 @@ fn help_command_extra_args() {
         .assert()
         .code(1)
         .stdout_eq("")
-        .stderr_matches(
+        .stderr_eq(
             "\
 dotslash error: 'help' command failed
 caused by: expected no arguments but received some
@@ -496,7 +496,7 @@ fn help_flag_extra_args() {
         .assert()
         .code(1)
         .stdout_eq("")
-        .stderr_matches(
+        .stderr_eq(
             "\
 dotslash error: 'help' command failed
 caused by: expected no arguments but received some
@@ -546,7 +546,7 @@ fn version_command_extra_args() {
         .assert()
         .code(1)
         .stdout_eq("")
-        .stderr_matches(
+        .stderr_eq(
             "\
 dotslash error: 'version' command failed
 caused by: expected no arguments but received some
@@ -564,7 +564,7 @@ fn version_flag_extra_args() {
         .assert()
         .code(1)
         .stdout_eq("")
-        .stderr_matches(
+        .stderr_eq(
             "\
 dotslash error: 'version' command failed
 caused by: expected no arguments but received some
@@ -590,7 +590,7 @@ fn b3sum_command_ok() -> anyhow::Result<()> {
         .assert()
         .code(0)
         .stderr_eq("")
-        .stdout_matches("824ecff042b9ac68a33ea5ee027379a09f3da1d5a47f29fc52072809a204db87\n");
+        .stdout_eq("824ecff042b9ac68a33ea5ee027379a09f3da1d5a47f29fc52072809a204db87\n");
     Ok(())
 }
 
@@ -608,7 +608,7 @@ fn cache_dir_command_ok() {
         .assert()
         .code(0)
         .stderr_eq("")
-        .stdout_matches(
+        .stdout_eq(
             "\
 [DOTSLASHCACHEDIR]
 ",
@@ -626,7 +626,7 @@ fn cache_dir_command_extra_args() {
         .assert()
         .code(1)
         .stdout_eq("")
-        .stderr_matches(
+        .stderr_eq(
             "\
 dotslash error: 'cache-dir' command failed
 caused by: expected no arguments but received some
@@ -664,7 +664,7 @@ fn clean_command_ok() {
         .assert()
         .code(0)
         .stdout_eq("")
-        .stderr_matches("Cleaning `[DOTSLASHCACHEDIR]`\n");
+        .stderr_eq("Cleaning `[DOTSLASHCACHEDIR]`\n");
 
     assert!(!cache_dir.exists());
 }
@@ -680,7 +680,7 @@ fn clean_command_extra_args() {
         .assert()
         .code(1)
         .stdout_eq("")
-        .stderr_matches(
+        .stderr_eq(
             "\
 dotslash error: 'clean' command failed
 caused by: expected no arguments but received some
@@ -703,7 +703,7 @@ fn create_url_entry_tar_gz() {
         .assert()
         .code(0)
         .stderr_eq("")
-        .stdout_matches(
+        .stdout_eq(
             r#"{
   "size": 48689,
   "hash": "blake3",
@@ -731,7 +731,7 @@ fn create_url_entry_tar_zst() {
         .assert()
         .code(0)
         .stderr_eq("")
-        .stdout_matches(
+        .stdout_eq(
             r#"{
   "size": 38886,
   "hash": "blake3",
@@ -764,7 +764,7 @@ fn fetch_simple() {
         .assert()
         .code(0)
         .stderr_eq("")
-        .stdout_matches(
+        .stdout_eq(
             "[DOTSLASHCACHEDIR]/[PACKTGZHTTPARCHIVECACHEDIR]/subdir/[PRINTARGVEXECUTABLE]\n",
         );
 
@@ -791,7 +791,7 @@ fn parse_command_ok() {
         .assert()
         .code(0)
         .stderr_eq("")
-        .stdout_matches_path(ci::snapshot_path("http__dummy_values.out"));
+        .stdout_eq(ci::snapshot_file("http__dummy_values.out"));
 }
 
 #[test]
@@ -806,7 +806,7 @@ fn parse_command_extra_args() {
         .assert()
         .code(1)
         .stdout_eq("")
-        .stderr_matches(
+        .stderr_eq(
             "\
 dotslash error: 'parse' command failed
 caused by: expected exactly one argument but received more
@@ -825,7 +825,7 @@ fn parse_command_non_existent_file() {
         .assert()
         .code(1)
         .stdout_eq("")
-        .stderr_matches(
+        .stderr_eq(
             "\
 dotslash error: 'parse' command failed
 caused by: failed to read file `fake/path`
@@ -852,6 +852,6 @@ fn sha256_command_ok() -> anyhow::Result<()> {
         .assert()
         .code(0)
         .stderr_eq("")
-        .stdout_matches("52aa28f4f276bdd9a103fcd7f74f97f2bffc52dd816b887952f791b39356b08e\n");
+        .stdout_eq("52aa28f4f276bdd9a103fcd7f74f97f2bffc52dd816b887952f791b39356b08e\n");
     Ok(())
 }

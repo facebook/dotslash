@@ -7,14 +7,14 @@
  * of this source tree.
  */
 
-use std::borrow::Cow;
 use std::path::Path;
 use std::path::PathBuf;
 
 use anyhow::Context as _;
 use snapbox::cmd::Command;
 use snapbox::Assert;
-use snapbox::Substitutions;
+use snapbox::RedactedValue;
+use snapbox::Redactions;
 use tempfile::TempDir;
 
 #[cfg_attr(fbcode_build, path = "fb/ci.rs")]
@@ -91,7 +91,7 @@ const IO_ERROR_NOT_FOUND: &str = if cfg!(windows) {
 
 pub struct DotslashTestEnv {
     current_dir: PathBuf,
-    substitutions: Substitutions,
+    redactions: Redactions,
     tempdir_path: PathBuf,
     _tempdir: TempDir,
 }
@@ -110,59 +110,68 @@ impl DotslashTestEnv {
             .as_path()
             .as_os_str()
             .to_str()
-            .context("tempdir is not UTF-8")?
-            .to_owned();
+            .context("tempdir is not UTF-8")?;
+        // FIXME: Avoid path normalization.
+        let tempdir_str = if cfg!(windows) {
+            tempdir_str.replace('\\', "/")
+        } else {
+            tempdir_str.to_owned()
+        };
 
         let current_dir = ci::current_dir().context("failed to get current dir")?;
 
         let current_dir_str = current_dir
             .as_os_str()
             .to_str()
-            .context("current_dir is not UTF-8")?
-            .to_owned();
+            .context("current_dir is not UTF-8")?;
+        let current_dir_str = if cfg!(windows) {
+            current_dir_str.replace('\\', "/")
+        } else {
+            current_dir_str.to_owned()
+        };
 
-        let mut substitutions = Substitutions::new();
-        substitutions.insert("[DOTSLASHCACHEDIR]", tempdir_str)?;
-        substitutions.insert("[CURRENTDIR]", current_dir_str)?;
-        substitutions.insert(
+        let mut redactions = Redactions::new();
+        redactions.insert("[DOTSLASHCACHEDIR]", tempdir_str)?;
+        redactions.insert("[CURRENTDIR]", current_dir_str)?;
+        redactions.insert(
             "[PACKTGZHTTPARCHIVECACHEDIR]",
             PACK_TGZ_HTTP_ARCHIVE_CACHE_DIR,
         )?;
-        substitutions.insert(
+        redactions.insert(
             "[PACKTARXZHTTPARCHIVECACHEDIR]",
             PACK_TAR_XZ_HTTP_ARCHIVE_CACHE_DIR,
         )?;
-        substitutions.insert(
+        redactions.insert(
             "[PACKTARZSTHTTPARCHIVECACHEDIR]",
             PACK_TAR_ZST_HTTP_ARCHIVE_CACHE_DIR,
         )?;
-        substitutions.insert(
+        redactions.insert(
             "[PACKZIPTHTTPARCHIVECACHEDIR]",
             PACK_ZIP_HTTP_ARCHIVE_CACHE_DIR,
         )?;
-        substitutions.insert(
+        redactions.insert(
             "[PACKGZHTTPARCHIVECACHEDIR]",
             PACK_GZ_HTTP_ARCHIVE_CACHE_DIR,
         )?;
-        substitutions.insert(
+        redactions.insert(
             "[PACKXZHTTPARCHIVECACHEDIR]",
             PACK_XZ_HTTP_ARCHIVE_CACHE_DIR,
         )?;
-        substitutions.insert(
+        redactions.insert(
             "[PACKZSTHTTPARCHIVECACHEDIR]",
             PACK_ZST_HTTP_ARCHIVE_CACHE_DIR,
         )?;
-        substitutions.insert(
+        redactions.insert(
             "[PACKPLAINHTTPARCHIVECACHEDIR]",
             PACK_PLAIN_HTTP_ARCHIVE_CACHE_DIR,
         )?;
-        substitutions.insert("[PRINTARGVEXECUTABLE]", PRINT_ARGV_EXECUTABLE)?;
-        substitutions.insert("[IOERRORNOTFOUND]", IO_ERROR_NOT_FOUND)?;
-        substitutions.insert("[DOTSLASHUSERAGENT]", USER_AGENT)?;
+        redactions.insert("[PRINTARGVEXECUTABLE]", PRINT_ARGV_EXECUTABLE)?;
+        redactions.insert("[IOERRORNOTFOUND]", IO_ERROR_NOT_FOUND)?;
+        redactions.insert("[DOTSLASHUSERAGENT]", USER_AGENT)?;
 
         Ok(DotslashTestEnv {
             current_dir,
-            substitutions,
+            redactions,
             tempdir_path,
             _tempdir: tempdir,
         })
@@ -171,9 +180,9 @@ impl DotslashTestEnv {
     pub fn substitution(
         &mut self,
         key: &'static str,
-        value: impl Into<Cow<'static, str>>,
-    ) -> Result<&mut Self, snapbox::Error> {
-        self.substitutions.insert(key, value)?;
+        value: impl Into<RedactedValue>,
+    ) -> snapbox::assert::Result<&mut Self> {
+        self.redactions.insert(key, value)?;
         Ok(self)
     }
 
@@ -182,7 +191,8 @@ impl DotslashTestEnv {
     }
 
     pub fn dotslash_command(&self) -> Command {
-        let assert = Assert::new().substitutions(self.substitutions.clone());
+        // TODO: .normalize_paths(false)
+        let assert = Assert::new().redact_with(self.redactions.clone());
         Command::new(ci::dotslash_bin())
             .current_dir(&self.current_dir)
             .env("DOTSLASH_CACHE", &self.tempdir_path)

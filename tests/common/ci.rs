@@ -14,6 +14,9 @@ use std::iter;
 use std::path::Path;
 use std::path::PathBuf;
 
+use snapbox::data::DataFormat;
+use snapbox::Data;
+
 pub fn current_dir() -> io::Result<PathBuf> {
     env::current_dir()
 }
@@ -26,6 +29,7 @@ pub fn envs() -> impl IntoIterator<Item = (impl AsRef<OsStr>, impl AsRef<OsStr>)
     iter::empty::<(&str, &str)>()
 }
 
-pub fn snapshot_path(name: &str) -> PathBuf {
-    Path::new(".").join("tests").join("snapshots").join(name)
+pub fn snapshot_file(name: &str) -> Data {
+    let path = Path::new(".").join("tests").join("snapshots").join(name);
+    Data::read_from(&path, Some(DataFormat::Text))
 }
