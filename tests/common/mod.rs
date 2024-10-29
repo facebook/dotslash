@@ -7,6 +7,7 @@
  * of this source tree.
  */
 
+use std::collections::HashMap;
 use std::path::Path;
 use std::path::PathBuf;
 
@@ -23,6 +24,18 @@ pub mod ci;
 #[path = "../../src/platform.rs"]
 #[expect(dead_code)]
 mod platform;
+
+macro_rules! if_win_else {
+    ($windows:expr, $not_windows:expr $(,)?) => {
+        if cfg!(windows) {
+            $windows
+        } else {
+            $not_windows
+        }
+    };
+}
+
+pub(crate) use if_win_else;
 
 const PACK_TGZ_HTTP_ARCHIVE_CACHE_DIR: &str = "cf/df86e55cbbd2455fd1e36468c2b1ff7f8998d4";
 
@@ -83,15 +96,66 @@ const PACK_PLAIN_HTTP_ARCHIVE_CACHE_DIR: &str = platform::if_platform! {
     windows_x86_64 = "19/0d26175e50e486f87d90ca9d10ac50e3c248fd",
 };
 
-const IO_ERROR_NOT_FOUND: &str = if cfg!(windows) {
-    "The system cannot find the path specified. (os error 3)"
-} else {
-    "No such file or directory (os error 2)"
-};
+const IO_ERROR_NOT_FOUND: &str = if_win_else!(
+    "The system cannot find the path specified. (os error 3)",
+    "No such file or directory (os error 2)",
+);
+
+#[derive(Debug)]
+struct SuperRedactions {
+    redactions: Redactions,
+    literal: HashMap<&'static str, String>,
+}
+
+impl SuperRedactions {
+    fn new() -> Self {
+        Self {
+            redactions: Redactions::new(),
+            literal: HashMap::new(),
+        }
+    }
+
+    fn redaction(
+        &mut self,
+        key: &'static str,
+        value: impl Into<RedactedValue>,
+    ) -> snapbox::assert::Result<&mut Self> {
+        self.redactions.insert(key, value)?;
+        Ok(self)
+    }
+
+    /// Normalizes path separators to the platform native separator,
+    /// and expands nested path redactions.
+    fn path_redaction(
+        &mut self,
+        key: &'static str,
+        value: impl AsRef<Path>,
+    ) -> snapbox::assert::Result<&mut Self> {
+        let value = value
+            .as_ref()
+            .components()
+            .map(|comp| {
+                (|| {
+                    let k = comp.as_os_str().to_str()?;
+                    let v = self.literal.get(k)?.as_ref();
+                    Some(v)
+                })()
+                .unwrap_or(comp.as_os_str())
+            })
+            .collect::<PathBuf>()
+            .to_string_lossy()
+            .into_owned();
+
+        self.redactions.insert(key, value.clone())?;
+        self.literal.insert(key, value);
+
+        Ok(self)
+    }
+}
 
 pub struct DotslashTestEnv {
     current_dir: PathBuf,
-    redactions: Redactions,
+    redactions: SuperRedactions,
     tempdir_path: PathBuf,
     _tempdir: TempDir,
 }
@@ -110,64 +174,55 @@ impl DotslashTestEnv {
             .as_path()
             .as_os_str()
             .to_str()
-            .context("tempdir is not UTF-8")?;
-        // FIXME: Avoid path normalization.
-        let tempdir_str = if cfg!(windows) {
-            tempdir_str.replace('\\', "/")
-        } else {
-            tempdir_str.to_owned()
-        };
+            .context("tempdir is not UTF-8")?
+            .to_owned();
 
         let current_dir = ci::current_dir().context("failed to get current dir")?;
 
         let current_dir_str = current_dir
             .as_os_str()
             .to_str()
-            .context("current_dir is not UTF-8")?;
-        let current_dir_str = if cfg!(windows) {
-            current_dir_str.replace('\\', "/")
-        } else {
-            current_dir_str.to_owned()
-        };
+            .context("current_dir is not UTF-8")?
+            .to_owned();
 
-        let mut redactions = Redactions::new();
-        redactions.insert("[DOTSLASHCACHEDIR]", tempdir_str)?;
-        redactions.insert("[CURRENTDIR]", current_dir_str)?;
-        redactions.insert(
-            "[PACKTGZHTTPARCHIVECACHEDIR]",
+        let mut redactions = SuperRedactions::new();
+        redactions.path_redaction("[DOTSLASH_CACHE_DIR]", tempdir_str)?;
+        redactions.path_redaction("[CURRENT_DIR]", current_dir_str)?;
+        redactions.path_redaction(
+            "[PACK_TGZ_HTTP_ARCHIVE_CACHE_DIR]",
             PACK_TGZ_HTTP_ARCHIVE_CACHE_DIR,
         )?;
-        redactions.insert(
-            "[PACKTARXZHTTPARCHIVECACHEDIR]",
+        redactions.path_redaction(
+            "[PACK_TAR_XZ_HTTP_ARCHIVE_CACHE_DIR]",
             PACK_TAR_XZ_HTTP_ARCHIVE_CACHE_DIR,
         )?;
-        redactions.insert(
-            "[PACKTARZSTHTTPARCHIVECACHEDIR]",
+        redactions.path_redaction(
+            "[PACK_TAR_ZST_HTTP_ARCHIVE_CACHE_DIR]",
             PACK_TAR_ZST_HTTP_ARCHIVE_CACHE_DIR,
         )?;
-        redactions.insert(
-            "[PACKZIPTHTTPARCHIVECACHEDIR]",
+        redactions.path_redaction(
+            "[PACK_ZIP_HTTP_ARCHIVE_CACHE_DIR]",
             PACK_ZIP_HTTP_ARCHIVE_CACHE_DIR,
         )?;
-        redactions.insert(
-            "[PACKGZHTTPARCHIVECACHEDIR]",
+        redactions.path_redaction(
+            "[PACK_GZ_HTTP_ARCHIVE_CACHE_DIR]",
             PACK_GZ_HTTP_ARCHIVE_CACHE_DIR,
         )?;
-        redactions.insert(
-            "[PACKXZHTTPARCHIVECACHEDIR]",
+        redactions.path_redaction(
+            "[PACK_XZ_HTTP_ARCHIVE_CACHE_DIR]",
             PACK_XZ_HTTP_ARCHIVE_CACHE_DIR,
         )?;
-        redactions.insert(
-            "[PACKZSTHTTPARCHIVECACHEDIR]",
+        redactions.path_redaction(
+            "[PACK_ZST_HTTP_ARCHIVE_CACHE_DIR]",
             PACK_ZST_HTTP_ARCHIVE_CACHE_DIR,
         )?;
-        redactions.insert(
-            "[PACKPLAINHTTPARCHIVECACHEDIR]",
+        redactions.path_redaction(
+            "[PACK_PLAIN_HTTP_ARCHIVE_CACHE_DIR]",
             PACK_PLAIN_HTTP_ARCHIVE_CACHE_DIR,
         )?;
-        redactions.insert("[PRINTARGVEXECUTABLE]", PRINT_ARGV_EXECUTABLE)?;
-        redactions.insert("[IOERRORNOTFOUND]", IO_ERROR_NOT_FOUND)?;
-        redactions.insert("[DOTSLASHUSERAGENT]", USER_AGENT)?;
+        redactions.path_redaction("[PRINT_ARGV_EXECUTABLE]", PRINT_ARGV_EXECUTABLE)?;
+        redactions.redaction("[IO_ERROR_NOT_FOUND]", IO_ERROR_NOT_FOUND)?;
+        redactions.redaction("[DOTSLASH_USER_AGENT]", USER_AGENT)?;
 
         Ok(DotslashTestEnv {
             current_dir,
@@ -177,13 +232,19 @@ impl DotslashTestEnv {
         })
     }
 
-    pub fn substitution(
-        &mut self,
-        key: &'static str,
-        value: impl Into<RedactedValue>,
-    ) -> snapbox::assert::Result<&mut Self> {
-        self.redactions.insert(key, value)?;
-        Ok(self)
+    pub fn redaction(&mut self, key: &'static str, value: impl Into<RedactedValue>) -> &mut Self {
+        self.redactions.redaction(key, value).unwrap();
+        self
+    }
+
+    pub fn path_redaction(&mut self, key: &'static str, value: impl AsRef<Path>) -> &mut Self {
+        self.redactions.path_redaction(key, value.as_ref()).unwrap();
+        self
+    }
+
+    #[expect(dead_code)]
+    pub fn current_dir(&self) -> &Path {
+        &self.current_dir
     }
 
     pub fn dotslash_cache(&self) -> &Path {
@@ -191,8 +252,9 @@ impl DotslashTestEnv {
     }
 
     pub fn dotslash_command(&self) -> Command {
-        // TODO: .normalize_paths(false)
-        let assert = Assert::new().redact_with(self.redactions.clone());
+        let assert = Assert::new()
+            .normalize_paths(false)
+            .redact_with(self.redactions.redactions.clone());
         Command::new(ci::dotslash_bin())
             .current_dir(&self.current_dir)
             .env("DOTSLASH_CACHE", &self.tempdir_path)

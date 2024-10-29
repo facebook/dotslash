@@ -12,10 +12,13 @@
 mod common;
 
 use std::ffi::OsString;
+use std::fs;
+use std::str;
 
 use tempfile::NamedTempFile;
 
 use crate::common::ci;
+use crate::common::if_win_else;
 use crate::common::DotslashTestEnv;
 
 #[cfg(unix)]
@@ -51,6 +54,10 @@ fn test_non_utf8_osstring() {
 fn http__gz__valid_executable() {
     DotslashTestEnv::try_new()
         .unwrap()
+        .path_redaction(
+            "[ARTIFACT_EXE]",
+            "[DOTSLASH_CACHE_DIR]/[PACK_GZ_HTTP_ARCHIVE_CACHE_DIR]/subdir/[PRINT_ARGV_EXECUTABLE]",
+        )
         .dotslash_command()
         .arg("tests/fixtures/http__gz__print_argv")
         .arg("abc")
@@ -63,16 +70,15 @@ fn http__gz__valid_executable() {
 2: def
 ",
         )
-        .stdout_eq(format!(
+        .stdout_eq(if_win_else!(
             "\
-exe: [DOTSLASHCACHEDIR]/[PACKGZHTTPARCHIVECACHEDIR]/subdir/[PRINTARGVEXECUTABLE]
-0: {argv0}
+exe: [ARTIFACT_EXE]
+0: [ARTIFACT_EXE]
 ",
-            argv0 = if cfg!(windows) {
-                "[DOTSLASHCACHEDIR]/[PACKGZHTTPARCHIVECACHEDIR]/subdir/[PRINTARGVEXECUTABLE]"
-            } else {
-                "tests/fixtures/http__gz__print_argv"
-            }
+            "\
+exe: [ARTIFACT_EXE]
+0: tests/fixtures/http__gz__print_argv
+",
         ));
 }
 
@@ -80,6 +86,10 @@ exe: [DOTSLASHCACHEDIR]/[PACKGZHTTPARCHIVECACHEDIR]/subdir/[PRINTARGVEXECUTABLE]
 fn http__xz__valid_executable() {
     DotslashTestEnv::try_new()
         .unwrap()
+        .path_redaction(
+            "[ARTIFACT_EXE]",
+            "[DOTSLASH_CACHE_DIR]/[PACK_XZ_HTTP_ARCHIVE_CACHE_DIR]/subdir/[PRINT_ARGV_EXECUTABLE]",
+        )
         .dotslash_command()
         .arg("tests/fixtures/http__xz__print_argv")
         .arg("abc")
@@ -92,16 +102,15 @@ fn http__xz__valid_executable() {
 2: def
 ",
         )
-        .stdout_eq(format!(
+        .stdout_eq(if_win_else!(
             "\
-exe: [DOTSLASHCACHEDIR]/[PACKXZHTTPARCHIVECACHEDIR]/subdir/[PRINTARGVEXECUTABLE]
-0: {argv0}
+exe: [ARTIFACT_EXE]
+0: [ARTIFACT_EXE]
 ",
-            argv0 = if cfg!(windows) {
-                "[DOTSLASHCACHEDIR]/[PACKXZHTTPARCHIVECACHEDIR]/subdir/[PRINTARGVEXECUTABLE]"
-            } else {
-                "tests/fixtures/http__xz__print_argv"
-            }
+            "\
+exe: [ARTIFACT_EXE]
+0: tests/fixtures/http__xz__print_argv
+",
         ));
 }
 
@@ -109,6 +118,10 @@ exe: [DOTSLASHCACHEDIR]/[PACKXZHTTPARCHIVECACHEDIR]/subdir/[PRINTARGVEXECUTABLE]
 fn http__zst__valid_executable() {
     DotslashTestEnv::try_new()
         .unwrap()
+        .path_redaction(
+            "[ARTIFACT_EXE]",
+            "[DOTSLASH_CACHE_DIR]/[PACK_ZST_HTTP_ARCHIVE_CACHE_DIR]/subdir/[PRINT_ARGV_EXECUTABLE]",
+        )
         .dotslash_command()
         .arg("tests/fixtures/http__zst__print_argv")
         .arg("abc")
@@ -121,16 +134,15 @@ fn http__zst__valid_executable() {
 2: def
 ",
         )
-        .stdout_eq(format!(
+        .stdout_eq(if_win_else!(
             "\
-exe: [DOTSLASHCACHEDIR]/[PACKZSTHTTPARCHIVECACHEDIR]/subdir/[PRINTARGVEXECUTABLE]
-0: {argv0}
+exe: [ARTIFACT_EXE]
+0: [ARTIFACT_EXE]
 ",
-            argv0 = if cfg!(windows) {
-                "[DOTSLASHCACHEDIR]/[PACKZSTHTTPARCHIVECACHEDIR]/subdir/[PRINTARGVEXECUTABLE]"
-            } else {
-                "tests/fixtures/http__zst__print_argv"
-            }
+            "\
+exe: [ARTIFACT_EXE]
+0: tests/fixtures/http__zst__print_argv
+",
         ));
 }
 
@@ -138,6 +150,10 @@ exe: [DOTSLASHCACHEDIR]/[PACKZSTHTTPARCHIVECACHEDIR]/subdir/[PRINTARGVEXECUTABLE
 fn http__zip__valid_executable() {
     DotslashTestEnv::try_new()
         .unwrap()
+        .path_redaction(
+            "[ARTIFACT_EXE]",
+            "[DOTSLASH_CACHE_DIR]/[PACK_ZIP_HTTP_ARCHIVE_CACHE_DIR]/subdir/[PRINT_ARGV_EXECUTABLE]",
+        )
         .dotslash_command()
         .arg("tests/fixtures/http__zip__print_argv")
         .arg("abc")
@@ -150,16 +166,15 @@ fn http__zip__valid_executable() {
 2: def
 ",
         )
-        .stdout_eq(format!(
+        .stdout_eq(if_win_else!(
             "\
-exe: [DOTSLASHCACHEDIR]/[PACKZIPTHTTPARCHIVECACHEDIR]/subdir/[PRINTARGVEXECUTABLE]
-0: {argv0}
+exe: [ARTIFACT_EXE]
+0: [ARTIFACT_EXE]
 ",
-            argv0 = if cfg!(windows) {
-                "[DOTSLASHCACHEDIR]/[PACKZIPTHTTPARCHIVECACHEDIR]/subdir/[PRINTARGVEXECUTABLE]"
-            } else {
-                "tests/fixtures/http__zip__print_argv"
-            }
+            "\
+exe: [ARTIFACT_EXE]
+0: tests/fixtures/http__zip__print_argv
+",
         ));
 }
 
@@ -167,6 +182,10 @@ exe: [DOTSLASHCACHEDIR]/[PACKZIPTHTTPARCHIVECACHEDIR]/subdir/[PRINTARGVEXECUTABL
 fn http__plain__valid_executable() {
     DotslashTestEnv::try_new()
         .unwrap()
+        .path_redaction(
+            "[ARTIFACT_EXE]",
+            "[DOTSLASH_CACHE_DIR]/[PACK_PLAIN_HTTP_ARCHIVE_CACHE_DIR]/subdir/[PRINT_ARGV_EXECUTABLE]",
+        )
         .dotslash_command()
         .arg("tests/fixtures/http__plain__print_argv")
         .arg("abc")
@@ -179,16 +198,15 @@ fn http__plain__valid_executable() {
 2: def
 ",
         )
-        .stdout_eq(format!(
+        .stdout_eq(if_win_else!(
             "\
-exe: [DOTSLASHCACHEDIR]/[PACKPLAINHTTPARCHIVECACHEDIR]/subdir/[PRINTARGVEXECUTABLE]
-0: {argv0}
+exe: [ARTIFACT_EXE]
+0: [ARTIFACT_EXE]
 ",
-            argv0 = if cfg!(windows) {
-                "[DOTSLASHCACHEDIR]/[PACKPLAINHTTPARCHIVECACHEDIR]/subdir/[PRINTARGVEXECUTABLE]"
-            } else {
-                "tests/fixtures/http__plain__print_argv"
-            }
+            "\
+exe: [ARTIFACT_EXE]
+0: tests/fixtures/http__plain__print_argv
+",
         ));
 }
 
@@ -196,6 +214,10 @@ exe: [DOTSLASHCACHEDIR]/[PACKPLAINHTTPARCHIVECACHEDIR]/subdir/[PRINTARGVEXECUTAB
 fn http__tar_gz__valid_executable() {
     DotslashTestEnv::try_new()
         .unwrap()
+        .path_redaction(
+            "[ARTIFACT_EXE]",
+            "[DOTSLASH_CACHE_DIR]/[PACK_TGZ_HTTP_ARCHIVE_CACHE_DIR]/subdir/[PRINT_ARGV_EXECUTABLE]",
+        )
         .dotslash_command()
         .arg("tests/fixtures/http__tar_gz__print_argv")
         .arg("abc")
@@ -208,16 +230,15 @@ fn http__tar_gz__valid_executable() {
 2: def
 ",
         )
-        .stdout_eq(format!(
+        .stdout_eq(if_win_else!(
             "\
-exe: [DOTSLASHCACHEDIR]/[PACKTGZHTTPARCHIVECACHEDIR]/subdir/[PRINTARGVEXECUTABLE]
-0: {argv0}
+exe: [ARTIFACT_EXE]
+0: [ARTIFACT_EXE]
 ",
-            argv0 = if cfg!(windows) {
-                "[DOTSLASHCACHEDIR]/[PACKTGZHTTPARCHIVECACHEDIR]/subdir/[PRINTARGVEXECUTABLE]"
-            } else {
-                "tests/fixtures/http__tar_gz__print_argv"
-            }
+            "\
+exe: [ARTIFACT_EXE]
+0: tests/fixtures/http__tar_gz__print_argv
+",
         ));
 }
 
@@ -225,6 +246,10 @@ exe: [DOTSLASHCACHEDIR]/[PACKTGZHTTPARCHIVECACHEDIR]/subdir/[PRINTARGVEXECUTABLE
 fn http__tar_xz__valid_executable() {
     DotslashTestEnv::try_new()
         .unwrap()
+        .path_redaction(
+            "[ARTIFACT_EXE]",
+            "[DOTSLASH_CACHE_DIR]/[PACK_TAR_XZ_HTTP_ARCHIVE_CACHE_DIR]/subdir/[PRINT_ARGV_EXECUTABLE]",
+        )
         .dotslash_command()
         .arg("tests/fixtures/http__tar_xz__print_argv")
         .arg("abc")
@@ -237,16 +262,15 @@ fn http__tar_xz__valid_executable() {
 2: def
 ",
         )
-        .stdout_eq(format!(
+        .stdout_eq(if_win_else!(
             "\
-exe: [DOTSLASHCACHEDIR]/[PACKTARXZHTTPARCHIVECACHEDIR]/subdir/[PRINTARGVEXECUTABLE]
-0: {argv0}
+exe: [ARTIFACT_EXE]
+0: [ARTIFACT_EXE]
 ",
-            argv0 = if cfg!(windows) {
-                "[DOTSLASHCACHEDIR]/[PACKTARXZHTTPARCHIVECACHEDIR]/subdir/[PRINTARGVEXECUTABLE]"
-            } else {
-                "tests/fixtures/http__tar_xz__print_argv"
-            }
+            "\
+exe: [ARTIFACT_EXE]
+0: tests/fixtures/http__tar_xz__print_argv
+",
         ));
 }
 
@@ -254,6 +278,10 @@ exe: [DOTSLASHCACHEDIR]/[PACKTARXZHTTPARCHIVECACHEDIR]/subdir/[PRINTARGVEXECUTAB
 fn http__tar_zst__valid_executable() {
     DotslashTestEnv::try_new()
         .unwrap()
+        .path_redaction(
+            "[ARTIFACT_EXE]",
+            "[DOTSLASH_CACHE_DIR]/[PACK_TAR_ZST_HTTP_ARCHIVE_CACHE_DIR]/subdir/[PRINT_ARGV_EXECUTABLE]",
+        )
         .dotslash_command()
         .arg("tests/fixtures/http__tar_zst__print_argv")
         .arg("abc")
@@ -266,16 +294,15 @@ fn http__tar_zst__valid_executable() {
 2: def
 ",
         )
-        .stdout_eq(format!(
+        .stdout_eq(if_win_else!(
             "\
-exe: [DOTSLASHCACHEDIR]/[PACKTARZSTHTTPARCHIVECACHEDIR]/subdir/[PRINTARGVEXECUTABLE]
-0: {argv0}
+exe: [ARTIFACT_EXE]
+0: [ARTIFACT_EXE]
 ",
-            argv0 = if cfg!(windows) {
-                "[DOTSLASHCACHEDIR]/[PACKTARZSTHTTPARCHIVECACHEDIR]/subdir/[PRINTARGVEXECUTABLE]"
-            } else {
-                "tests/fixtures/http__tar_zst__print_argv"
-            }
+            "\
+exe: [ARTIFACT_EXE]
+0: tests/fixtures/http__tar_zst__print_argv
+",
         ));
 }
 
@@ -283,11 +310,13 @@ exe: [DOTSLASHCACHEDIR]/[PACKTARZSTHTTPARCHIVECACHEDIR]/subdir/[PRINTARGVEXECUTA
 fn http__nonexistent_url() {
     DotslashTestEnv::try_new()
         .unwrap()
-        .substitution(
-            "[PROVIDERURL]",
+        .path_redaction("[DOTSLASH_FILE]", "[CURRENT_DIR]/tests/fixtures/http__nonexistent_url")
+        .path_redaction("[ARTIFACT_LOCATION]", "[DOTSLASH_CACHE_DIR]/[PACK_TGZ_HTTP_ARCHIVE_CACHE_DIR]")
+        .path_redaction("[OUTPUT_FILE]", "[DOTSLASH_CACHE_DIR]/cf/.tmp")
+        .redaction(
+            "[PROVIDER_URL]",
             "https://github.com/zertosh/dotslash_fixtures/raw/5adea95f2eac6509cad9ca87eb770596a1a21379/fake.tar.gz",
         )
-        .unwrap()
         .dotslash_command()
         .arg("tests/fixtures/http__nonexistent_url")
         .assert()
@@ -295,13 +324,13 @@ fn http__nonexistent_url() {
         .stdout_eq("")
         .stderr_eq(
             "\
-dotslash error: problem with `[CURRENTDIR]/tests/fixtures/http__nonexistent_url`
-caused by: failed to download artifact into cache `[DOTSLASHCACHEDIR]` artifact location `[DOTSLASHCACHEDIR]/[PACKTGZHTTPARCHIVECACHEDIR]`
+dotslash error: problem with `[DOTSLASH_FILE]`
+caused by: failed to download artifact into cache `[DOTSLASH_CACHE_DIR]` artifact location `[ARTIFACT_LOCATION]`
 caused by: no providers succeeded. warnings:
-failed to fetch artifact: failed to fetch `[PROVIDERURL]`
+failed to fetch artifact: failed to fetch `[PROVIDER_URL]`
 
 Caused by:
-    0: `curl --location --retry 3 --fail --silent --show-error --user-agent [DOTSLASHUSERAGENT] [PROVIDERURL] --output [DOTSLASHCACHEDIR]/cf/.tmp[..]`
+    0: `curl --location --retry 3 --fail --silent --show-error --user-agent [DOTSLASH_USER_AGENT] [PROVIDER_URL] --output [OUTPUT_FILE][..]`
     1: 404 Not Found
 ",
         );
@@ -371,7 +400,7 @@ fn dotslash_file_not_found() {
             "\
 dotslash error: problem with `path/to/fake/file`
 caused by: failed to read DotSlash file
-caused by: [IOERRORNOTFOUND]
+caused by: [IO_ERROR_NOT_FOUND]
 ",
         );
 }
@@ -380,15 +409,14 @@ caused by: [IOERRORNOTFOUND]
 fn dotslash_file_is_a_directory() {
     DotslashTestEnv::try_new()
         .unwrap()
-        .substitution(
-            "[IOERROR]",
-            if cfg!(windows) {
-                "Access is denied. (os error 5)"
-            } else {
-                "Is a directory (os error 21)"
-            },
+        .redaction(
+            "[IO_ERROR_IS_A_DIRECTORY]",
+            if_win_else!(
+                "Access is denied. (os error 5)",
+                "Is a directory (os error 21)",
+            ),
         )
-        .unwrap()
+        .path_redaction("[DOTSLASH_FILE]", "[CURRENT_DIR]/tests/fixtures")
         .dotslash_command()
         .arg("tests/fixtures")
         .assert()
@@ -396,9 +424,9 @@ fn dotslash_file_is_a_directory() {
         .stdout_eq("")
         .stderr_eq(
             "\
-dotslash error: problem with `[CURRENTDIR]/tests/fixtures`
+dotslash error: problem with `[DOTSLASH_FILE]`
 caused by: failed to read DotSlash file
-caused by: [IOERROR]
+caused by: [IO_ERROR_IS_A_DIRECTORY]
 ",
         );
 }
@@ -416,7 +444,7 @@ fn dotslash_file_name_is_non_utf8() {
             "\
 dotslash error: problem with `a/\u{FFFD}/c`
 caused by: failed to read DotSlash file
-caused by: [IOERRORNOTFOUND]
+caused by: [IO_ERROR_NOT_FOUND]
 ",
         );
 }
@@ -437,7 +465,7 @@ DOTSLASH_FILE.
 
 Supported platform: [..]
 
-Your DotSlash cache is: [DOTSLASHCACHEDIR]
+Your DotSlash cache is: [DOTSLASH_CACHE_DIR]
 
 Learn more at https://dotslash-cli.com
 ";
@@ -579,7 +607,7 @@ caused by: expected no arguments but received some
 #[test]
 fn b3sum_command_ok() -> anyhow::Result<()> {
     let tempfile = NamedTempFile::new()?;
-    std::fs::write(tempfile.path(), "DotSlash Rulez!\n")?;
+    fs::write(tempfile.path(), "DotSlash Rulez!\n")?;
 
     DotslashTestEnv::try_new()
         .unwrap()
@@ -591,6 +619,7 @@ fn b3sum_command_ok() -> anyhow::Result<()> {
         .code(0)
         .stderr_eq("")
         .stdout_eq("824ecff042b9ac68a33ea5ee027379a09f3da1d5a47f29fc52072809a204db87\n");
+
     Ok(())
 }
 
@@ -608,11 +637,7 @@ fn cache_dir_command_ok() {
         .assert()
         .code(0)
         .stderr_eq("")
-        .stdout_eq(
-            "\
-[DOTSLASHCACHEDIR]
-",
-        );
+        .stdout_eq("[DOTSLASH_CACHE_DIR]\n");
 }
 
 #[test]
@@ -639,14 +664,14 @@ caused by: expected no arguments but received some
 //
 
 #[test]
-fn clean_command_ok() {
-    let test_env = DotslashTestEnv::try_new().unwrap();
+fn clean_command_ok() -> anyhow::Result<()> {
+    let test_env = DotslashTestEnv::try_new()?;
 
     let cache_dir = test_env.dotslash_cache();
 
     // Cache dir exists, but should be empty.
     assert!(cache_dir.exists());
-    let is_empty = std::fs::read_dir(cache_dir).unwrap().next().is_none();
+    let is_empty = fs::read_dir(cache_dir)?.next().is_none();
     assert!(is_empty);
 
     test_env
@@ -664,9 +689,11 @@ fn clean_command_ok() {
         .assert()
         .code(0)
         .stdout_eq("")
-        .stderr_eq("Cleaning `[DOTSLASHCACHEDIR]`\n");
+        .stderr_eq("Cleaning `[DOTSLASH_CACHE_DIR]`\n");
 
     assert!(!cache_dir.exists());
+
+    Ok(())
 }
 
 #[test]
@@ -753,8 +780,12 @@ fn create_url_entry_tar_zst() {
 //
 
 #[test]
-fn fetch_simple() {
-    let test_env = DotslashTestEnv::try_new().unwrap();
+fn fetch_simple() -> anyhow::Result<()> {
+    let mut test_env = DotslashTestEnv::try_new()?;
+    test_env.path_redaction(
+        "[ARTIFACT_EXE]",
+        "[DOTSLASH_CACHE_DIR]/[PACK_TGZ_HTTP_ARCHIVE_CACHE_DIR]/subdir/[PRINT_ARGV_EXECUTABLE]",
+    );
 
     let assert = test_env
         .dotslash_command()
@@ -764,16 +795,14 @@ fn fetch_simple() {
         .assert()
         .code(0)
         .stderr_eq("")
-        .stdout_eq(
-            "[DOTSLASHCACHEDIR]/[PACKTGZHTTPARCHIVECACHEDIR]/subdir/[PRINTARGVEXECUTABLE]\n",
-        );
+        .stdout_eq("[ARTIFACT_EXE]\n");
 
-    let artifact = std::str::from_utf8(&assert.get_output().stdout)
-        .unwrap()
-        .trim_end();
+    let artifact = str::from_utf8(&assert.get_output().stdout)?.trim_end();
 
-    let metadata = std::fs::metadata(artifact).unwrap();
+    let metadata = fs::metadata(artifact)?;
     assert!(metadata.is_file());
+
+    Ok(())
 }
 
 //
@@ -829,7 +858,7 @@ fn parse_command_non_existent_file() {
             "\
 dotslash error: 'parse' command failed
 caused by: failed to read file `fake/path`
-caused by: [IOERRORNOTFOUND]
+caused by: [IO_ERROR_NOT_FOUND]
 ",
         );
 }
@@ -841,10 +870,9 @@ caused by: [IOERRORNOTFOUND]
 #[test]
 fn sha256_command_ok() -> anyhow::Result<()> {
     let tempfile = NamedTempFile::new()?;
-    std::fs::write(tempfile.path(), "DotSlash Rulez!\n")?;
+    fs::write(tempfile.path(), "DotSlash Rulez!\n")?;
 
-    DotslashTestEnv::try_new()
-        .unwrap()
+    DotslashTestEnv::try_new()?
         .dotslash_command()
         .arg("--")
         .arg("sha256")
@@ -853,5 +881,6 @@ fn sha256_command_ok() -> anyhow::Result<()> {
         .code(0)
         .stderr_eq("")
         .stdout_eq("52aa28f4f276bdd9a103fcd7f74f97f2bffc52dd816b887952f791b39356b08e\n");
+
     Ok(())
 }
