@@ -10,7 +10,7 @@
 use std::env::ArgsOs;
 use std::ffi::OsString;
 use std::fmt;
-use std::io::BufReader;
+use std::io;
 use std::str::FromStr;
 
 use anyhow::Context as _;
@@ -125,11 +125,10 @@ fn _run_subcommand(subcommand: &Subcommand, args: &mut ArgsOs) -> anyhow::Result
         Subcommand::B3Sum => {
             let file_arg = take_exactly_one_arg(args)?;
             // TODO: read from stdin if file_arg is `-`
-            let file = fs_ctx::file_open(file_arg)?;
-            let mut reader = BufReader::new(file);
+            let mut file = fs_ctx::file_open(file_arg)?;
             let mut hasher = blake3::Hasher::new();
-            let hex_digest = std::io::copy(&mut reader, &mut hasher)
-                .map(|_size_in_bytes| format!("{:x}", hasher.finalize()))?;
+            io::copy(&mut file, &mut hasher)?;
+            let hex_digest = format!("{:x}", hasher.finalize());
             println!("{}", hex_digest);
         }
 
@@ -230,11 +229,10 @@ Learn more at {}
         Subcommand::Sha256 => {
             let file_arg = take_exactly_one_arg(args)?;
             // TODO: read from stdin if file_arg is `-`
-            let file = fs_ctx::file_open(file_arg)?;
-            let mut reader = BufReader::new(file);
+            let mut file = fs_ctx::file_open(file_arg)?;
             let mut hasher = Sha256::new();
-            let hex_digest = std::io::copy(&mut reader, &mut hasher)
-                .map(|_size_in_bytes| format!("{:x}", hasher.finalize()))?;
+            io::copy(&mut file, &mut hasher)?;
+            let hex_digest = format!("{:x}", hasher.finalize());
             println!("{}", hex_digest);
         }
     };

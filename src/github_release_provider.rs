@@ -7,7 +7,6 @@
  * of this source tree.
  */
 
-use std::fmt::Write;
 use std::path::Path;
 use std::process::Command;
 
@@ -35,8 +34,7 @@ impl Provider for GitHubReleaseProvider {
         _fetch_lock: &FileLock,
         _artifact_entry: &ArtifactEntry,
     ) -> anyhow::Result<()> {
-        let GitHubReleaseProviderConfig { tag, repo, name } =
-            GitHubReleaseProviderConfig::deserialize(provider_config)?;
+        let GitHubReleaseProviderConfig { tag, repo, name } = <_>::deserialize(provider_config)?;
         let _output = Command::new("gh")
             .arg("release")
             .arg("download")
@@ -62,15 +60,14 @@ fn regex_escape(s: &str) -> String {
         // Releases filenames likely have at least one `.` in there that needs
         // to be escaped, so add some padding, by default.
         String::with_capacity(s.len() + 4),
-        |mut output, c| match c {
-            '\\' | '.' | '+' | '*' | '?' | '(' | ')' | '[' | ']' | '{' | '}' | '|' | '^' | '$' => {
-                let _ = write!(output, "\\{c}");
-                output
-            }
-            _ => {
-                let _ = write!(output, "{c}");
-                output
-            }
+        |mut output, c| {
+            if let '\\' | '.' | '+' | '*' | '?' | '(' | ')' | '[' | ']' | '{' | '}' | '|' | '^'
+            | '$' = c
+            {
+                output.push('\\');
+            };
+            output.push(c);
+            output
         },
     )
 }

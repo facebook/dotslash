@@ -8,8 +8,8 @@
  */
 
 use std::fs::File;
+use std::io;
 use std::io::BufReader;
-use std::io::BufWriter;
 use std::path::Path;
 use std::path::PathBuf;
 
@@ -160,14 +160,14 @@ fn verify_artifact(
     let (size_in_bytes, digest) = match artifact_entry.hash {
         HashAlgorithm::Blake3 => {
             let mut hasher = blake3::Hasher::new();
-            std::io::copy(&mut file, &mut hasher).map(|size_in_bytes| {
+            io::copy(&mut file, &mut hasher).map(|size_in_bytes| {
                 let digest = format!("{:x}", hasher.finalize());
                 (size_in_bytes, digest)
             })
         }
         HashAlgorithm::Sha256 => {
             let mut hasher = Sha256::new();
-            std::io::copy(&mut file, &mut hasher).map(|size_in_bytes| {
+            io::copy(&mut file, &mut hasher).map(|size_in_bytes| {
                 let digest = format!("{:x}", hasher.finalize());
                 (size_in_bytes, digest)
             })
@@ -243,27 +243,24 @@ fn unpack_verified_artifact(
                     let gz_file = fs_ctx::file_open(fetched_artifact)?;
                     let reader = BufReader::new(gz_file);
                     let mut decoder = GzDecoder::new(reader);
-                    let output_file = fs_ctx::file_create(&final_artifact_path)?;
-                    let mut writer = BufWriter::new(output_file);
-                    std::io::copy(&mut decoder, &mut writer)?;
+                    let mut output_file = fs_ctx::file_create(&final_artifact_path)?;
+                    io::copy(&mut decoder, &mut output_file)?;
                 }
                 Some(DecompressStep::Xz) => {
                     // fetched_artifact contains the .xz
                     let xz_file = fs_ctx::file_open(fetched_artifact)?;
                     let reader = BufReader::new(xz_file);
                     let mut decoder = XzDecoder::new(reader);
-                    let output_file = fs_ctx::file_create(&final_artifact_path)?;
-                    let mut writer = BufWriter::new(output_file);
-                    std::io::copy(&mut decoder, &mut writer)?;
+                    let mut output_file = fs_ctx::file_create(&final_artifact_path)?;
+                    io::copy(&mut decoder, &mut output_file)?;
                 }
                 Some(DecompressStep::Zstd) => {
                     // fetched_artifact contains the .zst
                     let zst_file = fs_ctx::file_open(fetched_artifact)?;
                     let reader = BufReader::new(zst_file);
                     let mut decoder = ZstdDecoder::with_buffer(reader)?;
-                    let output_file = fs_ctx::file_create(&final_artifact_path)?;
-                    let mut writer = BufWriter::new(output_file);
-                    std::io::copy(&mut decoder, &mut writer)?;
+                    let mut output_file = fs_ctx::file_create(&final_artifact_path)?;
+                    io::copy(&mut decoder, &mut output_file)?;
                 }
                 None => {
                     fs_ctx::rename(fetched_artifact, &final_artifact_path)?;

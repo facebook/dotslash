@@ -9,7 +9,7 @@
 
 use std::ffi::OsStr;
 use std::fs::File;
-use std::io::BufReader;
+use std::io;
 use std::io::IsTerminal as _;
 use std::str::FromStr;
 
@@ -36,20 +36,17 @@ pub fn print_entry_for_url(url: &OsStr) -> anyhow::Result<()> {
     let fetch_context = FetchContext {
         artifact_name: url,
         content_length: 0,
-        show_progress: std::io::stderr().is_terminal(),
+        show_progress: io::stderr().is_terminal(),
     };
     let tempfile = NamedTempFile::new()?;
     curl_cmd
         .get_request(tempfile.path(), &fetch_context)
         .with_context(|| format!("failed to fetch `{}`", url))?;
 
-    let file = File::open(tempfile.path())?;
-    let mut reader = BufReader::new(file);
+    let mut file = File::open(tempfile.path())?;
     let mut hasher = blake3::Hasher::new();
-    let (size, hex_digest) = std::io::copy(&mut reader, &mut hasher).map(|size_in_bytes| {
-        let digest = format!("{:x}", hasher.finalize());
-        (size_in_bytes, digest)
-    })?;
+    let size = io::copy(&mut file, &mut hasher)?;
+    let hex_digest = format!("{:x}", hasher.finalize());
 
     let entry_json = serialize_entry(url, size, hex_digest)?;
     println!("{}", entry_json);
