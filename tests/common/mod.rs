@@ -8,6 +8,8 @@
  */
 
 use std::collections::HashMap;
+use std::fs;
+use std::io;
 use std::path::Path;
 use std::path::PathBuf;
 
@@ -261,4 +263,34 @@ impl DotslashTestEnv {
             .envs(ci::envs())
             .with_assert(assert)
     }
+}
+
+impl Drop for DotslashTestEnv {
+    fn drop(&mut self) {
+        // Make it possible to delete the temp cache.
+        let _ = make_tree_entries_writable(&self.tempdir_path);
+    }
+}
+
+fn make_tree_entries_writable(folder: &Path) -> io::Result<()> {
+    for entry in fs::read_dir(folder)? {
+        let path = entry?.path();
+        let metadata = fs::symlink_metadata(&path)?;
+
+        if metadata.is_symlink() {
+            continue;
+        }
+        if metadata.is_dir() {
+            make_tree_entries_writable(&path)?;
+        }
+
+        let mut perms = metadata.permissions();
+        if perms.readonly() {
+            #[expect(clippy::permissions_set_readonly_false)]
+            perms.set_readonly(false);
+            fs::set_permissions(path, perms)?;
+        }
+    }
+
+    Ok(())
 }
