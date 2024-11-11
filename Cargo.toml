@@ -30,7 +30,7 @@ fs2 = "0.4"
 serde = { version = "1.0.185", features = ["derive", "rc"] }
 serde_jsonrc = "0.1"
 sha2 = "0.10.6"
-tar = "0.4.42"
+tar = "0.4.43"
 tempfile = "3.8"
 thiserror = "1.0.64"
 xz2 = { version = "0.1.7", features = ["static"] }
