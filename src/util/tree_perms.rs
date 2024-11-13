@@ -32,6 +32,8 @@ fn _make_tree_entries(folder: &Path, read_only: bool) -> io::Result<()> {
     Ok(())
 }
 
+/// Makes all entries within the specified `folder` read-only.
+///
 /// Takes the specified `folder` (which must point to a directory) and
 /// recursively makes all entries within it read-only, but it does *not* change
 /// the permissions on the folder itself. Symlinks are not followed and no

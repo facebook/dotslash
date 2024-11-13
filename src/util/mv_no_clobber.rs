@@ -14,6 +14,8 @@ use std::time::Duration;
 
 use crate::util::fs_ctx;
 
+/// Move a file or directory only if destination does not exist.
+///
 /// This is conceptually equivalent to `mv --no-clobber`, though like `mv -n`,
 /// this is susceptible to a TOCTTOU issue because another process could create
 /// the file at the destination between the initial check for the destination and
