@@ -32,7 +32,7 @@ serde_jsonrc = "0.1"
 sha2 = "0.10.6"
 tar = "0.4.43"
 tempfile = "3.8"
-thiserror = "1.0.64"
+thiserror = "2"
 xz2 = { version = "0.1.7", features = ["static"] }
 zip = { version = "0.6.6", features = ["deflate"], default-features = false }
 zstd = { version = "0.13", features = ["experimental", "zstdmt"] }
