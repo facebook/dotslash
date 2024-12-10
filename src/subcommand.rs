@@ -167,7 +167,7 @@ fn _run_subcommand(subcommand: &Subcommand, args: &mut ArgsOs) -> anyhow::Result
             let file_arg = take_exactly_one_arg(args)?;
             let dotslash_data = fs_ctx::read_to_string(file_arg)?;
             let dotslash_cache = DotslashCache::new();
-            let (artifact_entry, artifact_location) =
+            let (artifact_entry, artifact_location, _) =
                 locate_artifact(&dotslash_data, &dotslash_cache)?;
             if !artifact_location.executable.exists() {
                 let provider_factory = DefaultProviderFactory {};

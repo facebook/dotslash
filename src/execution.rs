@@ -72,13 +72,15 @@ fn run_dotslash_file<P: ProviderFactory>(
     };
 
     let dotslash_cache = DotslashCache::new();
-    let (artifact_entry, artifact_location) = locate_artifact(&dotslash_data, &dotslash_cache)?;
+    let (artifact_entry, artifact_location, preserve_arg0) = locate_artifact(&dotslash_data, &dotslash_cache)?;
 
     let mut command = Command::new(&artifact_location.executable);
     command.args(args);
 
-    #[cfg(unix)]
-    std::os::unix::process::CommandExt::arg0(&mut command, file_arg);
+    if preserve_arg0 {
+        #[cfg(unix)]
+        std::os::unix::process::CommandExt::arg0(&mut command, file_arg);
+    }
 
     let error = util::execv(&mut command);
 

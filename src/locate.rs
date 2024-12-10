@@ -21,7 +21,7 @@ use crate::util::ListOf;
 pub fn locate_artifact(
     dotslash_data: &str,
     dotslash_cache: &DotslashCache,
-) -> anyhow::Result<(ArtifactEntry, ArtifactLocation)> {
+) -> anyhow::Result<(ArtifactEntry, ArtifactLocation, bool)> {
     let (_original_json, mut config_file) =
         config::parse_file(dotslash_data).context("failed to parse DotSlash file")?;
 
@@ -50,5 +50,5 @@ pub fn locate_artifact(
         let _ = util::update_mtime(&artifact_location.executable);
     }
 
-    Ok((artifact_entry, artifact_location))
+    Ok((artifact_entry, artifact_location, config_file.preserve_arg0))
 }
