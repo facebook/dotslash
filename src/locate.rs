@@ -50,5 +50,5 @@ pub fn locate_artifact(
         let _ = util::update_mtime(&artifact_location.executable);
     }
 
-    Ok((artifact_entry, artifact_location, config_file.preserve_arg0))
+    Ok((artifact_entry, artifact_location, config_file.forward_arg0))
 }

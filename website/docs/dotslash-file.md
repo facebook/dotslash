@@ -106,7 +106,7 @@ The general structure of a DotSlash file is:
 {
   "name": /* string */,
   "platforms": /* map */,
-  "preserve_arg0": /* boolean */,
+  "forward_arg0": /* boolean */,
 }
 ```
 
@@ -118,10 +118,10 @@ properties:
 - `"name"` must be a string that represents the name of the executable (it often
   matches the name of the DotSlash file)
 - `"platforms"` must be a map of supported platforms to artifacts
-- `"preserve_arg0"` [optional] may be a boolean specifying whether to preserve
+- `"forward_arg0"` [optional] may be a boolean specifying whether to forward
   the zeroth argument passed to `dotslash` itself (`true`, the default), or to
   instead pass the path to the executable in the Dotslash cache (`false`). See
-  [Preserve arg0](#preserve-arg0).
+  [Forward arg0](#forward-arg0).
 
 :::tip
 
@@ -440,18 +440,18 @@ In this case, setting `readonly: false` will disable the logic that marks all of
 the entries in the temporary folder read-only before it is moved to its final
 location in the cache.
 
-## Preserve arg0
+## Forward arg0
 
-There is an optional `preserve_arg0` field on the root object in a Dotslash file
+There is an optional `forward_arg0` field on the root object in a Dotslash file
 that specifies what is passed as the zeroth argument (`argv[0]`) to the
 underlying process. The options are:
 
-- `"preserve_arg0": true` - This forwards the zeroth argument of the outer
+- `"forward_arg0": true` - This forwards the zeroth argument of the outer
   invocation of `dotslash`. This can be useful for executables that will use the
   zeroth argument to modify their behavior or behave as different commands, such
   as `clang` or GNU coreutils. This is the default.
-- `"preserve_arg0": false` - This passes the path to the executable in the
-  dotslash cache as the zeroth argument. This can be useful for executables that
+- `"forward_arg0": false` - This passes the path to the executable in the
+  Dotslash cache as the zeroth argument. This can be useful for executables that
   will use `argv[0]` to locate the path of related files in the same archive, or
   parse trailing data attached to the executable file.
 

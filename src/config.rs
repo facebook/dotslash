@@ -28,11 +28,11 @@ pub const REQUIRED_HEADER: &str = "#!/usr/bin/env dotslash";
 pub struct ConfigFile {
     pub name: String,
     pub platforms: HashMap<String, ArtifactEntry>,
-    #[serde(default = "default_preserve_arg0")]
-    pub preserve_arg0: bool,
+    #[serde(default = "default_forward_arg0")]
+    pub forward_arg0: bool,
 }
 
-fn default_preserve_arg0() -> bool {
+fn default_forward_arg0() -> bool {
     true
 }
 
