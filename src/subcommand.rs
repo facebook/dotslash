@@ -117,10 +117,10 @@ See `dotslash --help` for more information."
 }
 
 pub fn run_subcommand(subcommand: Subcommand, args: &mut ArgsOs) -> Result<(), SubcommandError> {
-    _run_subcommand(&subcommand, args).map_err(|x| SubcommandError::Other(subcommand, x))
+    run_subcommand_impl(&subcommand, args).map_err(|x| SubcommandError::Other(subcommand, x))
 }
 
-fn _run_subcommand(subcommand: &Subcommand, args: &mut ArgsOs) -> anyhow::Result<()> {
+fn run_subcommand_impl(subcommand: &Subcommand, args: &mut ArgsOs) -> anyhow::Result<()> {
     match subcommand {
         Subcommand::B3Sum => {
             let file_arg = take_exactly_one_arg(args)?;
