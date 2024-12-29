@@ -16,9 +16,7 @@ use std::io;
 /// `c` cannot exist as a child of the file `/a/b`.
 ///
 /// On Windows, this is an `io::ErrorKind::NotFound` error.
-/// On Unix, this is an `io::ErrorKind::NotADirectory` error (currently
-/// behind `#![feature(io_error_more)]`), so we need to inspect the
-/// `raw_os_error`.
+/// On Unix, this is an `io::ErrorKind::NotADirectory`.
 ///
 /// Note on execv:
 ///
@@ -39,15 +37,8 @@ use std::io;
 /// this case.
 #[must_use]
 pub fn is_not_found_error(err: &io::Error) -> bool {
-    #[cfg(unix)]
-    if err
-        .raw_os_error()
-        .is_some_and(|x| x == nix::errno::Errno::ENOTDIR as i32)
-    {
-        return true;
-    }
-
     err.kind() == io::ErrorKind::NotFound
+        || (cfg!(unix) && err.kind() == io::ErrorKind::NotADirectory)
 }
 
 #[cfg(test)]
