@@ -55,7 +55,7 @@ fn is_true(b: &bool) -> bool {
     *b
 }
 
-#[derive(Deserialize, Serialize, Debug, PartialEq, Eq)]
+#[derive(Deserialize, Serialize, Copy, Clone, Debug, PartialEq, Eq)]
 pub enum HashAlgorithm {
     #[serde(rename = "blake3")]
     Blake3,

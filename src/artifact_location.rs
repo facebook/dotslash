@@ -12,10 +12,12 @@ use std::fmt::Write;
 use std::path::Path;
 use std::path::PathBuf;
 
+use crate::artifact_path::ArtifactPath;
 use crate::config::ArtifactEntry;
 use crate::config::HashAlgorithm;
 use crate::dotslash_cache::DotslashCache;
 use crate::fetch_method::ArchiveFormat;
+use crate::fetch_method::ArtifactFormat;
 use crate::fetch_method::DecompressStep;
 
 /// We limit the number of bytes of the BLAKE3 hash to try to keep the path
@@ -51,16 +53,26 @@ pub fn determine_location(
     artifact_entry: &ArtifactEntry,
     dotslash_cache: &DotslashCache,
 ) -> ArtifactLocation {
+    let ArtifactEntry {
+        size,
+        hash,
+        digest,
+        format,
+        path,
+        providers: _,
+        readonly,
+    } = artifact_entry;
+
     let artifact_hash = blake3::Hasher::new()
-        .update(artifact_entry.size.to_string().as_bytes())
+        .update(size.to_string().as_bytes())
         .update(b"\0")
-        .update(create_key_for_hash_algorithm(&artifact_entry.hash))
+        .update(create_key_for_hash_algorithm(*hash))
         .update(b"\0")
-        .update(artifact_entry.digest.as_str().as_bytes())
+        .update(digest.as_str().as_bytes())
         .update(b"\0")
-        .update(create_key_for_format(artifact_entry).as_bytes())
+        .update(create_key_for_format(*format, path).as_bytes())
         .update(b"\0")
-        .update(if artifact_entry.readonly { b"1" } else { b"0" })
+        .update(if *readonly { b"1" } else { b"0" })
         .finalize();
     let artifact_key = artifact_hash.as_bytes()[..NUM_HASH_BYTES_FOR_PATH]
         .iter()
@@ -79,7 +91,7 @@ pub fn determine_location(
         .join(key_rest);
 
     let mut executable = artifact_directory.clone();
-    executable.extend(Path::new(artifact_entry.path.as_str()));
+    executable.extend(Path::new(path.as_str()));
     let lock_path = dotslash_cache.locks_dir(key_prefix).join(key_rest);
 
     ArtifactLocation {
@@ -89,15 +101,15 @@ pub fn determine_location(
     }
 }
 
-fn create_key_for_hash_algorithm(hash: &HashAlgorithm) -> &'static [u8] {
+fn create_key_for_hash_algorithm(hash: HashAlgorithm) -> &'static [u8] {
     match hash {
         HashAlgorithm::Blake3 => b"blake3",
         HashAlgorithm::Sha256 => b"sha256",
     }
 }
 
-fn create_key_for_format(entry: &ArtifactEntry) -> Cow<'_, str> {
-    match entry.format.extraction_policy() {
+fn create_key_for_format(format: ArtifactFormat, path: &ArtifactPath) -> Cow<'static, str> {
+    match format.extraction_policy() {
         (decompress, Some(ArchiveFormat::Tar)) => {
             // For an artifact that is an archive, the type of archive is
             // sufficient to distinguish it.
@@ -118,7 +130,6 @@ fn create_key_for_format(entry: &ArtifactEntry) -> Cow<'_, str> {
             // For a non-archive artifact, the `path` must be part of the cache
             // key. The key has a prefix to distinguish it from the cache keys
             // for archive artifacts.
-            let path = &entry.path;
             match decompress {
                 None => Cow::Owned(format!("file:{}", path)),
                 Some(DecompressStep::Gzip) => Cow::Owned(format!("file.gz:{}", path)),
