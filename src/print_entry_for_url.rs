@@ -11,13 +11,11 @@ use std::ffi::OsStr;
 use std::fs::File;
 use std::io;
 use std::io::IsTerminal as _;
-use std::str::FromStr;
 
 use anyhow::Context as _;
 use digest::Digest as _;
 use tempfile::NamedTempFile;
 
-use crate::artifact_path::ArtifactPath;
 use crate::config::ArtifactEntry;
 use crate::config::HashAlgorithm;
 use crate::curl::CurlCommand;
@@ -53,22 +51,19 @@ pub fn print_entry_for_url(url: &OsStr) -> anyhow::Result<()> {
     Ok(())
 }
 
-fn serialize_entry(url: &str, size: u64, hex_digest: impl Into<String>) -> anyhow::Result<String> {
+fn serialize_entry(url: &str, size: u64, hex_digest: String) -> anyhow::Result<String> {
     let format = match guess_artifact_format_from_url(url.as_bytes()) {
         ArtifactFormat::Plain => {
-            "TODO: specify this value; could not guess format from URL".to_string()
+            "TODO: specify this value; could not guess format from URL".to_owned()
         }
-        format => serde_jsonrc::to_value(format)?
-            .as_str()
-            .unwrap()
-            .to_string(),
+        format => serde_jsonrc::to_value(format)?.as_str().unwrap().to_owned(),
     };
     let entry = LooseArtifactEntry {
         size,
         hash: HashAlgorithm::Blake3,
-        digest: hex_digest.into().try_into()?,
+        digest: hex_digest.try_into()?,
         format,
-        path: ArtifactPath::from_str("TODO: specify the appropriate `path` for this artifact")?,
+        path: "TODO: specify the appropriate `path` for this artifact".parse()?,
         providers: vec![serde_jsonrc::json!({"url": url})],
         readonly: true,
     };
@@ -100,29 +95,26 @@ fn guess_artifact_format_from_url(url: &[u8]) -> ArtifactFormat {
 
 #[cfg(test)]
 mod tests {
-    use std::str::FromStr;
+    use serde_jsonrc::value::Value;
 
     use super::*;
-    use crate::artifact_path::ArtifactPath;
 
     #[test]
     fn serialize_entry_recognized_format() -> anyhow::Result<()> {
         let url = "https://github.com/zertosh/dotslash_fixtures/raw/462625c6bf2671439dce66bd5bc40b05f2ed8819/pack.tar.gz";
         let size = 48689_u64;
-        let hex_digest = "068464830bd5c276e085a4eab5ef9cc57159f94273db296d6a638e49b78ca55f";
-        let entry_json = serialize_entry(url, size, hex_digest)?;
+        let hex_digest =
+            "068464830bd5c276e085a4eab5ef9cc57159f94273db296d6a638e49b78ca55f".to_owned();
+        let entry_json = serialize_entry(url, size, hex_digest.clone())?;
         let entry = serde_jsonrc::from_str::<ArtifactEntry>(&entry_json)?;
         // Ensure the output parses as a valid ArtifactEntry.
         assert_eq!(
             ArtifactEntry {
                 size,
                 hash: HashAlgorithm::Blake3,
-                digest: hex_digest.to_string().try_into()?,
+                digest: hex_digest.try_into()?,
                 format: ArtifactFormat::TarGz,
-                path: ArtifactPath::from_str(
-                    "TODO: specify the appropriate `path` for this artifact"
-                )
-                .unwrap(),
+                path: "TODO: specify the appropriate `path` for this artifact".parse()?,
                 providers: vec![serde_jsonrc::json!({"url": url})],
                 readonly: true,
             },
@@ -135,27 +127,21 @@ mod tests {
     fn serialize_entry_unrecognized_format() -> anyhow::Result<()> {
         let url = "http://example.com/somefile";
         let size = 48689_u64;
-        let hex_digest = "068464830bd5c276e085a4eab5ef9cc57159f94273db296d6a638e49b78ca55f";
-        let entry_json = serialize_entry(url, size, hex_digest)?;
+        let hex_digest =
+            "068464830bd5c276e085a4eab5ef9cc57159f94273db296d6a638e49b78ca55f".to_owned();
+        let entry_json = serialize_entry(url, size, hex_digest.clone())?;
         // Note that `entry_json` cannot be deserialized into an ArtifactEntry
         // due to the illegal value for `format`.
-        assert_eq!(
-            format!(
-                r#"{{
-  "size": {size},
-  "hash": "blake3",
-  "digest": "{hex_digest}",
-  "format": "TODO: specify this value; could not guess format from URL",
-  "path": "TODO: specify the appropriate `path` for this artifact",
-  "providers": [
-    {{
-      "url": "{url}"
-    }}
-  ]
-}}"#
-            ),
-            entry_json
-        );
+        let expected = serde_jsonrc::json!({
+            "size": size,
+            "hash": "blake3",
+            "digest": hex_digest,
+            "format": "TODO: specify this value; could not guess format from URL",
+            "path": "TODO: specify the appropriate `path` for this artifact",
+            "providers": [{"url": url}],
+        });
+        let actual = serde_jsonrc::from_str::<Value>(&entry_json)?;
+        assert_eq!(expected, actual);
         Ok(())
     }
 

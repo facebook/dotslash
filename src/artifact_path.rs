@@ -19,7 +19,8 @@ use thiserror::Error;
 /// `ArtifactPath` is a newtype type for `String` rather than `PathBuf` because
 /// we want it to be unambiguously represented with forward slashes on all
 /// platforms.
-#[derive(Debug, Deserialize, Serialize, PartialEq, Eq, Clone)]
+#[derive(Deserialize, Serialize, Debug)]
+#[cfg_attr(test, derive(PartialEq))]
 #[serde(try_from = "String")]
 pub struct ArtifactPath(String);
 
@@ -110,7 +111,8 @@ fn normalize_as_relative_unix_path(s: &str) -> anyhow::Result<usize, ArtifactInv
     }
 }
 
-#[derive(Debug, Error, PartialEq)]
+#[derive(Error, Debug)]
+#[cfg_attr(test, derive(PartialEq))]
 pub enum ArtifactInvalidPathError {
     #[error("path cannot be the empty string")]
     EmptyPath,

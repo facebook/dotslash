@@ -24,13 +24,16 @@ use crate::fetch_method::ArtifactFormat;
 /// all of the DotSlash files in the repo.
 pub const REQUIRED_HEADER: &str = "#!/usr/bin/env dotslash";
 
-#[derive(Deserialize, Debug, PartialEq)]
+#[derive(Deserialize, Debug)]
+#[cfg_attr(test, derive(PartialEq))]
 pub struct ConfigFile {
+    #[cfg_attr(not(test), expect(dead_code))]
     pub name: String,
     pub platforms: HashMap<String, ArtifactEntry>,
 }
 
-#[derive(Deserialize, Serialize, Debug, PartialEq)]
+#[derive(Deserialize, Serialize, Debug)]
+#[cfg_attr(test, derive(PartialEq))]
 pub struct ArtifactEntry<Format = ArtifactFormat> {
     pub size: u64,
     pub hash: HashAlgorithm,
@@ -55,7 +58,8 @@ fn is_true(b: &bool) -> bool {
     *b
 }
 
-#[derive(Deserialize, Serialize, Copy, Clone, Debug, PartialEq, Eq)]
+#[derive(Deserialize, Serialize, Copy, Clone, Debug)]
+#[cfg_attr(test, derive(PartialEq))]
 pub enum HashAlgorithm {
     #[serde(rename = "blake3")]
     Blake3,
@@ -82,10 +86,7 @@ pub fn parse_file(data: &str) -> anyhow::Result<(Value, ConfigFile)> {
 
 #[cfg(test)]
 mod tests {
-    use std::str::FromStr;
-
     use super::*;
-    use crate::config::ArtifactPath;
     use crate::fetch_method::ArtifactFormat;
 
     fn parse_file_string(json: &str) -> anyhow::Result<ConfigFile> {
@@ -130,7 +131,7 @@ mod tests {
                         )
                         .unwrap(),
                         format: ArtifactFormat::Tar,
-                        path: ArtifactPath::from_str("bindir/my_tool").unwrap(),
+                        path: "bindir/my_tool".parse().unwrap(),
                         providers: vec![serde_jsonrc::json!({
                             "type": "http",
                             "url": "https://example.com/my_tool.tar",
@@ -180,7 +181,7 @@ mod tests {
                         )
                         .unwrap(),
                         format: ArtifactFormat::Plain,
-                        path: ArtifactPath::from_str("minesweeper.exe").unwrap(),
+                        path: "minesweeper.exe".parse().unwrap(),
                         providers: vec![serde_jsonrc::json!({
                             "type": "http",
                             "url": "https://foo.com",

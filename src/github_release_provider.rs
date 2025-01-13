@@ -19,7 +19,7 @@ use crate::util::FileLock;
 
 pub struct GitHubReleaseProvider {}
 
-#[derive(Deserialize, Debug, PartialEq)]
+#[derive(Deserialize, Debug)]
 struct GitHubReleaseProviderConfig {
     tag: String,
     repo: String,

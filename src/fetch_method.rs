@@ -10,7 +10,8 @@
 use serde::Deserialize;
 use serde::Serialize;
 
-#[derive(Copy, Clone, Default, Deserialize, Serialize, Debug, PartialEq, Eq)]
+#[derive(Deserialize, Serialize, Copy, Clone, Default, Debug)]
+#[cfg_attr(test, derive(PartialEq))]
 pub enum ArtifactFormat {
     /// Artifact is a single file with no compression applied.
     #[default]

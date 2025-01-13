@@ -142,12 +142,8 @@ fn create_key_for_format(format: ArtifactFormat, path: &ArtifactPath) -> Cow<'st
 
 #[cfg(test)]
 mod tests {
-    use std::str::FromStr;
-
     use super::*;
-    use crate::artifact_path::ArtifactPath;
     use crate::digest::Digest;
-    use crate::fetch_method::ArtifactFormat;
 
     #[test]
     fn paths_for_extract_case() {
@@ -159,7 +155,7 @@ mod tests {
             )
             .unwrap(),
             format: ArtifactFormat::TarGz,
-            path: ArtifactPath::from_str("bin/sapling").unwrap(),
+            path: "bin/sapling".parse().unwrap(),
             providers: vec![],
             readonly: true,
         };
@@ -199,7 +195,7 @@ mod tests {
             )
             .unwrap(),
             format: ArtifactFormat::Plain,
-            path: ArtifactPath::from_str("minesweeper.exe").unwrap(),
+            path: "minesweeper.exe".parse().unwrap(),
             providers: vec![],
             readonly: true,
         };

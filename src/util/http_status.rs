@@ -11,7 +11,7 @@
 
 use thiserror::Error;
 
-#[derive(Debug, Error, PartialEq, Eq)]
+#[derive(Error, Debug)]
 pub enum HttpStatus {
     #[error("400 Bad Request")]
     BadRequest,

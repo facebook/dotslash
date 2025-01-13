@@ -21,6 +21,11 @@ use crate::util::FileLock;
 
 pub struct HttpProvider {}
 
+#[derive(Deserialize, Debug)]
+struct HttpProviderConfig {
+    url: String,
+}
+
 impl Provider for HttpProvider {
     fn fetch_artifact(
         &self,
@@ -44,9 +49,4 @@ impl Provider for HttpProvider {
             .with_context(|| format!("failed to fetch `{}`", url))?;
         Ok(())
     }
-}
-
-#[derive(Deserialize, Debug, PartialEq)]
-struct HttpProviderConfig {
-    url: String,
 }
