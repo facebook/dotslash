@@ -1,6 +1,10 @@
 # Changelog
 
-## Next (TBD)
+## v0.5.0 (2025-01-13)
+
+- Added `arg0` artifact entry config field:
+  <https://github.com/facebook/dotslash/pull/37>
+- MSRV 1.83.
 
 ## v0.4.3 (2024-10-13)
 
