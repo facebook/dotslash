@@ -150,6 +150,7 @@ artifact to fetch is as follows:
   "providers": /* array of providers */,
   "format": /* recognized format, such as "tar.gz"; see list below */,
   "path": /* filename or path within an archive */,
+  "arg0": /* arg0 behavior, see below */,
   "readonly": /* `false` disables `chmod -R -w` on the unpacked artifact */,
 }
 ```
@@ -410,6 +411,26 @@ Looking at the `hermes` example above:
 At Meta, we have found compression to be a win, but if for some reason you
 prefer to fetch your executable as an uncompressed single file, you can omit the
 `"format"` field, but `"path"` is still required.
+
+## Arg0
+
+There is an optional `arg0` field on an artifact entry. It defaults to
+`"dotslash-file"` on Unix, and to `"underlying-executable"` unconditionally on
+Windows. It specifies what is passed as the zeroth argument (`argv[0]`) to the
+underlying process. The options are:
+
+- `"dotslash-file"` - This forwards the zeroth argument of the outer `dotslash`
+  invocation (in other words, the DotSlash file). This can be useful for
+  executables that will use the zeroth argument to modify their behavior or
+  behave as different commands, such as `clang` or GNU coreutils. This is the
+  default on Unix.
+- `"underlying-executable"` - This passes the path to the executable in the
+  DotSlash cache as the zeroth argument. This can be useful for executables that
+  will use `argv[0]` to locate the path of related files in the same archive, or
+  parse trailing data attached to the executable file. This is the unconditional
+  default on Windows.
+
+This option has no effect on Windows.
 
 ## Readonly
 
