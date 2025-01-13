@@ -42,8 +42,31 @@ pub struct ArtifactEntry<Format = ArtifactFormat> {
     pub format: Format,
     pub path: ArtifactPath,
     pub providers: Vec<Value>,
+    #[serde(default, skip_serializing_if = "is_default")]
+    pub arg0: Arg0,
     #[serde(default = "readonly_default_as_true", skip_serializing_if = "is_true")]
     pub readonly: bool,
+}
+
+fn is_default<T>(t: &T) -> bool
+where
+    T: Default + PartialEq,
+{
+    *t == Default::default()
+}
+
+/// Determines what arg0 (`argv[0]`) gets set to.
+/// Note: This has no effect on Windows, where the behavior is effectively
+/// always "UnderlyingExecutable".
+#[derive(Deserialize, Serialize, Copy, Clone, Default, Debug, PartialEq, Eq)]
+#[serde(rename_all = "kebab-case")]
+pub enum Arg0 {
+    /// arg0 is set to the DotSlash file path as passed to `dotslash`.
+    #[default]
+    DotslashFile,
+    /// arg0 is left unset, which defaults to the underlying executable
+    /// in the cache directory.
+    UnderlyingExecutable,
 }
 
 /// While having a boolean that defaults to `true` is somewhat undesirable,
@@ -136,6 +159,7 @@ mod tests {
                             "type": "http",
                             "url": "https://example.com/my_tool.tar",
                         })],
+                        arg0: Arg0::DotslashFile,
                         readonly: true,
                     }
                 )]
@@ -186,6 +210,7 @@ mod tests {
                             "type": "http",
                             "url": "https://foo.com",
                         })],
+                        arg0: Arg0::DotslashFile,
                         readonly: true,
                     }
                 )]

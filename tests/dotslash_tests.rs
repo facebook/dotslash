@@ -336,6 +336,63 @@ Caused by:
         );
 }
 
+#[test]
+fn http__arg0() -> anyhow::Result<()> {
+    let mut test_env = DotslashTestEnv::try_new()?;
+
+    let dotslash_file = "tests/fixtures/http__tar_zst__print_argv";
+
+    let contents = fs::read_to_string(test_env.current_dir().join(dotslash_file))?;
+
+    let tempfile = NamedTempFile::new()?;
+    fs::write(
+        tempfile.path(),
+        contents.replace(
+            r#""format": "tar.zst","#,
+            r#""format": "tar.zst", "arg0": "underlying-executable","#,
+        ),
+    )?;
+
+    test_env.path_redaction(
+        "[ARTIFACT_EXE]",
+        "[DOTSLASH_CACHE_DIR]/[PACK_TAR_ZST_HTTP_ARCHIVE_CACHE_DIR]/subdir/[PRINT_ARGV_EXECUTABLE]",
+    );
+
+    // Default behavior is "dotslash-file".
+    test_env
+        .dotslash_command()
+        .arg(dotslash_file)
+        .assert()
+        .code(0)
+        .stderr_eq("")
+        .stdout_eq(if_win_else!(
+            "\
+exe: [ARTIFACT_EXE]
+0: [ARTIFACT_EXE]
+",
+            "\
+exe: [ARTIFACT_EXE]
+0: tests/fixtures/http__tar_zst__print_argv
+",
+        ));
+
+    // Modified "underlying-executable" behavior.
+    test_env
+        .dotslash_command()
+        .arg(tempfile.path())
+        .assert()
+        .code(0)
+        .stderr_eq("")
+        .stdout_eq(
+            "\
+exe: [ARTIFACT_EXE]
+0: [ARTIFACT_EXE]
+",
+        );
+
+    Ok(())
+}
+
 //
 // Commands
 //

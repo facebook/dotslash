@@ -11,12 +11,16 @@ use std::env::ArgsOs;
 use std::ffi::OsStr;
 use std::fs;
 use std::io;
+#[cfg(unix)]
+use std::os::unix::process::CommandExt;
 use std::path::Path;
 use std::process::Command;
 use std::process::ExitCode;
 
 use anyhow::Context as _;
 
+#[cfg(unix)]
+use crate::config::Arg0;
 use crate::dotslash_cache::DotslashCache;
 use crate::download::download_artifact;
 use crate::locate::locate_artifact;
@@ -78,7 +82,14 @@ fn run_dotslash_file<P: ProviderFactory>(
     command.args(args);
 
     #[cfg(unix)]
-    std::os::unix::process::CommandExt::arg0(&mut command, file_arg);
+    match artifact_location.arg0 {
+        Arg0::DotslashFile => {
+            command.arg0(file_arg);
+        }
+        Arg0::UnderlyingExecutable => {
+            // This is what the OS already does...
+        }
+    }
 
     let error = util::execv(&mut command);
 

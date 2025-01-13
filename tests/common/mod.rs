@@ -244,7 +244,6 @@ impl DotslashTestEnv {
         self
     }
 
-    #[expect(dead_code)]
     pub fn current_dir(&self) -> &Path {
         &self.current_dir
     }

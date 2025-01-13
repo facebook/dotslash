@@ -13,6 +13,7 @@ use std::path::Path;
 use std::path::PathBuf;
 
 use crate::artifact_path::ArtifactPath;
+use crate::config::Arg0;
 use crate::config::ArtifactEntry;
 use crate::config::HashAlgorithm;
 use crate::dotslash_cache::DotslashCache;
@@ -36,6 +37,9 @@ pub struct ArtifactLocation {
     /// The path to use for advisory locking while downloading the specified
     /// artifact.
     pub lock_path: PathBuf,
+    /// Determines what arg0 (`argv[0]`) gets set to.
+    #[cfg_attr(windows, expect(dead_code))]
+    pub arg0: Arg0,
 }
 
 /// In terms of the computing the path within the artifact_directory, it is a
@@ -60,6 +64,7 @@ pub fn determine_location(
         format,
         path,
         providers: _,
+        arg0,
         readonly,
     } = artifact_entry;
 
@@ -98,6 +103,7 @@ pub fn determine_location(
         artifact_directory,
         executable,
         lock_path,
+        arg0: *arg0,
     }
 }
 
@@ -157,6 +163,7 @@ mod tests {
             format: ArtifactFormat::TarGz,
             path: "bin/sapling".parse().unwrap(),
             providers: vec![],
+            arg0: Arg0::DotslashFile,
             readonly: true,
         };
         let dotslash_cache = DotslashCache::default();
@@ -197,6 +204,7 @@ mod tests {
             format: ArtifactFormat::Plain,
             path: "minesweeper.exe".parse().unwrap(),
             providers: vec![],
+            arg0: Arg0::DotslashFile,
             readonly: true,
         };
         let dotslash_cache = DotslashCache::default();
