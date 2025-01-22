@@ -65,7 +65,6 @@ pub fn unpack_file(
     // [2] https://doc.rust-lang.org/std/fs/fn.canonicalize.html#platform-specific-behavior
     // [3] https://doc.rust-lang.org/std/fs/fn.canonicalize.html#errors
 
-    fs_ctx::create_dir_all(destination_dir)?;
     let destination_dir = fs_ctx::canonicalize(destination_dir)?;
     let file = fs_ctx::file_open(source_file)?;
     let reader = BufReader::new(file);
