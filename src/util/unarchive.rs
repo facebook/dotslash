@@ -8,8 +8,9 @@
  */
 
 use std::io;
-use std::io::BufReader;
+use std::io::BufRead;
 use std::io::Read;
+use std::io::Seek;
 use std::path::Path;
 
 use flate2::bufread::GzDecoder;
@@ -25,24 +26,70 @@ use crate::util::fs_ctx;
 #[derive(Copy, Clone)]
 pub enum ArchiveType {
     Tar,
+    #[cfg(not(dotslash_internal))]
+    Gz,
     TarGz,
     #[cfg(not(dotslash_internal))]
+    Xz,
+    #[cfg(not(dotslash_internal))]
     TarXz,
+    #[cfg(not(dotslash_internal))]
+    Zstd,
     TarZstd,
     #[cfg(not(dotslash_internal))]
     Zip,
 }
 
-/// Attempts to extract the tar/zip archive into the specified directory.
+/// Attempts to extract the tar/zip archive into the specified directory
+/// or file.
 ///
 /// To extract tars, this uses the tar crate (https://crates.io/crates/tar)
 /// directly. Those who create compressed artifacts for DotSlash are
 /// responsible for ensuring they can be decompressed with its version of tar.
-pub fn unpack_file(
-    source_file: &Path,
-    destination_dir: &Path,
-    archive_type: ArchiveType,
-) -> io::Result<()> {
+pub fn unarchive<R>(reader: R, destination: &Path, archive_type: ArchiveType) -> io::Result<()>
+where
+    R: BufRead + Seek,
+{
+    match archive_type {
+        ArchiveType::Tar => unpack_tar(reader, destination),
+
+        #[cfg(not(dotslash_internal))]
+        ArchiveType::Gz => write_out(GzDecoder::new(reader), destination),
+        ArchiveType::TarGz => unpack_tar(GzDecoder::new(reader), destination),
+
+        #[cfg(not(dotslash_internal))]
+        ArchiveType::Xz => write_out(XzDecoder::new(reader), destination),
+        #[cfg(not(dotslash_internal))]
+        ArchiveType::TarXz => unpack_tar(XzDecoder::new(reader), destination),
+
+        #[cfg(not(dotslash_internal))]
+        ArchiveType::Zstd => write_out(ZstdDecoder::with_buffer(reader)?, destination),
+        ArchiveType::TarZstd => unpack_tar(ZstdDecoder::with_buffer(reader)?, destination),
+
+        #[cfg(not(dotslash_internal))]
+        ArchiveType::Zip => {
+            let destination = fs_ctx::canonicalize(destination)?;
+            let mut archive = ZipArchive::new(reader)?;
+            archive.extract(destination)?;
+            Ok(())
+        }
+    }
+}
+
+#[cfg(not(dotslash_internal))]
+fn write_out<R>(mut reader: R, destination_dir: &Path) -> io::Result<()>
+where
+    R: Read,
+{
+    let mut output_file = fs_ctx::file_create(destination_dir)?;
+    io::copy(&mut reader, &mut output_file)?;
+    Ok(())
+}
+
+fn unpack_tar<R>(reader: R, destination_dir: &Path) -> io::Result<()>
+where
+    R: Read,
+{
     // The destination dir is canonicalized for the benefit of Windows, but we
     // do it on all platforms for consistency of behavior.
     //
@@ -66,37 +113,7 @@ pub fn unpack_file(
     // [3] https://doc.rust-lang.org/std/fs/fn.canonicalize.html#errors
 
     let destination_dir = fs_ctx::canonicalize(destination_dir)?;
-    let file = fs_ctx::file_open(source_file)?;
-    let reader = BufReader::new(file);
 
-    match archive_type {
-        ArchiveType::Tar => unpack_tar(reader, &destination_dir),
-        ArchiveType::TarGz => {
-            let decoder = GzDecoder::new(reader);
-            unpack_tar(decoder, &destination_dir)
-        }
-        #[cfg(not(dotslash_internal))]
-        ArchiveType::TarXz => {
-            let decoder = XzDecoder::new(reader);
-            unpack_tar(decoder, &destination_dir)
-        }
-        ArchiveType::TarZstd => {
-            let decoder = ZstdDecoder::with_buffer(reader)?;
-            unpack_tar(decoder, &destination_dir)
-        }
-        #[cfg(not(dotslash_internal))]
-        ArchiveType::Zip => {
-            let mut archive = ZipArchive::new(reader)?;
-            archive.extract(&destination_dir)?;
-            Ok(())
-        }
-    }
-}
-
-fn unpack_tar<R>(reader: R, destination_dir: &Path) -> io::Result<()>
-where
-    R: Read,
-{
     let mut archive = Archive::new(reader);
     archive.set_preserve_permissions(true);
     archive.set_preserve_mtime(true);

@@ -110,7 +110,6 @@ pub fn parse_file(data: &str) -> anyhow::Result<(Value, ConfigFile)> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::fetch_method::ArtifactFormat;
 
     fn parse_file_string(json: &str) -> anyhow::Result<ConfigFile> {
         Ok(parse_file(json)?.1)

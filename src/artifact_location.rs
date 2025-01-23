@@ -17,9 +17,7 @@ use crate::config::Arg0;
 use crate::config::ArtifactEntry;
 use crate::config::HashAlgorithm;
 use crate::dotslash_cache::DotslashCache;
-use crate::fetch_method::ArchiveFormat;
 use crate::fetch_method::ArtifactFormat;
-use crate::fetch_method::DecompressStep;
 
 /// We limit the number of bytes of the BLAKE3 hash to try to keep the path
 /// lengths in $DOTSLASH_CACHE down so that we don't exceed $PATH_MAX.
@@ -115,34 +113,22 @@ fn create_key_for_hash_algorithm(hash: HashAlgorithm) -> &'static [u8] {
 }
 
 fn create_key_for_format(format: ArtifactFormat, path: &ArtifactPath) -> Cow<'static, str> {
-    match format.extraction_policy() {
-        (decompress, Some(ArchiveFormat::Tar)) => {
-            // For an artifact that is an archive, the type of archive is
-            // sufficient to distinguish it.
-            match decompress {
-                None => Cow::Borrowed("tar"),
-                Some(DecompressStep::Gzip) => Cow::Borrowed("tar.gz"),
-                Some(DecompressStep::Xz) => Cow::Borrowed("tar.xz"),
-                Some(DecompressStep::Zstd) => Cow::Borrowed("tar.zst"),
-            }
-        }
-        (decompress, Some(ArchiveFormat::Zip)) => {
-            if let Some(d) = decompress {
-                unreachable!("zip's extraction_policy should never return `(Some(_), _)`; {d:?}");
-            }
-            Cow::Borrowed("zip")
-        }
-        (decompress, None) => {
-            // For a non-archive artifact, the `path` must be part of the cache
-            // key. The key has a prefix to distinguish it from the cache keys
-            // for archive artifacts.
-            match decompress {
-                None => Cow::Owned(format!("file:{}", path)),
-                Some(DecompressStep::Gzip) => Cow::Owned(format!("file.gz:{}", path)),
-                Some(DecompressStep::Xz) => Cow::Owned(format!("file.xz:{}", path)),
-                Some(DecompressStep::Zstd) => Cow::Owned(format!("file.zst:{}", path)),
-            }
-        }
+    match format {
+        // For a non-container artifact, the `path` must be part of the cache
+        // key. The key has a prefix to distinguish it from the cache keys
+        // for archive artifacts.
+        ArtifactFormat::Plain => Cow::Owned(format!("file:{}", path)),
+        ArtifactFormat::Gz => Cow::Owned(format!("file.gz:{}", path)),
+        ArtifactFormat::Xz => Cow::Owned(format!("file.xz:{}", path)),
+        ArtifactFormat::Zstd => Cow::Owned(format!("file.zst:{}", path)),
+
+        // For a container artifact, the type of archive is sufficient
+        // to distinguish it.
+        ArtifactFormat::Tar => Cow::Borrowed("tar"),
+        ArtifactFormat::TarGz => Cow::Borrowed("tar.gz"),
+        ArtifactFormat::TarXz => Cow::Borrowed("tar.xz"),
+        ArtifactFormat::TarZstd => Cow::Borrowed("tar.zst"),
+        ArtifactFormat::Zip => Cow::Borrowed("zip"),
     }
 }
 

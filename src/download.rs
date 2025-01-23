@@ -7,6 +7,7 @@
  * of this source tree.
  */
 
+use std::borrow::Cow;
 use std::fs::File;
 use std::io;
 use std::io::BufReader;
@@ -15,24 +16,18 @@ use std::path::PathBuf;
 
 use anyhow::Context as _;
 use digest::Digest as _;
-use flate2::bufread::GzDecoder;
 use serde_jsonrc::value::Value;
 use sha2::Sha256;
-use xz2::bufread::XzDecoder;
-use zstd::stream::read::Decoder as ZstdDecoder;
 
 use crate::artifact_location::ArtifactLocation;
 use crate::config::ArtifactEntry;
 use crate::config::HashAlgorithm;
 use crate::digest::Digest;
-use crate::fetch_method::ArchiveFormat;
 use crate::fetch_method::ArtifactFormat;
-use crate::fetch_method::DecompressStep;
 use crate::provider::ProviderFactory;
 use crate::util;
 use crate::util::fs_ctx;
 use crate::util::unarchive;
-use crate::util::unarchive::ArchiveType;
 use crate::util::FileLock;
 use crate::util::FileLockError;
 
@@ -211,66 +206,29 @@ fn unpack_verified_artifact(
     format: ArtifactFormat,
     artifact_entry_path: &str,
 ) -> anyhow::Result<()> {
-    match &format.extraction_policy() {
-        (Some(d), Some(ArchiveFormat::Zip)) => {
-            unreachable!("zip's extraction_policy should never return `(Some(_), _)`; {d:?}");
+    // Container artifacts get unarchived into directories.
+    // Non-container artifacts get written directly to a file.
+    let final_artifact_path = if format.is_container() {
+        Cow::Borrowed(temp_dir_to_mv)
+    } else {
+        let final_artifact_path = temp_dir_to_mv.join(artifact_entry_path);
+        let parent = final_artifact_path.parent().unwrap();
+        if parent != Path::new("") {
+            fs_ctx::create_dir_all(parent)?;
         }
-        (None, Some(ArchiveFormat::Zip)) => {
-            unarchive::unpack_file(fetched_artifact, temp_dir_to_mv, ArchiveType::Zip)?;
-        }
-        (None, Some(ArchiveFormat::Tar)) => {
-            unarchive::unpack_file(fetched_artifact, temp_dir_to_mv, ArchiveType::Tar)?;
-        }
-        (Some(DecompressStep::Gzip), Some(ArchiveFormat::Tar)) => {
-            unarchive::unpack_file(fetched_artifact, temp_dir_to_mv, ArchiveType::TarGz)?;
-        }
-        (Some(DecompressStep::Zstd), Some(ArchiveFormat::Tar)) => {
-            unarchive::unpack_file(fetched_artifact, temp_dir_to_mv, ArchiveType::TarZstd)?;
-        }
-        (Some(DecompressStep::Xz), Some(ArchiveFormat::Tar)) => {
-            unarchive::unpack_file(fetched_artifact, temp_dir_to_mv, ArchiveType::TarXz)?;
-        }
-        (decompression, None) => {
-            let final_artifact_path = temp_dir_to_mv.join(artifact_entry_path);
-            let parent = final_artifact_path.parent().unwrap();
-            if parent != Path::new("") {
-                fs_ctx::create_dir_all(parent)?;
-            }
+        Cow::Owned(final_artifact_path)
+    };
 
-            match decompression {
-                Some(DecompressStep::Gzip) => {
-                    // fetched_artifact contains the .gz
-                    let gz_file = fs_ctx::file_open(fetched_artifact)?;
-                    let reader = BufReader::new(gz_file);
-                    let mut decoder = GzDecoder::new(reader);
-                    let mut output_file = fs_ctx::file_create(&final_artifact_path)?;
-                    io::copy(&mut decoder, &mut output_file)?;
-                }
-                Some(DecompressStep::Xz) => {
-                    // fetched_artifact contains the .xz
-                    let xz_file = fs_ctx::file_open(fetched_artifact)?;
-                    let reader = BufReader::new(xz_file);
-                    let mut decoder = XzDecoder::new(reader);
-                    let mut output_file = fs_ctx::file_create(&final_artifact_path)?;
-                    io::copy(&mut decoder, &mut output_file)?;
-                }
-                Some(DecompressStep::Zstd) => {
-                    // fetched_artifact contains the .zst
-                    let zst_file = fs_ctx::file_open(fetched_artifact)?;
-                    let reader = BufReader::new(zst_file);
-                    let mut decoder = ZstdDecoder::with_buffer(reader)?;
-                    let mut output_file = fs_ctx::file_create(&final_artifact_path)?;
-                    io::copy(&mut decoder, &mut output_file)?;
-                }
-                None => {
-                    fs_ctx::rename(fetched_artifact, &final_artifact_path)?;
-                }
-            }
+    if let Some(archive_type) = format.as_archive_type() {
+        let reader = BufReader::new(fs_ctx::file_open(fetched_artifact)?);
+        unarchive::unarchive(reader, &final_artifact_path, archive_type)?;
+    } else {
+        fs_ctx::rename(fetched_artifact, &final_artifact_path)?;
+    }
 
-            // Change the file permissions, so can't overwrite file by accident.
-            #[cfg(unix)]
-            util::chmodx(final_artifact_path).context("failed to make path executable")?;
-        }
+    if !format.is_container() {
+        #[cfg(unix)]
+        util::chmodx(final_artifact_path).context("failed to make path executable")?;
     };
 
     Ok(())
