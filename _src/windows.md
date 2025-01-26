@@ -77,8 +77,9 @@ for easy execution without any of the drawbacks of batch scripts. But this
 method requires compiling a small executable and keeping it next to the DotSlash
 file.
 
-The _DotSlash Windows Shim_ will be made available to the public shortly under
-the [`windows_shim`](https://github.com/facebook/dotslash/windows_shim) in the
+The _DotSlash Windows Shim_ is available under the
+[`windows_shim`](https://github.com/facebook/dotslash/tree/main/windows_shim)
+folder in the
 [DotSlash GitHub repository](https://github.com/facebook/dotslash).
 
 ## `MAX_PATH` limits
