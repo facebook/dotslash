@@ -35,7 +35,7 @@ impl Provider for GitHubReleaseProvider {
         _artifact_entry: &ArtifactEntry,
     ) -> anyhow::Result<()> {
         let GitHubReleaseProviderConfig { tag, repo, name } = <_>::deserialize(provider_config)?;
-        let _output = Command::new("gh")
+        let output = Command::new("gh")
             .arg("release")
             .arg("download")
             .arg(tag)
@@ -48,8 +48,18 @@ impl Provider for GitHubReleaseProvider {
             .arg(regex_escape(&name))
             .arg("--output")
             .arg(destination)
-            .output()?;
-        Ok(())
+            .output()
+            .unwrap();
+
+        if output.status.success() {
+            Ok(())
+        } else {
+            Err(anyhow::anyhow!(
+                "failed to download release with exit code {} and stderr: {}",
+                output.status.code().unwrap(),
+                String::from_utf8_lossy(&output.stderr)
+            ))
+        }
     }
 }
 
