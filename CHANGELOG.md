@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.5.1 (2025-02-03)
+
+- Improved the error message for GitHub provider auth failures:
+  <https://github.com/facebook/dotslash/pull/43>
+
 ## v0.5.0 (2025-01-13)
 
 - Added `arg0` artifact entry config field:
