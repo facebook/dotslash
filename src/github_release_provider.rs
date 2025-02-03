@@ -10,11 +10,14 @@
 use std::path::Path;
 use std::process::Command;
 
+use anyhow::Context as _;
 use serde::Deserialize;
 use serde_jsonrc::value::Value;
 
 use crate::config::ArtifactEntry;
 use crate::provider::Provider;
+use crate::util::CommandDisplay;
+use crate::util::CommandStderrDisplay;
 use crate::util::FileLock;
 
 pub struct GitHubReleaseProvider {}
@@ -35,7 +38,8 @@ impl Provider for GitHubReleaseProvider {
         _artifact_entry: &ArtifactEntry,
     ) -> anyhow::Result<()> {
         let GitHubReleaseProviderConfig { tag, repo, name } = <_>::deserialize(provider_config)?;
-        let _output = Command::new("gh")
+        let mut command = Command::new("gh");
+        command
             .arg("release")
             .arg("download")
             .arg(tag)
@@ -47,8 +51,22 @@ impl Provider for GitHubReleaseProvider {
             // regex. Adding ^ and $ as anchors only seems to break things.
             .arg(regex_escape(&name))
             .arg("--output")
-            .arg(destination)
-            .output()?;
+            .arg(destination);
+
+        let output = command
+            .output()
+            .with_context(|| format!("{}", CommandDisplay::new(&command)))
+            .context("failed to run the GitHub CLI")?;
+
+        if !output.status.success() {
+            return Err(anyhow::format_err!(
+                "{}",
+                CommandStderrDisplay::new(&output)
+            ))
+            .with_context(|| format!("{}", CommandDisplay::new(&command)))
+            .context("the GitHub CLI failed");
+        }
+
         Ok(())
     }
 }
