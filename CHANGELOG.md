@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.5.2 (2025-02-05)
+
+- Include experimental commands in --help:
+  <https://github.com/facebook/dotslash/pull/44>
+
 ## v0.5.1 (2025-02-03)
 
 - Improved the error message for GitHub provider auth failures:
