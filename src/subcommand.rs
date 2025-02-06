@@ -217,6 +217,18 @@ Supported platform: {}
 
 Your DotSlash cache is: {}
 
+dotslash also has these special experimental commands:
+  dotslash --help                   Print this message
+  dotslash --version                Print the version of dotslash
+  dotslash -- b3sum FILE            Compute blake3 hash
+  dotslash -- clean                 Clean dotslash cache
+  dotslash -- create-url-entry URL  Generate "http" provider entry
+  dotslash -- cache-dir             Print path to the cache directory
+  dotslash -- fetch DOTSLASH_FILE   Prepare for execution, but print exe path
+                                    instead of executing
+  dotslash -- parse DOTSLASH_FILE   Parse the dotslash file
+  dotslash -- sha256 FILE           Compute sha256 sum of the file
+
 Learn more at {}
 "##,
                 REQUIRED_HEADER,
