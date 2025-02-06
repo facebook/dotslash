@@ -14,7 +14,6 @@ use std::io;
 use std::path::Path;
 use std::path::PathBuf;
 
-use fs2::FileExt as _;
 use thiserror::Error;
 
 #[derive(Debug, Error)]
@@ -46,8 +45,7 @@ impl FileLock {
                 .open(path)
                 .map_err(|e| FileLockError::Create(path.to_path_buf(), e))?;
 
-            lock_file
-                .lock_exclusive()
+            fs2::FileExt::lock_exclusive(&lock_file)
                 .map_err(|e| FileLockError::LockExclusive(path.to_path_buf(), e))?;
 
             Ok(FileLock {
@@ -61,7 +59,7 @@ impl FileLock {
 impl Drop for FileLock {
     fn drop(&mut self) {
         if let Some(file) = self.file.take() {
-            drop(file.unlock());
+            drop(fs2::FileExt::unlock(&file));
         }
     }
 }
