@@ -24,5 +24,29 @@ The _DotSlash Windows Shim_ does this:
 
 ## Binary size
 
-The current "reference implementation" is rather large. A no_std version that
-uses only Windows APIs will be added soon. Stay tuned!
+_DotSlash Windows Shim_ builds without a standard library and only uses Windows
+APIs. Release binaries are around ~5KB.
+
+## Release
+
+A nightly toolchain is required:
+
+```shell
+cargo +nightly build --release
+```
+
+Alternatively, though not recommended:
+
+```shell
+RUSTC_BOOTSTRAP=1 cargo build --release
+```
+
+## Debugging
+
+It may be useful to have the standard library (e.g. `dbg!`) when debugging.
+Build with `--no-default-features` (avoids the default `no_std` feature) to have
+access to the standard library.
+
+```shell
+cargo build --no-default-features
+```
