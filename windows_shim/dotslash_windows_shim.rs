@@ -23,15 +23,9 @@
 #![cfg_attr(feature = "no_std", no_main)]
 #![cfg_attr(feature = "no_std", windows_subsystem = "console")] // Set Entrypoint to "mainCRTStartup"
 
-extern crate alloc;
-
 #[allow(clippy::upper_case_acronyms)]
 type DWORD = u32;
 
-use alloc::alloc::GlobalAlloc;
-use alloc::alloc::Layout;
-use alloc::vec::Vec;
-use core::ffi::c_void;
 use core::mem;
 use core::ptr;
 use core::str;
@@ -45,6 +39,8 @@ use windows_sys::Win32::Foundation::BOOL;
 use windows_sys::Win32::Foundation::ERROR_FILE_NOT_FOUND;
 use windows_sys::Win32::Foundation::HANDLE;
 use windows_sys::Win32::Foundation::HMODULE;
+use windows_sys::Win32::Foundation::S_FALSE;
+use windows_sys::Win32::Foundation::S_OK;
 use windows_sys::Win32::Foundation::TRUE;
 use windows_sys::Win32::Foundation::WAIT_OBJECT_0;
 use windows_sys::Win32::Globalization::lstrcatW;
@@ -58,7 +54,6 @@ use windows_sys::Win32::System::LibraryLoader::GetModuleHandleW;
 use windows_sys::Win32::System::Memory::GetProcessHeap;
 use windows_sys::Win32::System::Memory::HeapAlloc;
 use windows_sys::Win32::System::Memory::HeapFree;
-use windows_sys::Win32::System::Memory::HeapReAlloc;
 use windows_sys::Win32::System::Memory::HEAP_ZERO_MEMORY;
 use windows_sys::Win32::System::Threading::CreateProcessW;
 use windows_sys::Win32::System::Threading::ExitProcess;
@@ -95,27 +90,68 @@ fn fatal(text: &str) -> ! {
     unsafe { ExitProcess(1) }
 }
 
-fn main_impl() -> ! {
-    // CreateProcessW's lpCommandLine has a maximum length of 32,767
-    // characters. Allocate that upfront to avoid growing buffers.
-    let mut ds_cmd: Vec<u16> = Vec::with_capacity(32767);
+// CreateProcessW's lpCommandLine has a maximum length of 32,767
+// characters.
+const BUF_MAX_SIZE: usize = 32767;
 
-    // Start constructing the DotSlash command string.
-    ds_cmd.push(0);
+struct PoorMansString {
+    buf: *mut u16,
+    len: usize,
+}
+
+impl PoorMansString {
+    fn append(&mut self, other: *const u16) {
+        let other_len = unsafe { lstrlenW(other) as usize };
+        if self.len + other_len > BUF_MAX_SIZE {
+            fatal("Buffer overflow");
+        }
+        unsafe {
+            // Concatenate other string to self.buf
+            if lstrcatW(self.buf, other).is_null() {
+                fatal("string concatenation failed");
+            }
+        }
+
+        self.len = self.len + other_len;
+    }
+
+    fn capacity(&self) -> usize {
+        BUF_MAX_SIZE - 1
+    }
+
+    fn new() -> Self {
+        // Allocate BUF_MAX_SIZE upfront to avoid growing buffers.
+        let buf = unsafe {
+            HeapAlloc(
+                GetProcessHeap(),
+                HEAP_ZERO_MEMORY,
+                BUF_MAX_SIZE * mem::size_of::<u16>(),
+            ) as *mut u16
+        };
+        Self { buf, len: 0 }
+    }
+}
+
+impl Drop for PoorMansString {
+    fn drop(&mut self) {
+        unsafe {
+            HeapFree(GetProcessHeap(), 0, self.buf as *mut _);
+        }
+    }
+}
+
+fn main_impl() -> ! {
+    let mut ds_cmd = PoorMansString::new();
 
     // Append "dotslash " to the command string.
-    if unsafe { lstrcatW(ds_cmd.as_mut_ptr(), w!("dotslash ")) }.is_null() {
-        fatal("could not append dotslash command string.");
-    }
+    ds_cmd.append(w!("dotslash "));
 
     // Append the DotSlash file path to the command string.
     //
     // NOTE: Turning this executable's full path into a valid argument on the
     // command string will happen in-place in the command string.
     unsafe {
-        let ds_file_offset = lstrlenW(ds_cmd.as_ptr()) as usize;
-        let ds_file_ptr = ds_cmd.as_mut_ptr().add(ds_file_offset);
-
+        let ds_file_ptr = ds_cmd.buf.add(ds_cmd.len);
         // Get a handle to this executable.
         //
         // When passed NULL, GetModuleHandle returns a handle to the file
@@ -131,28 +167,34 @@ fn main_impl() -> ! {
         // GetModuleFileName requires you to keep growing a buffer until it
         // fits the path. No need to do this because the command buffer
         // is already as large as can be.
+        let remaining_capacity = ds_cmd.capacity() - ds_cmd.len;
         let new_len = GetModuleFileNameW(
-            handle,                                    /* hModule */
-            ds_file_ptr,                               /* lpFilename */
-            (ds_cmd.capacity() - ds_file_offset) as _, /* nSize */
+            handle,                  /* hModule */
+            ds_file_ptr,             /* lpFilename */
+            remaining_capacity as _, /* nSize */
         ) as usize;
-        if new_len == 0 {
+        if new_len == 0 || new_len == remaining_capacity {
             fatal("GetModuleFileNameW failed.");
         }
+        ds_cmd.len += new_len;
 
         // Remove the extension from this executable's full path.
         //
-        // We assume that the DotSlash file is named just like this
-        // executable but without the `.exe`.
+        // We assume that the DotSlash file is named just like this executable but
+        // without the `.exe`.
         //
-        // For an executable named `foo.exe` we should now have a command
-        // string that looks like `dotslash C:\path\to\foo`.
+        // For an executable named `foo.exe` we should now have a command string that
+        // looks like `dotslash C:\path\to\foo`.
         //
-        // PathCchRemoveExtension returns `!= S_OK` when there is no extension.
-        // In this case, we'll pass this executable as the DotSlash file path.
-        // `dotslash` will fail and complain that it's not a valid DotSlash
-        // file.
-        PathCchRemoveExtension(ds_file_ptr, new_len + 1);
+        // PathCchRemoveExtension returns `S_OK` when an extension was found and
+        // removed. It returns `S_FALSE` when there is no extension. In this case, we'll
+        // pass this executable as the DotSlash file path. `dotslash` will fail and
+        // complain that it's not a valid DotSlash file.
+        //
+        let found_extension = PathCchRemoveExtension(ds_file_ptr, new_len + 1);
+        if found_extension != S_OK && found_extension != S_FALSE {
+            fatal("PathCchRemoveExtension failed.");
+        }
 
         // Quote the entire DotSlash file path if there are spaces.
         //
@@ -172,10 +214,8 @@ fn main_impl() -> ! {
         // Append the arguments to the command string if there are any.
         if *args_ptr != 0 {
             // Append a separator for the arguments.
-            if lstrcatW(ds_cmd.as_mut_ptr(), w!(" ")).is_null() {
-                fatal("could not append command args separator.");
-            }
-            lstrcatW(ds_cmd.as_mut_ptr(), args_ptr);
+            ds_cmd.append(w!(" "));
+            ds_cmd.append(args_ptr);
         }
     }
 
@@ -187,14 +227,14 @@ fn main_impl() -> ! {
 
     let status = unsafe {
         CreateProcessW(
-            ptr::null_mut(),     // lpApplicationName
-            ds_cmd.as_mut_ptr(), // lpCommandLine
-            ptr::null_mut(),     // lpProcessAttributes
-            ptr::null_mut(),     // lpThreadAttributes
-            TRUE,                // bInheritHandles
-            0,                   // dwCreationFlags
-            ptr::null_mut(),     // lpEnvironment
-            ptr::null_mut(),     // lpCurrentDirectory
+            ptr::null_mut(), // lpApplicationName
+            ds_cmd.buf,      // lpCommandLine
+            ptr::null_mut(), // lpProcessAttributes
+            ptr::null_mut(), // lpThreadAttributes
+            TRUE,            // bInheritHandles
+            0,               // dwCreationFlags
+            ptr::null_mut(), // lpEnvironment
+            ptr::null_mut(), // lpCurrentDirectory
             &si,
             &mut pi,
         )
@@ -284,32 +324,3 @@ fn panic(_info: &core::panic::PanicInfo) -> ! {
 #[no_mangle]
 #[cfg(feature = "no_std")]
 pub extern "C" fn eh_personality() {}
-
-struct Win32HeapAlloc;
-
-// Based on https://github.com/rust-lang/rust/blob/1.75.0/compiler/rustc_codegen_cranelift/example/alloc_system.rs#L70-L124
-unsafe impl GlobalAlloc for Win32HeapAlloc {
-    unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
-        HeapAlloc(GetProcessHeap(), 0, layout.size()) as *mut u8
-    }
-
-    unsafe fn alloc_zeroed(&self, layout: Layout) -> *mut u8 {
-        HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, layout.size()) as *mut u8
-    }
-
-    unsafe fn dealloc(&self, ptr: *mut u8, _layout: Layout) {
-        HeapFree(GetProcessHeap(), 0, ptr as *mut c_void);
-    }
-
-    unsafe fn realloc(&self, ptr: *mut u8, _layout: Layout, new_size: usize) -> *mut u8 {
-        HeapReAlloc(
-            GetProcessHeap(),
-            HEAP_ZERO_MEMORY,
-            ptr as *mut c_void,
-            new_size,
-        ) as *mut u8
-    }
-}
-
-#[global_allocator]
-static GLOBAL: Win32HeapAlloc = Win32HeapAlloc;
