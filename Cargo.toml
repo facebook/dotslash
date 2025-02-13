@@ -22,7 +22,7 @@ path = "tests/dotslash_tests.rs"
 anyhow = "1.0.95"
 blake3 = { version = "=1.5.2", features = ["rayon", "traits-preview"] }
 digest = "0.10"
-dirs = "2.0"
+dirs = "6.0"
 dunce = "1.0.2"
 filetime = "0.2.9"
 flate2 = { version = "1.0.33", features = ["rust_backend"], default-features = false }
@@ -31,7 +31,7 @@ serde = { version = "1.0.185", features = ["derive", "rc"] }
 serde_jsonrc = "0.1"
 sha2 = "0.10.6"
 tar = "0.4.43"
-tempfile = "3.8"
+tempfile = "3.15"
 thiserror = "2"
 xz2 = { version = "0.1.7", features = ["static"] }
 zip = { version = "0.6.6", features = ["deflate"], default-features = false }
