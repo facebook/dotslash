@@ -9,8 +9,8 @@
 
 use anyhow::Context as _;
 
-use crate::artifact_location::determine_location;
 use crate::artifact_location::ArtifactLocation;
+use crate::artifact_location::determine_location;
 use crate::config;
 use crate::config::ArtifactEntry;
 use crate::dotslash_cache::DotslashCache;

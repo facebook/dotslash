@@ -14,8 +14,8 @@ use std::iter;
 use std::path::Path;
 use std::path::PathBuf;
 
-use snapbox::data::DataFormat;
 use snapbox::Data;
+use snapbox::data::DataFormat;
 
 pub fn current_dir() -> io::Result<PathBuf> {
     env::current_dir()

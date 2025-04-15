@@ -14,10 +14,10 @@ use std::path::Path;
 use std::path::PathBuf;
 
 use anyhow::Context as _;
-use snapbox::cmd::Command;
 use snapbox::Assert;
 use snapbox::RedactedValue;
 use snapbox::Redactions;
+use snapbox::cmd::Command;
 use tempfile::TempDir;
 
 #[cfg_attr(fbcode_build, path = "fb/ci.rs")]

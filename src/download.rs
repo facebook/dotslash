@@ -26,10 +26,10 @@ use crate::digest::Digest;
 use crate::fetch_method::ArtifactFormat;
 use crate::provider::ProviderFactory;
 use crate::util;
-use crate::util::fs_ctx;
-use crate::util::unarchive;
 use crate::util::FileLock;
 use crate::util::FileLockError;
+use crate::util::fs_ctx;
+use crate::util::unarchive;
 
 pub const DEFAULT_PROVDIER_TYPE: &str = "http";
 

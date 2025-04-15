@@ -18,8 +18,8 @@ use digest::Digest as _;
 use sha2::Sha256;
 use thiserror::Error;
 
-use crate::config::parse_file;
 use crate::config::REQUIRED_HEADER;
+use crate::config::parse_file;
 use crate::default_provider_factory::DefaultProviderFactory;
 use crate::dotslash_cache::DotslashCache;
 use crate::download::download_artifact;

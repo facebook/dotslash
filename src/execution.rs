@@ -25,9 +25,9 @@ use crate::dotslash_cache::DotslashCache;
 use crate::download::download_artifact;
 use crate::locate::locate_artifact;
 use crate::provider::ProviderFactory;
-use crate::subcommand::run_subcommand;
 use crate::subcommand::Subcommand;
 use crate::subcommand::SubcommandError;
+use crate::subcommand::run_subcommand;
 use crate::util;
 
 pub fn run<P: ProviderFactory>(mut args: ArgsOs, provider_factory: &P) -> ExitCode {

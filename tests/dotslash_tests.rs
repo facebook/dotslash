@@ -17,9 +17,9 @@ use std::str;
 
 use tempfile::NamedTempFile;
 
+use crate::common::DotslashTestEnv;
 use crate::common::ci;
 use crate::common::if_win_else;
-use crate::common::DotslashTestEnv;
 
 #[cfg(unix)]
 fn non_utf8_osstring() -> OsString {
