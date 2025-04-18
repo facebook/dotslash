@@ -33,13 +33,23 @@ jobs:
       - run: cargo build --release --target aarch64-apple-darwin
       - run: cargo build --release --target x86_64-apple-darwin
       - run: lipo -create -output dotslash target/aarch64-apple-darwin/release/dotslash target/x86_64-apple-darwin/release/dotslash
+      # Package universal binary
       - run: tar -czvf "dotslash-macos.${GITHUB_REF#refs/tags/}.tar.gz" dotslash
         shell: bash
+      # Package architecture-specific binaries
+      - run: tar -czvf "dotslash-macos-arm64.${GITHUB_REF#refs/tags/}.tar.gz" -C target/aarch64-apple-darwin/release dotslash
+        shell: bash
+      - run: tar -czvf "dotslash-macos-amd64.${GITHUB_REF#refs/tags/}.tar.gz" -C target/x86_64-apple-darwin/release dotslash
+        shell: bash
+      # Upload all binaries
       - name: upload release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
-        run: gh release upload "${GITHUB_REF#refs/tags/}" "dotslash-macos.${GITHUB_REF#refs/tags/}.tar.gz"
+        run: |
+          gh release upload "${GITHUB_REF#refs/tags/}" "dotslash-macos.${GITHUB_REF#refs/tags/}.tar.gz"
+          gh release upload "${GITHUB_REF#refs/tags/}" "dotslash-macos-arm64.${GITHUB_REF#refs/tags/}.tar.gz"
+          gh release upload "${GITHUB_REF#refs/tags/}" "dotslash-macos-amd64.${GITHUB_REF#refs/tags/}.tar.gz"
 
   ubuntu-22_04-x86_64:
     needs: create-release
