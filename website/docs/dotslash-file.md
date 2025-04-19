@@ -206,11 +206,28 @@ Currently, DotSlash supports two providers out of the box: the **HTTP Provider**
 (`"type": "github-release"`). (At the time of this writing, there is no way to
 add custom providers without forking DotSlash.)
 
-Each provider in the `providers` list will be tried, in order, to fetch the
+Each provider in the `providers` list will be tried, in order by default, to fetch the
 artifact, until one succeeds. The provider type need not be unique within a
 list, e.g., the HTTP Provider can be specified multiple times with different
 values for `"url"`. Though note that the `size`/`hash`/`digest` are specified
 _independently_ of the providers, so all providers must yield the same artifact.
+
+The order in which providers are tried can be randomized
+by adding `providers_order: "random"` under the artifact entry.
+
+```json
+{
+  ...
+  "format": "tar.gz",
+  "path": "hermes",
+  "providers": [
+    {"url": "https://mirror1.example.com/hermes.tar.gz"},
+    {"url": "https://mirror2.example.com/hermes.tar.gz"},
+    {"url": "https://mirror3.example.com/hermes.tar.gz"}
+  ],
+  "providers_order": "random"
+}
+```
 
 ### HTTP Provider
 
