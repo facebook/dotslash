@@ -23,6 +23,9 @@ pub enum FileLockError {
 
     #[error("failed to get exclusive lock `{0}`")]
     LockExclusive(PathBuf, #[source] io::Error),
+
+    #[error("failed to get shared lock `{0}`")]
+    LockShared(PathBuf, #[source] io::Error),
 }
 
 #[derive(Debug, Default)]
@@ -47,6 +50,29 @@ impl FileLock {
 
             fs2::FileExt::lock_exclusive(&lock_file)
                 .map_err(|e| FileLockError::LockExclusive(path.to_path_buf(), e))?;
+
+            Ok(FileLock {
+                file: Some(lock_file),
+            })
+        }
+        inner(path.as_ref())
+    }
+
+    pub fn acquire_shared_lock<P>(path: P) -> Result<FileLock, FileLockError>
+    where
+        P: AsRef<Path>,
+    {
+        fn inner(path: &Path) -> Result<FileLock, FileLockError> {
+            let lock_file = File::options()
+                .read(true)
+                .write(true)
+                .create(true)
+                .truncate(false)
+                .open(path)
+                .map_err(|e| FileLockError::Create(path.to_path_buf(), e))?;
+
+            fs2::FileExt::lock_shared(&lock_file)
+                .map_err(|e| FileLockError::LockShared(path.to_path_buf(), e))?;
 
             Ok(FileLock {
                 file: Some(lock_file),

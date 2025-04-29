@@ -253,7 +253,7 @@ pub fn acquire_download_lock_for_artifact(
             match FileLock::acquire(&artifact_location.lock_path) {
                 Ok(file_lock) => return Ok(file_lock),
                 Err(err @ FileLockError::LockExclusive(..)) => return Err(err.into()),
-                Err(FileLockError::Create(..)) => {}
+                Err(FileLockError::Create(..) | FileLockError::LockShared(..)) => {}
             }
         }
     }
