@@ -53,11 +53,11 @@ $ dotslash -- cache-dir
 The `DOTSLASH_CACHE` environment variable can be used to override the default
 location of the DotSlash cache. By default, the DotSlash cache resides at:
 
-| platform | path                                                 |
-| -------- | ---------------------------------------------------- |
-| Linux    | `$XDG_CACHE_HOME/dotslash` or `$HOME/.cache/dotslash |
-| macOS    | `$HOME/Library/Caches/dotslash`                      |
-| Windows  | `{FOLDERID_LocalAppData}/dotslash`                   |
+| platform | path                                                  |
+| -------- | ----------------------------------------------------- |
+| Linux    | `$XDG_CACHE_HOME/dotslash` or `$HOME/.cache/dotslash` |
+| macOS    | `$HOME/Library/Caches/dotslash`                       |
+| Windows  | `{FOLDERID_LocalAppData}/dotslash`                    |
 
 DotSlash relies on
 [`dirs::cache_dir()`](https://docs.rs/dirs/5.0.1/dirs/fn.cache_dir.html) to use
