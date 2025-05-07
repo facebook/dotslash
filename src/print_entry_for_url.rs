@@ -19,6 +19,7 @@ use tempfile::NamedTempFile;
 use crate::config::Arg0;
 use crate::config::ArtifactEntry;
 use crate::config::HashAlgorithm;
+use crate::config::ProvidersOrder;
 use crate::curl::CurlCommand;
 use crate::curl::FetchContext;
 use crate::fetch_method::ArtifactFormat;
@@ -67,6 +68,7 @@ fn serialize_entry(url: &str, size: u64, hex_digest: String) -> anyhow::Result<S
         path: "TODO: specify the appropriate `path` for this artifact".parse()?,
         providers: vec![serde_jsonrc::json!({"url": url})],
         arg0: Arg0::default(),
+        providers_order: ProvidersOrder::Sequential,
         readonly: true,
     };
     let entry_json = serde_jsonrc::to_string_pretty(&entry)?;
@@ -119,6 +121,7 @@ mod tests {
                 path: "TODO: specify the appropriate `path` for this artifact".parse()?,
                 providers: vec![serde_jsonrc::json!({"url": url})],
                 arg0: Arg0::DotslashFile,
+                providers_order: ProvidersOrder::Sequential,
                 readonly: true,
             },
             entry,
