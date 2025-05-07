@@ -23,7 +23,23 @@ We provide prebuilt binaries for macOS, [Ubuntu] Linux, and Windows on GitHub:
 
 <https://github.com/facebook/dotslash/releases/latest>
 
-For the reasons explained above, the macOS release is a Universal Binary.
+macOS: for the reasons explained above, the macOS release is a Universal Binary.
+
+```shell
+curl -LSfs https://github.com/facebook/dotslash/releases/latest/download/dotslash-macos.tar.gz | tar fxz - -C YOUR_BIN_PATH
+```
+
+Linux
+
+```shell
+curl -LSfs "https://github.com/facebook/dotslash/releases/latest/download/dotslash-ubuntu-22.04.$(uname -m).tar.gz" | tar fxz - -C YOUR_BIN_PATH
+```
+
+Windows
+
+```cmd
+cmd /c 'curl.exe -LSfs https://github.com/facebook/dotslash/releases/latest/download/dotslash-windows.tar.gz | tar fxz - -C YOUR_BIN_PATH'
+```
 
 Once you have downloaded DotSlash, you must ensure that `dotslash` (or
 `dotslash.exe` on Windows) is on your `PATH`. You can test that it is setup
