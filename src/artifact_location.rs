@@ -64,6 +64,7 @@ pub fn determine_location(
         providers: _,
         arg0,
         readonly,
+        providers_order: _,
     } = artifact_entry;
 
     let artifact_hash = blake3::Hasher::new()
@@ -135,7 +136,7 @@ fn create_key_for_format(format: ArtifactFormat, path: &ArtifactPath) -> Cow<'st
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::digest::Digest;
+    use crate::{config::ProvidersOrder, digest::Digest};
 
     #[test]
     fn paths_for_extract_case() {
@@ -151,6 +152,7 @@ mod tests {
             providers: vec![],
             arg0: Arg0::DotslashFile,
             readonly: true,
+            providers_order: ProvidersOrder::Sequential,
         };
         let dotslash_cache = DotslashCache::default();
         let location = determine_location(&artifact_entry, &dotslash_cache);
@@ -191,6 +193,7 @@ mod tests {
             path: "minesweeper.exe".parse().unwrap(),
             providers: vec![],
             arg0: Arg0::DotslashFile,
+            providers_order: ProvidersOrder::Sequential,
             readonly: true,
         };
         let dotslash_cache = DotslashCache::default();

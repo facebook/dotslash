@@ -16,12 +16,15 @@ use std::path::PathBuf;
 
 use anyhow::Context as _;
 use digest::Digest as _;
+use rand::seq::SliceRandom;
+use rand::SeedableRng;
 use serde_jsonrc::value::Value;
 use sha2::Sha256;
 
 use crate::artifact_location::ArtifactLocation;
 use crate::config::ArtifactEntry;
 use crate::config::HashAlgorithm;
+use crate::config::ProvidersOrder;
 use crate::digest::Digest;
 use crate::fetch_method::ArtifactFormat;
 use crate::provider::ProviderFactory;
@@ -61,7 +64,17 @@ pub fn download_artifact<P: ProviderFactory>(
 
     // Record warnings: only reported if no provider succeeds.
     let mut warnings = vec![];
-    for provider_config in &artifact_entry.providers {
+
+    // Build a list of provider references,
+    // and if randomization is enabled, shuffle them.
+    let mut rng = rand_chacha::ChaCha8Rng::from_os_rng();
+    let providers = providers_in_order(
+        &mut rng,
+        &artifact_entry.providers,
+        artifact_entry.providers_order,
+    );
+
+    for provider_config in providers {
         // This must be a sibling to the final artifact_location so that we can
         // atomically move it into place.
         let temp_dir_to_mv = fs_ctx::tempdir_in(artifact_parent_dir)?;
@@ -129,6 +142,23 @@ pub fn download_artifact<P: ProviderFactory>(
         "no providers succeeded. warnings:\n{}",
         warnings.join("\n")
     ))
+}
+
+fn providers_in_order<'b>(
+    rng: &mut impl rand::Rng,
+    providers: &'b [Value],
+    providers_order: ProvidersOrder,
+) -> Vec<&'b Value> {
+    let mut ordered_providers: Vec<&Value> = Vec::with_capacity(providers.len());
+    for provider_config in providers {
+        ordered_providers.push(provider_config);
+    }
+    match providers_order {
+        ProvidersOrder::Sequential => {} // nothing to do
+        ProvidersOrder::Random => ordered_providers.shuffle(rng),
+    }
+
+    ordered_providers
 }
 
 fn get_provider_type(provider_config: &Value) -> anyhow::Result<&str> {
@@ -258,4 +288,46 @@ pub fn acquire_download_lock_for_artifact(
         }
     }
     Ok(FileLock::default())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn providers_in_order_sequential() {
+        let mut rng = rand_chacha::ChaCha8Rng::from_os_rng(); // doesn't matter
+
+        let providers = vec![
+            serde_jsonrc::from_str(r#"{"type": "a"}"#).unwrap(),
+            serde_jsonrc::from_str(r#"{"type": "b"}"#).unwrap(),
+            serde_jsonrc::from_str(r#"{"type": "c"}"#).unwrap(),
+        ];
+
+        let ordered_providers =
+            providers_in_order(&mut rng, &providers, ProvidersOrder::Sequential);
+
+        assert_eq!(
+            ordered_providers,
+            vec![&providers[0], &providers[1], &providers[2]]
+        );
+    }
+
+    #[test]
+    fn providers_in_order_random() {
+        let mut rng = rand_chacha::ChaCha8Rng::seed_from_u64(42); // deterministic for testing
+
+        let providers = vec![
+            serde_jsonrc::from_str(r#"{"type": "a"}"#).unwrap(),
+            serde_jsonrc::from_str(r#"{"type": "b"}"#).unwrap(),
+            serde_jsonrc::from_str(r#"{"type": "c"}"#).unwrap(),
+        ];
+
+        let ordered_providers = providers_in_order(&mut rng, &providers, ProvidersOrder::Random);
+
+        assert_eq!(
+            ordered_providers,
+            vec![&providers[2], &providers[1], &providers[0]]
+        );
+    }
 }
