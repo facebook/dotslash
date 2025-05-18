@@ -392,4 +392,32 @@ mod tests {
             vec![&providers[2], &providers[3], &providers[1], &providers[0]]
         );
     }
+
+    #[test]
+    fn providres_in_order_weighted_random_zero_weight() {
+        let mut rng = rand_chacha::ChaCha8Rng::seed_from_u64(42); // deterministic for testing
+
+        let providers = vec![
+            serde_jsonrc::from_str(r#"{"type": "a", "weight": 0}"#).unwrap(),
+            serde_jsonrc::from_str(r#"{"type": "b", "weight": 2}"#).unwrap(),
+        ];
+
+        let result = providers_in_order(&mut rng, &providers, ProvidersOrder::WeightedRandom);
+        assert!(result.is_err());
+        assert!(result.unwrap_err().to_string().contains("weight must be greater than 0"));
+    }
+
+    #[test]
+    fn providers_in_order_weighted_random_negative_weight() {
+        let mut rng = rand_chacha::ChaCha8Rng::seed_from_u64(42); // deterministic for testing
+
+        let providers = vec![
+            serde_jsonrc::from_str(r#"{"type": "a", "weight": -1}"#).unwrap(),
+            serde_jsonrc::from_str(r#"{"type": "b", "weight": 2}"#).unwrap(),
+        ];
+
+        let result = providers_in_order(&mut rng, &providers, ProvidersOrder::WeightedRandom);
+        assert!(result.is_err());
+        assert!(result.unwrap_err().to_string().contains("weight must be a non-negative integer"));
+    }
 }
