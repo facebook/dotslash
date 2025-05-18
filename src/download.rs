@@ -16,7 +16,7 @@ use std::path::PathBuf;
 
 use anyhow::Context as _;
 use digest::Digest as _;
-use rand::seq::SliceRandom;
+use rand::distr::Distribution;
 use rand::SeedableRng;
 use serde_jsonrc::value::Value;
 use sha2::Sha256;
@@ -72,7 +72,7 @@ pub fn download_artifact<P: ProviderFactory>(
         &mut rng,
         &artifact_entry.providers,
         artifact_entry.providers_order,
-    );
+    )?;
 
     for provider_config in providers {
         // This must be a sibling to the final artifact_location so that we can
@@ -148,17 +148,55 @@ fn providers_in_order<'b>(
     rng: &mut impl rand::Rng,
     providers: &'b [Value],
     providers_order: ProvidersOrder,
-) -> Vec<&'b Value> {
+) -> anyhow::Result<Vec<&'b Value>> {
     let mut ordered_providers: Vec<&Value> = Vec::with_capacity(providers.len());
-    for provider_config in providers {
-        ordered_providers.push(provider_config);
-    }
     match providers_order {
-        ProvidersOrder::Sequential => {} // nothing to do
-        ProvidersOrder::Random => ordered_providers.shuffle(rng),
+        ProvidersOrder::Sequential => {
+            // Just use the order in the config.
+            for provider_config in providers {
+                ordered_providers.push(provider_config);
+            }
+        }
+
+        ProvidersOrder::WeightedRandom => {
+            // Assign weights to each provider based on the "weight" field.
+            // Defaults to 1 if not specified.
+            let mut weights: Vec<u64> = Vec::with_capacity(providers.len());
+            for (idx, provider_config) in providers.iter().enumerate() {
+                let weight_value = provider_config
+                    .get("weight");
+
+                let weight = match weight_value {
+                    None => 1 as u64,
+                    Some(weight) =>
+                        weight.as_u64()
+                        .with_context(|| format!("provider[{}]: weight must be a non-negative integer", idx))?,
+                };
+
+                if weight == 0 {
+                    return Err(anyhow::anyhow!(
+                        "provider[{}]: weight must be greater than 0", idx
+                    ));
+                }
+
+                weights.push(weight );
+            }
+
+            // Shuffle the providers using weighted sampling of indexes
+            // without duplicates in the result.
+            let dist = rand::distr::weighted::WeightedIndex::new(&weights)
+                .map_err(|e| anyhow::anyhow!("error initializing weights: {}", e))?;
+            let mut seen = std::collections::HashSet::new();
+            while ordered_providers.len() < providers.len() {
+                let idx = dist.sample(rng);
+                if seen.insert(idx) {
+                    ordered_providers.push(&providers[idx]);
+                }
+            }
+        }
     }
 
-    ordered_providers
+    Ok(ordered_providers)
 }
 
 fn get_provider_type(provider_config: &Value) -> anyhow::Result<&str> {
@@ -305,7 +343,8 @@ mod tests {
         ];
 
         let ordered_providers =
-            providers_in_order(&mut rng, &providers, ProvidersOrder::Sequential);
+            providers_in_order(&mut rng, &providers, ProvidersOrder::Sequential)
+                .expect("failed to order providers");
 
         assert_eq!(
             ordered_providers,
@@ -314,7 +353,7 @@ mod tests {
     }
 
     #[test]
-    fn providers_in_order_random() {
+    fn providers_in_order_weighted_random_default_weights() {
         let mut rng = rand_chacha::ChaCha8Rng::seed_from_u64(42); // deterministic for testing
 
         let providers = vec![
@@ -323,11 +362,34 @@ mod tests {
             serde_jsonrc::from_str(r#"{"type": "c"}"#).unwrap(),
         ];
 
-        let ordered_providers = providers_in_order(&mut rng, &providers, ProvidersOrder::Random);
+        let ordered_providers =
+            providers_in_order(&mut rng, &providers, ProvidersOrder::WeightedRandom)
+                .expect("failed to order providers");
 
         assert_eq!(
             ordered_providers,
             vec![&providers[2], &providers[1], &providers[0]]
+        );
+    }
+
+    #[test]
+    fn providers_in_order_weighted_random_custom_weights() {
+        let mut rng = rand_chacha::ChaCha8Rng::seed_from_u64(42); // deterministic for testing
+
+        let providers = vec![
+            serde_jsonrc::from_str(r#"{"type": "a", "weight": 1}"#).unwrap(),
+            serde_jsonrc::from_str(r#"{"type": "b", "weight": 2}"#).unwrap(),
+            serde_jsonrc::from_str(r#"{"type": "c", "weight": 10}"#).unwrap(),
+            serde_jsonrc::from_str(r#"{"type": "d", "weight": 2}"#).unwrap(),
+        ];
+
+        let ordered_providers =
+            providers_in_order(&mut rng, &providers, ProvidersOrder::WeightedRandom)
+                .expect("failed to order providers");
+
+        assert_eq!(
+            ordered_providers,
+            vec![&providers[2], &providers[3], &providers[1], &providers[0]]
         );
     }
 }

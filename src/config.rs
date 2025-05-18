@@ -79,8 +79,12 @@ pub enum ProvidersOrder {
     /// Try each provider in the order they are listed in the DotSlash file.
     #[default]
     Sequential,
-    /// Try providers in a random order.
-    Random,
+    /// Try providers in a random order,
+    /// using the "weight" key on each provider
+    /// to determine the probability of selection.
+    //
+    /// If no "weight" key is present, all providers are equally likely.
+    WeightedRandom,
 }
 
 /// While having a boolean that defaults to `true` is somewhat undesirable,
@@ -228,7 +232,7 @@ mod tests {
                             "url": "https://example.com/my_tool.tar"
                         }
                     ],
-                    "providers_order": "random"
+                    "providers_order": "weighted-random"
                 },
             },
         }
@@ -236,7 +240,7 @@ mod tests {
         let config_file = parse_file_string(dotslash).unwrap();
         assert_eq!(
             config_file.platforms["linux-x86_64"].providers_order,
-            ProvidersOrder::Random
+            ProvidersOrder::WeightedRandom,
         );
     }
 
