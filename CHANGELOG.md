@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.5.3 (2025-05-19)
+
+- One-liner installations are now possible, see
+  [the new installation instructions](https://dotslash-cli.com/docs/installation/#prebuilt-binaries)
+  <https://github.com/facebook/dotslash/pull/17>
+- Precompiled arch-specific binaries are now available for macOS:
+  <https://github.com/facebook/dotslash/pull/48>
+
 ## v0.5.2 (2025-02-05)
 
 - Include experimental commands in --help:
