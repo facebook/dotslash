@@ -29,9 +29,7 @@ pub fn is_path_safe_to_own(path: &Path) -> bool {
             Ok(meta) => {
                 return unistd::getuid().as_raw() == meta.uid();
             }
-            Err(ref e) if util::is_not_found_error(e) => {
-                continue;
-            }
+            Err(ref e) if util::is_not_found_error(e) => (),
             Err(ref e) if e.kind() == io::ErrorKind::PermissionDenied => {
                 return false;
             }

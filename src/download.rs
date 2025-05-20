@@ -165,7 +165,7 @@ fn providers_in_order<'b>(
                 let weight_value = provider_config.get("weight");
 
                 let weight = match weight_value {
-                    None => 1 as u64,
+                    None => 1u64,
                     Some(weight) => weight.as_u64().with_context(|| {
                         format!("provider[{}]: weight must be a non-negative integer", idx)
                     })?,
@@ -296,7 +296,7 @@ fn unpack_verified_artifact(
     if !format.is_container() {
         #[cfg(unix)]
         util::chmodx(final_artifact_path).context("failed to make path executable")?;
-    };
+    }
 
     Ok(())
 }

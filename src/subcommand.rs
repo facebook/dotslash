@@ -204,7 +204,7 @@ fn run_subcommand_impl(subcommand: &Subcommand, args: &mut ArgsOs) -> anyhow::Re
             }
 
             eprint!(
-                r##"usage: dotslash DOTSLASH_FILE [OPTIONS]
+                r#"usage: dotslash DOTSLASH_FILE [OPTIONS]
 
 DOTSLASH_FILE must be a file that starts with `{}`
 and contains a JSON body tells DotSlash how to fetch and run the executable
@@ -230,7 +230,7 @@ dotslash also has these special experimental commands:
   dotslash -- sha256 FILE           Compute sha256 sum of the file
 
 Learn more at {}
-"##,
+"#,
                 REQUIRED_HEADER,
                 SUPPORTED_PLATFORM,
                 DotslashCache::new().cache_dir().display(),
@@ -247,7 +247,7 @@ Learn more at {}
             let hex_digest = format!("{:x}", hasher.finalize());
             println!("{}", hex_digest);
         }
-    };
+    }
 
     Ok(())
 }

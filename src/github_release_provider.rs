@@ -83,7 +83,7 @@ fn regex_escape(s: &str) -> String {
             | '$' = c
             {
                 output.push('\\');
-            };
+            }
             output.push(c);
             output
         },
