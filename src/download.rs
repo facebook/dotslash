@@ -16,12 +16,14 @@ use std::path::PathBuf;
 
 use anyhow::Context as _;
 use digest::Digest as _;
+use rand::distributions::Distribution;
 use serde_jsonrc::value::Value;
 use sha2::Sha256;
 
 use crate::artifact_location::ArtifactLocation;
 use crate::config::ArtifactEntry;
 use crate::config::HashAlgorithm;
+use crate::config::ProvidersOrder;
 use crate::digest::Digest;
 use crate::fetch_method::ArtifactFormat;
 use crate::provider::ProviderFactory;
@@ -61,7 +63,17 @@ pub fn download_artifact<P: ProviderFactory>(
 
     // Record warnings: only reported if no provider succeeds.
     let mut warnings = vec![];
-    for provider_config in &artifact_entry.providers {
+
+    // Build a list of provider references,
+    // and if randomization is enabled, shuffle them.
+    let mut rng = rand::thread_rng();
+    let providers = providers_in_order(
+        &mut rng,
+        &artifact_entry.providers,
+        artifact_entry.providers_order,
+    )?;
+
+    for provider_config in providers {
         // This must be a sibling to the final artifact_location so that we can
         // atomically move it into place.
         let temp_dir_to_mv = fs_ctx::tempdir_in(artifact_parent_dir)?;
@@ -129,6 +141,61 @@ pub fn download_artifact<P: ProviderFactory>(
         "no providers succeeded. warnings:\n{}",
         warnings.join("\n")
     ))
+}
+
+fn providers_in_order<'b>(
+    rng: &mut impl rand::Rng,
+    providers: &'b [Value],
+    providers_order: ProvidersOrder,
+) -> anyhow::Result<Vec<&'b Value>> {
+    let mut ordered_providers: Vec<&Value> = Vec::with_capacity(providers.len());
+    match providers_order {
+        ProvidersOrder::Sequential => {
+            // Just use the order in the config.
+            for provider_config in providers {
+                ordered_providers.push(provider_config);
+            }
+        }
+
+        ProvidersOrder::WeightedRandom => {
+            // Assign weights to each provider based on the "weight" field.
+            // Defaults to 1 if not specified.
+            let mut weights: Vec<u64> = Vec::with_capacity(providers.len());
+            for (idx, provider_config) in providers.iter().enumerate() {
+                let weight_value = provider_config.get("weight");
+
+                let weight = match weight_value {
+                    None => 1 as u64,
+                    Some(weight) => weight.as_u64().with_context(|| {
+                        format!("provider[{}]: weight must be a non-negative integer", idx)
+                    })?,
+                };
+
+                if weight == 0 {
+                    return Err(anyhow::anyhow!(
+                        "provider[{}]: weight must be greater than 0",
+                        idx
+                    ));
+                }
+
+                weights.push(weight);
+            }
+
+            // Shuffle the providers using weighted sampling of indexes
+            // without duplicates in the result.
+            let dist = rand::distributions::weighted::WeightedIndex::new(&weights)
+                .map_err(|e| anyhow::anyhow!("error initializing weights: {}", e))?;
+            let mut seen = std::collections::HashSet::new();
+            while ordered_providers.len() < providers.len() {
+                let idx = dist.sample(rng);
+                if seen.insert(idx) {
+                    ordered_providers.push(&providers[idx]);
+                }
+            }
+        }
+    }
+
+    Ok(ordered_providers)
 }
 
 fn get_provider_type(provider_config: &Value) -> anyhow::Result<&str> {
@@ -258,4 +325,110 @@ pub fn acquire_download_lock_for_artifact(
         }
     }
     Ok(FileLock::default())
+}
+
+#[cfg(test)]
+mod tests {
+    use rand::SeedableRng;
+
+    use super::*;
+
+    #[test]
+    fn providers_in_order_sequential() {
+        let mut rng = rand::thread_rng(); // doesn't matter
+
+        let providers = vec![
+            serde_jsonrc::from_str(r#"{"type": "a"}"#).unwrap(),
+            serde_jsonrc::from_str(r#"{"type": "b"}"#).unwrap(),
+            serde_jsonrc::from_str(r#"{"type": "c"}"#).unwrap(),
+        ];
+
+        let ordered_providers =
+            providers_in_order(&mut rng, &providers, ProvidersOrder::Sequential)
+                .expect("failed to order providers");
+
+        assert_eq!(
+            ordered_providers,
+            vec![&providers[0], &providers[1], &providers[2]]
+        );
+    }
+
+    #[test]
+    fn providers_in_order_weighted_random_default_weights() {
+        let mut rng = rand::rngs::SmallRng::seed_from_u64(42); // deterministic for testing
+
+        let providers = vec![
+            serde_jsonrc::from_str(r#"{"type": "a"}"#).unwrap(),
+            serde_jsonrc::from_str(r#"{"type": "b"}"#).unwrap(),
+            serde_jsonrc::from_str(r#"{"type": "c"}"#).unwrap(),
+        ];
+
+        let ordered_providers =
+            providers_in_order(&mut rng, &providers, ProvidersOrder::WeightedRandom)
+                .expect("failed to order providers");
+
+        assert_eq!(
+            ordered_providers,
+            vec![&providers[0], &providers[2], &providers[1]]
+        );
+    }
+
+    #[test]
+    fn providers_in_order_weighted_random_custom_weights() {
+        let mut rng = rand::rngs::SmallRng::seed_from_u64(42); // deterministic for testing
+
+        let providers = vec![
+            serde_jsonrc::from_str(r#"{"type": "a", "weight": 1}"#).unwrap(),
+            serde_jsonrc::from_str(r#"{"type": "b", "weight": 2}"#).unwrap(),
+            serde_jsonrc::from_str(r#"{"type": "c", "weight": 10}"#).unwrap(),
+            serde_jsonrc::from_str(r#"{"type": "d", "weight": 2}"#).unwrap(),
+        ];
+
+        let ordered_providers =
+            providers_in_order(&mut rng, &providers, ProvidersOrder::WeightedRandom)
+                .expect("failed to order providers");
+
+        assert_eq!(
+            ordered_providers,
+            vec![&providers[1], &providers[2], &providers[0], &providers[3]]
+        );
+    }
+
+    #[test]
+    fn providres_in_order_weighted_random_zero_weight() {
+        let mut rng = rand::rngs::SmallRng::seed_from_u64(42); // deterministic for testing
+
+        let providers = vec![
+            serde_jsonrc::from_str(r#"{"type": "a", "weight": 0}"#).unwrap(),
+            serde_jsonrc::from_str(r#"{"type": "b", "weight": 2}"#).unwrap(),
+        ];
+
+        let result = providers_in_order(&mut rng, &providers, ProvidersOrder::WeightedRandom);
+        assert!(result.is_err());
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("weight must be greater than 0")
+        );
+    }
+
+    #[test]
+    fn providers_in_order_weighted_random_negative_weight() {
+        let mut rng = rand::rngs::SmallRng::seed_from_u64(42); // deterministic for testing
+
+        let providers = vec![
+            serde_jsonrc::from_str(r#"{"type": "a", "weight": -1}"#).unwrap(),
+            serde_jsonrc::from_str(r#"{"type": "b", "weight": 2}"#).unwrap(),
+        ];
+
+        let result = providers_in_order(&mut rng, &providers, ProvidersOrder::WeightedRandom);
+        assert!(result.is_err());
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("weight must be a non-negative integer")
+        );
+    }
 }

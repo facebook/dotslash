@@ -206,11 +206,39 @@ Currently, DotSlash supports two providers out of the box: the **HTTP Provider**
 (`"type": "github-release"`). (At the time of this writing, there is no way to
 add custom providers without forking DotSlash.)
 
-Each provider in the `providers` list will be tried, in order, to fetch the
-artifact, until one succeeds. The provider type need not be unique within a
-list, e.g., the HTTP Provider can be specified multiple times with different
-values for `"url"`. Though note that the `size`/`hash`/`digest` are specified
-_independently_ of the providers, so all providers must yield the same artifact.
+Each provider in the `providers` list will be tried, in order by default, to
+fetch the artifact, until one succeeds. The provider type need not be unique
+within a list, e.g., the HTTP Provider can be specified multiple times with
+different values for `"url"`. Though note that the `size`/`hash`/`digest` are
+specified _independently_ of the providers, so all providers must yield the same
+artifact.
+
+The order in which providers are tried can be randomized by adding
+`providers_order: "weighted-random"` under the artifact entry. This will
+randomize the order in which providers are tried, using an optional `weight` for
+each provider to bias the selection. For example:
+
+```json
+{
+  ...
+  "format": "tar.gz",
+  "path": "hermes",
+  "providers": [
+    {"url": "https://primary.example.com/hermes.tar.gz", "weight": 3},
+    {"url": "https://mirror1.example.com/hermes.tar.gz", "weight": 1},
+    {"url": "https://mirror2.example.com/hermes.tar.gz", "weight": 1},
+    {"url": "https://mirror3.example.com/hermes.tar.gz", "weight": 1}
+  ],
+  "providers_order": "weighted-random"
+}
+```
+
+In this example, the primary provider is more likely to be tried first, but the
+remaining three mirrors are equally likely to be tried next. Providers are not
+retried if they fail, so the first successful provider wins.
+
+The weight must be an integer value greater than or equal to `1`. If weight is
+not specified for a provider, it defaults to `1`.
 
 ### HTTP Provider
 

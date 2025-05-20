@@ -46,6 +46,8 @@ pub struct ArtifactEntry<Format = ArtifactFormat> {
     pub arg0: Arg0,
     #[serde(default = "readonly_default_as_true", skip_serializing_if = "is_true")]
     pub readonly: bool,
+    #[serde(default, skip_serializing_if = "is_default")]
+    pub providers_order: ProvidersOrder,
 }
 
 fn is_default<T>(t: &T) -> bool
@@ -67,6 +69,22 @@ pub enum Arg0 {
     /// arg0 is left unset, which defaults to the underlying executable
     /// in the cache directory.
     UnderlyingExecutable,
+}
+
+/// Determines the order in which providers are tried
+/// when multiple providers are available.
+#[derive(Deserialize, Serialize, Copy, Clone, Default, Debug, PartialEq, Eq)]
+#[serde(rename_all = "kebab-case")]
+pub enum ProvidersOrder {
+    /// Try each provider in the order they are listed in the DotSlash file.
+    #[default]
+    Sequential,
+    /// Try providers in a random order,
+    /// using the "weight" key on each provider
+    /// to determine the probability of selection.
+    //
+    /// If no "weight" key is present, all providers are equally likely.
+    WeightedRandom,
 }
 
 /// While having a boolean that defaults to `true` is somewhat undesirable,
@@ -159,11 +177,70 @@ mod tests {
                             "url": "https://example.com/my_tool.tar",
                         })],
                         arg0: Arg0::DotslashFile,
+                        providers_order: ProvidersOrder::Sequential,
                         readonly: true,
                     }
                 )]
                 .into(),
             },
+        );
+    }
+
+    #[test]
+    fn providers_order_sequential_explicit() {
+        let dotslash = r#"#!/usr/bin/env dotslash
+        {
+            "name": "my_tool",
+            "platforms": {
+                "linux-x86_64": {
+                    "size": 123,
+                    "hash": "sha256",
+                    "digest": "7f83b1657ff1fc53b92dc18148a1d65dfc2d4b1fa3d677284addd200126d9069",
+                    "path": "bindir/my_tool",
+                    "providers": [
+                        {
+                            "type": "http",
+                            "url": "https://example.com/my_tool.tar"
+                        }
+                    ],
+                    "providers_order": "sequential"
+                },
+            },
+        }
+        "#;
+        let config_file = parse_file_string(dotslash).unwrap();
+        assert_eq!(
+            config_file.platforms["linux-x86_64"].providers_order,
+            ProvidersOrder::Sequential
+        );
+    }
+
+    #[test]
+    fn providers_order_random() {
+        let dotslash = r#"#!/usr/bin/env dotslash
+        {
+            "name": "my_tool",
+            "platforms": {
+                "linux-x86_64": {
+                    "size": 123,
+                    "hash": "sha256",
+                    "digest": "7f83b1657ff1fc53b92dc18148a1d65dfc2d4b1fa3d677284addd200126d9069",
+                    "path": "bindir/my_tool",
+                    "providers": [
+                        {
+                            "type": "http",
+                            "url": "https://example.com/my_tool.tar"
+                        }
+                    ],
+                    "providers_order": "weighted-random"
+                },
+            },
+        }
+        "#;
+        let config_file = parse_file_string(dotslash).unwrap();
+        assert_eq!(
+            config_file.platforms["linux-x86_64"].providers_order,
+            ProvidersOrder::WeightedRandom,
         );
     }
 
@@ -210,6 +287,7 @@ mod tests {
                             "url": "https://foo.com",
                         })],
                         arg0: Arg0::DotslashFile,
+                        providers_order: ProvidersOrder::Sequential,
                         readonly: true,
                     }
                 )]
