@@ -20,11 +20,17 @@ pub enum ArtifactFormat {
     #[serde(skip)]
     Plain,
 
+    #[serde(rename = "bz2")]
+    Bzip2,
+
     #[serde(rename = "gz")]
     Gz,
 
     #[serde(rename = "tar")]
     Tar,
+
+    #[serde(rename = "tar.bz2")]
+    TarBzip2,
 
     #[serde(rename = "tar.gz")]
     TarGz,
@@ -50,10 +56,12 @@ impl ArtifactFormat {
     pub fn as_archive_type(self) -> Option<ArchiveType> {
         match self {
             Self::Plain => None,
+            Self::Bzip2 => Some(ArchiveType::Bzip2),
             Self::Gz => Some(ArchiveType::Gz),
             Self::Xz => Some(ArchiveType::Xz),
             Self::Zstd => Some(ArchiveType::Zstd),
             Self::Tar => Some(ArchiveType::Tar),
+            Self::TarBzip2 => Some(ArchiveType::TarBzip2),
             Self::TarGz => Some(ArchiveType::TarGz),
             Self::TarXz => Some(ArchiveType::TarXz),
             Self::TarZstd => Some(ArchiveType::TarZstd),
@@ -64,8 +72,8 @@ impl ArtifactFormat {
     #[must_use]
     pub fn is_container(self) -> bool {
         match self {
-            Self::Plain | Self::Gz | Self::Xz | Self::Zstd => false,
-            Self::Tar | Self::TarGz | Self::TarXz | Self::TarZstd | Self::Zip => true,
+            Self::Plain | Self::Bzip2 | Self::Gz | Self::Xz | Self::Zstd => false,
+            Self::Tar | Self::TarBzip2 | Self::TarGz | Self::TarXz | Self::TarZstd | Self::Zip => true,
         }
     }
 }

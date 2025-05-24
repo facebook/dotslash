@@ -352,11 +352,13 @@ properties:
 
 | `format`  | Archive? | Decompress? |
 | --------- | -------- | ----------- |
+| `tar.bz2` | yes      | bzip2       |
 | `tar.gz`  | yes      | gzip        |
 | `tar.xz`  | yes      | xz          |
 | `tar.zst` | yes      | zstd        |
 | `tar`     | yes      | _none_      |
 | `zip`     | yes      | zip         |
+| `bz2`     | no       | bzip2       |
 | `gz`      | no       | gzip        |
 | `xz`      | no       | xz          |
 | `zst`     | no       | zstd        |
