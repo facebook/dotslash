@@ -76,7 +76,9 @@ fn serialize_entry(url: &str, size: u64, hex_digest: String) -> anyhow::Result<S
 }
 
 fn guess_artifact_format_from_url(url: &[u8]) -> ArtifactFormat {
-    if url.ends_with(b".tar.gz") || url.ends_with(b".tgz") {
+    if url.ends_with(b".tar.bz2") {
+        ArtifactFormat::TarBzip2
+    } else if url.ends_with(b".tar.gz") || url.ends_with(b".tgz") {
         ArtifactFormat::TarGz
     } else if url.ends_with(b".tar.zst") || url.ends_with(b".tzst") {
         ArtifactFormat::TarZstd
@@ -86,6 +88,8 @@ fn guess_artifact_format_from_url(url: &[u8]) -> ArtifactFormat {
         ArtifactFormat::Tar
     } else if url.ends_with(b".zip") {
         ArtifactFormat::Zip
+    } else if url.ends_with(b".bz2") {
+        ArtifactFormat::Bzip2
     } else if url.ends_with(b".gz") {
         ArtifactFormat::Gz
     } else if url.ends_with(b".xz") {

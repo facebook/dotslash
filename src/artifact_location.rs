@@ -119,6 +119,7 @@ fn create_key_for_format(format: ArtifactFormat, path: &ArtifactPath) -> Cow<'st
         // key. The key has a prefix to distinguish it from the cache keys
         // for archive artifacts.
         ArtifactFormat::Plain => Cow::Owned(format!("file:{}", path)),
+        ArtifactFormat::Bzip2 => Cow::Owned(format!("file.bz:{}", path)),
         ArtifactFormat::Gz => Cow::Owned(format!("file.gz:{}", path)),
         ArtifactFormat::Xz => Cow::Owned(format!("file.xz:{}", path)),
         ArtifactFormat::Zstd => Cow::Owned(format!("file.zst:{}", path)),
@@ -126,6 +127,7 @@ fn create_key_for_format(format: ArtifactFormat, path: &ArtifactPath) -> Cow<'st
         // For a container artifact, the type of archive is sufficient
         // to distinguish it.
         ArtifactFormat::Tar => Cow::Borrowed("tar"),
+        ArtifactFormat::TarBzip2 => Cow::Borrowed("tar.bz2"),
         ArtifactFormat::TarGz => Cow::Borrowed("tar.gz"),
         ArtifactFormat::TarXz => Cow::Borrowed("tar.xz"),
         ArtifactFormat::TarZstd => Cow::Borrowed("tar.zst"),
