@@ -13,6 +13,7 @@ use std::io::Read;
 use std::io::Seek;
 use std::path::Path;
 
+use bzip2::read::BzDecoder;
 use flate2::bufread::GzDecoder;
 use tar::Archive;
 #[cfg(not(dotslash_internal))]
@@ -26,6 +27,9 @@ use crate::util::fs_ctx;
 #[derive(Copy, Clone)]
 pub enum ArchiveType {
     Tar,
+    #[cfg(not(dotslash_internal))]
+    Bzip2,
+    TarBzip2,
     #[cfg(not(dotslash_internal))]
     Gz,
     TarGz,
@@ -52,6 +56,10 @@ where
 {
     match archive_type {
         ArchiveType::Tar => unpack_tar(reader, destination),
+
+        #[cfg(not(dotslash_internal))]
+        ArchiveType::Bzip2 => write_out(BzDecoder::new(reader), destination),
+        ArchiveType::TarBzip2 => unpack_tar(BzDecoder::new(reader), destination),
 
         #[cfg(not(dotslash_internal))]
         ArchiveType::Gz => write_out(GzDecoder::new(reader), destination),
