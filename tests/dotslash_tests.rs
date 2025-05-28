@@ -323,16 +323,16 @@ fn http__nonexistent_url() {
         .code(1)
         .stdout_eq("")
         .stderr_eq(
-            "\
+            format!("\
 dotslash error: problem with `[DOTSLASH_FILE]`
 caused by: failed to download artifact into cache `[DOTSLASH_CACHE_DIR]` artifact location `[ARTIFACT_LOCATION]`
 caused by: no providers succeeded. warnings:
 failed to fetch artifact: failed to fetch `[PROVIDER_URL]`
 
 Caused by:
-    0: `curl --location --retry 3 --fail --silent --show-error --user-agent [DOTSLASH_USER_AGENT] [PROVIDER_URL] --output [OUTPUT_FILE][..]`
+    0: `curl --location --retry 3 --fail --silent --show-error {}--user-agent [DOTSLASH_USER_AGENT] [PROVIDER_URL] --output [OUTPUT_FILE][..]`
     1: 404 Not Found
-",
+", if cfg!(windows) { "--ssl-revoke-best-effort "} else {""}),
         );
 }
 

@@ -283,6 +283,13 @@ impl CurlCommand<'_> {
         // it fails.
         curl_command.arg("--show-error");
 
+        // Fixes spurious errors on Windows with the following error message:
+        // curl: (35) schannel: next InitializeSecurityContext failed: CRYPT_E_REVOCATION_OFFLINE (0x80092013)
+        // - The revocation function was unable to check revocation because the revocation server was offline
+        if cfg!(windows) {
+            curl_command.arg("--ssl-revoke-best-effort");
+        }
+
         curl_command.arg("--user-agent");
         curl_command.arg(USER_AGENT);
 
