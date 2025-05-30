@@ -1,0 +1,8 @@
+{
+  "install_buck": {
+    "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+    "features": {
+      "dotslash": {}
+    }
+  }
+}
