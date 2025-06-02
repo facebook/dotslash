@@ -20,4 +20,5 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           base-path-to-features: ./devcontainer-features/src
+          features-namespace: ${{ github.repository_owner }}/devcontainers/features
           publish-features: "true"
