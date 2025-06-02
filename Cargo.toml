@@ -4,7 +4,7 @@
 name = "dotslash"
 version = "0.5.3"
 authors = ["Michael Bolin <bolinfest@gmail.com>", "Andres Suarez <zertosh@gmail.com>"]
-edition = "2021"
+edition = "2024"
 rust-version = "1.85"
 description = "Command-line tool to facilitate fetching an executable, caching it, and then running it."
 readme = "README.md"
