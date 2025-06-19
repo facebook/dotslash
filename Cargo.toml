@@ -19,7 +19,7 @@ name = "dotslash_tests_rs"
 path = "tests/dotslash_tests.rs"
 
 [dependencies]
-anyhow = "1.0.95"
+anyhow = "1.0.98"
 blake3 = { version = "=1.6.1", features = ["mmap", "rayon", "traits-preview"] }
 bzip2 = "0.5"
 digest = "0.10"
