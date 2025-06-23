@@ -39,7 +39,7 @@ jobs:
       # Package architecture-specific binaries
       - run: tar -czvf "dotslash-macos-arm64.tar.gz" -C target/aarch64-apple-darwin/release dotslash
         shell: bash
-      - run: tar -czvf "dotslash-macos-amd64.tar.gz" -C target/x86_64-apple-darwin/release dotslash
+      - run: tar -czvf "dotslash-macos-x86_64.tar.gz" -C target/x86_64-apple-darwin/release dotslash
         shell: bash
       # Upload all binaries
       - name: upload release
@@ -49,7 +49,7 @@ jobs:
         run: |
           gh release upload "${GITHUB_REF#refs/tags/}" "dotslash-macos.tar.gz"
           gh release upload "${GITHUB_REF#refs/tags/}" "dotslash-macos-arm64.tar.gz"
-          gh release upload "${GITHUB_REF#refs/tags/}" "dotslash-macos-amd64.tar.gz"
+          gh release upload "${GITHUB_REF#refs/tags/}" "dotslash-macos-x86_64.tar.gz"
       # Deprecated; will be removed in a future release!
       # Package universal binary
       - run: tar -czvf "dotslash-macos.${GITHUB_REF#refs/tags/}.tar.gz" dotslash
