@@ -26,7 +26,12 @@ ensure_dependencies() {
 download() {
   local version="$1"
   local url
-  url="https://github.com/facebook/dotslash/releases/download/${version}/dotslash-linux-musl.$(uname -m).${version}.tar.gz"
+  local arch
+  arch="$(uname -m)"
+  if [ "${arch}" -eq "aarch64" ]; then
+    arch="arm64"
+  fi
+  url="https://github.com/facebook/dotslash/releases/download/${version}/dotslash-linux-musl.${arch}.${version}.tar.gz"
 
   # First, verify the release exists!
   echo "Fetching version ${version} from ${url}..."
