@@ -34,6 +34,24 @@ jobs:
       - run: cargo build --release --target x86_64-apple-darwin
       - run: lipo -create -output dotslash target/aarch64-apple-darwin/release/dotslash target/x86_64-apple-darwin/release/dotslash
       # Package universal binary
+      - run: tar -czvf "dotslash-macos.tar.gz" dotslash
+        shell: bash
+      # Package architecture-specific binaries
+      - run: tar -czvf "dotslash-macos-arm64.tar.gz" -C target/aarch64-apple-darwin/release dotslash
+        shell: bash
+      - run: tar -czvf "dotslash-macos-amd64.tar.gz" -C target/x86_64-apple-darwin/release dotslash
+        shell: bash
+      # Upload all binaries
+      - name: upload release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          gh release upload "${GITHUB_REF#refs/tags/}" "dotslash-macos.tar.gz"
+          gh release upload "${GITHUB_REF#refs/tags/}" "dotslash-macos-arm64.tar.gz"
+          gh release upload "${GITHUB_REF#refs/tags/}" "dotslash-macos-amd64.tar.gz"
+      # Deprecated; will be removed in a future release!
+      # Package universal binary
       - run: tar -czvf "dotslash-macos.${GITHUB_REF#refs/tags/}.tar.gz" dotslash
         shell: bash
       # Package architecture-specific binaries
@@ -42,7 +60,7 @@ jobs:
       - run: tar -czvf "dotslash-macos-amd64.${GITHUB_REF#refs/tags/}.tar.gz" -C target/x86_64-apple-darwin/release dotslash
         shell: bash
       # Upload all binaries
-      - name: upload release
+      - name: upload versioned release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
@@ -61,8 +79,15 @@ jobs:
       - run: cargo test
       - run: cargo clippy
       - run: cargo build --release
-      - run: tar -czvf "dotslash-ubuntu-22.04.x86_64.${GITHUB_REF#refs/tags/}.tar.gz" -C target/release dotslash
+      - run: tar -czvf "dotslash-ubuntu-22.04.x86_64.tar.gz" -C target/release dotslash
       - name: upload release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: gh release upload "${GITHUB_REF#refs/tags/}" "dotslash-ubuntu-22.04.x86_64.tar.gz"
+      # Deprecated; will be removed in a future release!
+      - run: tar -czvf "dotslash-ubuntu-22.04.x86_64.${GITHUB_REF#refs/tags/}.tar.gz" -C target/release dotslash
+      - name: upload versioned release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
@@ -84,8 +109,15 @@ jobs:
       - run: cargo build --target aarch64-unknown-linux-gnu --release
         env:
           CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER: aarch64-linux-gnu-gcc
-      - run: tar -czvf "dotslash-ubuntu-22.04.arm64.${GITHUB_REF#refs/tags/}.tar.gz" -C target/aarch64-unknown-linux-gnu/release dotslash
+      - run: tar -czvf "dotslash-ubuntu-22.04.aarch64.tar.gz" -C target/aarch64-unknown-linux-gnu/release dotslash
       - name: upload release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: gh release upload "${GITHUB_REF#refs/tags/}" "dotslash-ubuntu-22.04.aarch64.tar.gz"
+      # Deprecated; will be removed in a future release!
+      - run: tar -czvf "dotslash-ubuntu-22.04.arm64.${GITHUB_REF#refs/tags/}.tar.gz" -C target/aarch64-unknown-linux-gnu/release dotslash
+      - name: upload versioned release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
@@ -107,8 +139,15 @@ jobs:
       - run: cargo test
       - run: cargo clippy
       - run: cargo build --target x86_64-unknown-linux-musl --release
-      - run: tar -czvf "dotslash-linux-musl.x86_64.${GITHUB_REF#refs/tags/}.tar.gz" -C target/x86_64-unknown-linux-musl/release dotslash
+      - run: tar -czvf "dotslash-linux-musl.x86_64.tar.gz" -C target/x86_64-unknown-linux-musl/release dotslash
       - name: upload release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: gh release upload "${GITHUB_REF#refs/tags/}" "dotslash-linux-musl.x86_64.tar.gz"
+      # Deprecated; will be removed in a future release!
+      - run: tar -czvf "dotslash-linux-musl.x86_64.${GITHUB_REF#refs/tags/}.tar.gz" -C target/x86_64-unknown-linux-musl/release dotslash
+      - name: upload versioned release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
@@ -128,8 +167,15 @@ jobs:
           crate: cross
           version: latest
       - run: cross build --target aarch64-unknown-linux-musl --release
-      - run: tar -czvf "dotslash-linux-musl.arm64.${GITHUB_REF#refs/tags/}.tar.gz" -C target/aarch64-unknown-linux-musl/release dotslash
+      - run: tar -czvf "dotslash-linux-musl.aarch64.tar.gz" -C target/aarch64-unknown-linux-musl/release dotslash
       - name: upload release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: gh release upload "${GITHUB_REF#refs/tags/}" "dotslash-linux-musl.aarch64.tar.gz"
+      # Deprecated; will be removed in a future release!
+      - run: tar -czvf "dotslash-linux-musl.arm64.${GITHUB_REF#refs/tags/}.tar.gz" -C target/aarch64-unknown-linux-musl/release dotslash
+      - name: upload versioned release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
@@ -145,9 +191,17 @@ jobs:
       - run: cargo test
       - run: cargo clippy
       - run: cargo build --release
-      - run: tar czvf dotslash-windows.%GITHUB_REF:~10%.tar.gz -C target/release dotslash.exe
+      - run: tar czvf dotslash-windows.tar.gz -C target/release dotslash.exe
         shell: cmd
       - name: upload release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload %GITHUB_REF:~10% dotslash-windows.tar.gz
+        shell: cmd
+      # Deprecated; will be removed in a future release!
+      - run: tar czvf dotslash-windows.%GITHUB_REF:~10%.tar.gz -C target/release dotslash.exe
+        shell: cmd
+      - name: upload versioned release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh release upload %GITHUB_REF:~10% dotslash-windows.%GITHUB_REF:~10%.tar.gz
