@@ -26,10 +26,14 @@ jobs:
         uses: docker/setup-buildx-action@v3
         with:
           driver: docker-container
+      - if: ${{ github.event_name != 'pull_request' }}
+        id: cache_to_helper
+        run: echo "cacheTo=ghcr.io/${{ github.repository_owner }}/devcontainers/dotslash" >> $GITHUB_OUTPUT
       - name: Build devcontainer image
         uses: devcontainers/ci@8bf61b26e9c3a98f69cb6ce2f88d24ff59b785c6 # v0.3.1900000417
         with:
           cacheFrom: ghcr.io/${{ github.repository_owner }}/devcontainers/dotslash
+          cacheTo: ${{ steps.cache_to_helper.outputs.cacheTo }}
           env: |
             CI=1
           imageName: ghcr.io/${{ github.repository_owner }}/devcontainers/dotslash
