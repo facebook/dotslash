@@ -1,0 +1,23 @@
+{
+	"name": "Ubuntu",
+	"image": "mcr.microsoft.com/devcontainers/base:jammy",
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"GitHub.vscode-github-actions",
+				"nefrob.vscode-just-syntax"
+			]
+		}
+	},
+	"features": {
+		"ghcr.io/devcontainers/features/docker-in-docker:2": {
+			// We do not need this.
+			"dockerDashComposeVersion": "none",
+			// Install OSS Moby build instead of Docker CE.
+			"moby": true
+		},
+		"ghcr.io/devcontainers/features/rust:1": {},
+		"ghcr.io/devcontainers-extra/features/devcontainers-cli:1": {},
+		"ghcr.io/guiyomh/features/just:0": {}
+	}
+}
