@@ -10,7 +10,12 @@ on:
 
 jobs:
   validate-devcontainer-feature:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.runsOn }}
+    strategy:
+      matrix:
+        runsOn:
+          - ubuntu-24.04-arm
+          - ubuntu-latest
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - name: Validate devcontainer-feature.json files

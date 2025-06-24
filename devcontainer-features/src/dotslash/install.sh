@@ -17,7 +17,6 @@ ensure_dependencies() {
   DEBIAN_FRONTEND=noninteractive apt-get -y install --no-install-recommends --no-install-suggests \
     ca-certificates \
     curl \
-    jq \
     tar
   apt-get clean
   rm -rf /var/lib/apt/lists/*
@@ -26,7 +25,11 @@ ensure_dependencies() {
 download() {
   local version="$1"
   local url
-  url="https://github.com/facebook/dotslash/releases/download/${version}/dotslash-linux-musl.$(uname -m).${version}.tar.gz"
+  if [ "${version}" = "latest" ]; then
+    url="https://github.com/facebook/dotslash/releases/latest/download/dotslash-linux-musl.$(uname -m).tar.gz"
+  else
+    url="https://github.com/facebook/dotslash/releases/download/${version}/dotslash-linux-musl.$(uname -m).tar.gz"
+  fi
 
   # First, verify the release exists!
   echo "Fetching version ${version} from ${url}..."
@@ -42,11 +45,6 @@ download() {
   curl --silent --location --output '-' "${url}" | tar -xz -f '-' -C /usr/local/bin dotslash
 }
 
-list_releases() {
-  local url="https://api.github.com/repos/facebook/dotslash/releases"
-  curl -s "${url}" | jq -c '.[] | select(.draft == false and .prerelease == false) | .tag_name'
-}
-
 echo "Activating feature 'dotslash' with version ${VERSION}"
 
 if [ -z "${VERSION}" ]; then
@@ -55,11 +53,6 @@ if [ -z "${VERSION}" ]; then
 fi
 
 ensure_dependencies
-
-if [ "${VERSION}" = "latest" ]; then
-  echo "Determining latest release since 'latest' version specified..."
-  VERSION=$(list_releases | head -n 1)
-fi
 
 # Remove any double quotes that might be in the version string.
 VERSION="${VERSION//\"/}"
