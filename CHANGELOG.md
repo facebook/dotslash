@@ -1,5 +1,25 @@
 # Changelog
 
+## v0.5.5 (2025-06-25)
+
+- Added support for
+  [provider order randomization](https://github.com/facebook/dotslash/pull/49)
+- Added support for
+  [.bz2 and .tar.bz2](https://github.com/facebook/dotslash/pull/53)
+
+Additionally, as of this release we are now attaching binaries to releases that
+don't have the release version in the filename. These files are in addition to
+the files that mention the version number for backwards compatibility with the
+`install-dotslash` action. WARNING: We will be removing the legacy versioned
+filenames in a future release, follow
+[this issue](https://github.com/facebook/dotslash/issues/68).
+
+## v0.5.4 (2025-05-19)
+
+- Reverted "One-liner installations are now possible, see
+  [the new installation instructions](https://dotslash-cli.com/docs/installation/#prebuilt-binaries)
+  <https://github.com/facebook/dotslash/pull/17>"
+
 ## v0.5.3 (2025-05-19)
 
 - One-liner installations are now possible, see
