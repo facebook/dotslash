@@ -50,7 +50,7 @@ jobs:
           gh release upload "${GITHUB_REF#refs/tags/}" "dotslash-macos.tar.gz"
           gh release upload "${GITHUB_REF#refs/tags/}" "dotslash-macos-arm64.tar.gz"
           gh release upload "${GITHUB_REF#refs/tags/}" "dotslash-macos-x86_64.tar.gz"
-      # Deprecated; will be removed in a future release!
+      # TODO(#68): Deprecated; will be removed in a future release!
       # Package universal binary
       - run: tar -czvf "dotslash-macos.${GITHUB_REF#refs/tags/}.tar.gz" dotslash
         shell: bash
@@ -85,7 +85,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
         run: gh release upload "${GITHUB_REF#refs/tags/}" "dotslash-ubuntu-22.04.x86_64.tar.gz"
-      # Deprecated; will be removed in a future release!
+      # TODO(#68): Deprecated; will be removed in a future release!
       - run: tar -czvf "dotslash-ubuntu-22.04.x86_64.${GITHUB_REF#refs/tags/}.tar.gz" -C target/release dotslash
       - name: upload versioned release
         env:
@@ -115,7 +115,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
         run: gh release upload "${GITHUB_REF#refs/tags/}" "dotslash-ubuntu-22.04.aarch64.tar.gz"
-      # Deprecated; will be removed in a future release!
+      # TODO(#68): Deprecated; will be removed in a future release!
       - run: tar -czvf "dotslash-ubuntu-22.04.arm64.${GITHUB_REF#refs/tags/}.tar.gz" -C target/aarch64-unknown-linux-gnu/release dotslash
       - name: upload versioned release
         env:
@@ -145,7 +145,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
         run: gh release upload "${GITHUB_REF#refs/tags/}" "dotslash-linux-musl.x86_64.tar.gz"
-      # Deprecated; will be removed in a future release!
+      # TODO(#68): Deprecated; will be removed in a future release!
       - run: tar -czvf "dotslash-linux-musl.x86_64.${GITHUB_REF#refs/tags/}.tar.gz" -C target/x86_64-unknown-linux-musl/release dotslash
       - name: upload versioned release
         env:
@@ -173,7 +173,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
         run: gh release upload "${GITHUB_REF#refs/tags/}" "dotslash-linux-musl.aarch64.tar.gz"
-      # Deprecated; will be removed in a future release!
+      # TODO(#68): Deprecated; will be removed in a future release!
       - run: tar -czvf "dotslash-linux-musl.arm64.${GITHUB_REF#refs/tags/}.tar.gz" -C target/aarch64-unknown-linux-musl/release dotslash
       - name: upload versioned release
         env:
@@ -198,7 +198,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh release upload %GITHUB_REF:~10% dotslash-windows.tar.gz
         shell: cmd
-      # Deprecated; will be removed in a future release!
+      # TODO(#68): Deprecated; will be removed in a future release!
       - run: tar czvf dotslash-windows.%GITHUB_REF:~10%.tar.gz -C target/release dotslash.exe
         shell: cmd
       - name: upload versioned release
