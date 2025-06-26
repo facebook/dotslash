@@ -45,6 +45,17 @@ xattr -r -d com.apple.quarantine ~/Downloads/dotslash-macos.*.tar.gz
 
 :::
 
+## Developer Container
+
+We provide a feature that you can add to your `devcontainer.json` that will
+automatically install the latest version of DotSlash to `/usr/local/bin`.
+
+```
+"features": {
+  "ghcr.io/facebook/devcontainers/features/dotslash:latest": {}
+}
+```
+
 ## GitHub Actions
 
 We provide a GitHub Action to install dotslash for a workflow:
