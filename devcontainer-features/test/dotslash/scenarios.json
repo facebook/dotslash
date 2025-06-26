@@ -4,5 +4,13 @@
     "features": {
       "dotslash": {}
     }
+  },
+  "versioned": {
+    "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+    "features": {
+      "dotslash": {
+        "version": "v0.5.5"
+      }
+    }
   }
 }
