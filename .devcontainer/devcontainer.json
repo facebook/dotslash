@@ -1,6 +1,9 @@
 {
 	"name": "Ubuntu",
-	"image": "mcr.microsoft.com/devcontainers/base:jammy",
+	"build": {
+		"cacheFrom": "ghcr.io/facebook/devcontainers/dotslash",
+		"dockerfile": "Containerfile"
+	},
 	"customizations": {
 		"vscode": {
 			"extensions": [
@@ -16,7 +19,6 @@
 			// Install OSS Moby build instead of Docker CE.
 			"moby": true
 		},
-		"ghcr.io/devcontainers/features/rust:1": {},
 		"ghcr.io/devcontainers-extra/features/devcontainers-cli:1": {},
 		"ghcr.io/guiyomh/features/just:0": {}
 	}
