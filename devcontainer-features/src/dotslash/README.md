@@ -2,6 +2,8 @@
 
 A feature to install DotSlash into a Dev Container.
 
+It is installed at `/usr/local/bin/dotslash`.
+
 ## Example Usage
 
 ```json
