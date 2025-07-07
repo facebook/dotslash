@@ -206,3 +206,29 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh release upload %GITHUB_REF:~10% dotslash-windows.%GITHUB_REF:~10%.tar.gz
         shell: cmd
+
+  windows-arm64:
+    needs: create-release
+    runs-on: windows-11-arm
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo test
+      - run: cargo clippy
+      - run: cargo build --release
+      - run: tar czvf dotslash-windows-arm64.tar.gz --options gzip:compression-level=9 -C target/release dotslash.exe
+        shell: cmd
+      - name: upload release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload %GITHUB_REF:~10% dotslash-windows-arm64.tar.gz
+        shell: cmd
+      # TODO(#68): Deprecated; will be removed in a future release!
+      - run: tar czvf dotslash-windows-arm64.%GITHUB_REF:~10%.tar.gz -C target/release dotslash.exe
+        shell: cmd
+      - name: upload versioned release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload %GITHUB_REF:~10% dotslash-windows-arm64.%GITHUB_REF:~10%.tar.gz
+        shell: cmd
