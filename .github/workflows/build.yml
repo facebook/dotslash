@@ -11,12 +11,14 @@ jobs:
       matrix:
         # macos-13 appears to be x86 while macos-latest is arm64
         # https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners/about-github-hosted-runners
-        os: [ubuntu-latest, windows-latest, macos-13, macos-latest]
+        os: [ubuntu-latest, windows-latest, windows-11-arm, macos-13, macos-latest]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
       - run: cargo build
       - run: cargo build --release
       - run: cargo test
