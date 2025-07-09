@@ -28,6 +28,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: aarch64-apple-darwin,x86_64-apple-darwin
+          components: clippy
       - run: cargo test
       - run: cargo clippy
       - run: cargo build --release --target aarch64-apple-darwin
@@ -76,6 +77,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
       - run: cargo test
       - run: cargo clippy
       - run: cargo build --release
@@ -102,6 +105,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: aarch64-unknown-linux-gnu
+          components: clippy
       - name: Install aarch64 build tools
         run: |
           sudo apt update
@@ -132,6 +136,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: x86_64-unknown-linux-musl
+          components: clippy
       - name: Install musl build tools
         run: |
           sudo apt update
@@ -162,6 +167,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: aarch64-unknown-linux-musl
+          components: clippy
       - uses: actions-rs/install@v0.1
         with:
           crate: cross
@@ -188,6 +194,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
       - run: cargo test
       - run: cargo clippy
       - run: cargo build --release
@@ -214,6 +222,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
       - run: cargo test
       - run: cargo clippy
       - run: cargo build --release
