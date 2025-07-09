@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.5.6 (2025-07-08)
+
+- [Fixed a bug](https://github.com/facebook/dotslash/pull/75) where DotSlash
+  would sometimes write corrupted zip files to its cache
+- One-liner installations are now possible again, see
+  [the new installation instructions](https://dotslash-cli.com/docs/installation/#prebuilt-binaries)
+- [ARM64 Windows binaries](https://github.com/facebook/dotslash/pull/76) for
+  DotSlash are available
+
 ## v0.5.5 (2025-06-25)
 
 - Added support for
