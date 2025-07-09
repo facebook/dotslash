@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.5.7 (2025-07-09)
+
+- Fix release pipeline for ARM64 Windows:
+  <https://github.com/facebook/dotslash/commit/96964d54609611fba87764e3697ad8a9ff3268f3>
+  - v0.5.6 was never published because of this.
+
 ## v0.5.6 (2025-07-08)
 
 - [Fixed a bug](https://github.com/facebook/dotslash/pull/75) where DotSlash
