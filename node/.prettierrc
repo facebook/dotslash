@@ -1,0 +1,9 @@
+{
+  "singleQuote": true,
+  "overrides": [
+    {
+      "files": "bin/dotslash",
+      "options": { "parser": "babel" }
+    }
+  ]
+}
