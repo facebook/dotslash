@@ -162,7 +162,7 @@ usage: dotslash DOTSLASH_FILE [OPTIONS]
 ```
 
 Note that if `cargo build` fails with an error like
-`` Failed to find tool. Is `musl-gcc` installed? ``, then you likely need to
+``Failed to find tool. Is `musl-gcc` installed?``, then you likely need to
 install the `musl-gcc` package, which `rustup` does not do for you.
 
 On Ubuntu/Debian, you can install it with:
