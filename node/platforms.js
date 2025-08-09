@@ -26,7 +26,11 @@ module.exports = {
       },
     },
     win32: {
-      '*': {
+      arm64: {
+        slug: 'windows-arm64',
+        binary: 'dotslash.exe',
+      },
+      x64: {
         slug: 'windows',
         binary: 'dotslash.exe',
       },
