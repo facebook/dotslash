@@ -20,7 +20,8 @@
   "files": [
     "bin",
     "platforms.js",
-    "index.js"
+    "index.js",
+    "index.d.ts"
   ],
   "scripts": {
     "clean": "node scripts/clean-package",
