@@ -1,0 +1,38 @@
+{
+  "name": "@motizilberman/dotslash",
+  "version": "0.0.0-dev",
+  "bin": {
+    "dotslash": "bin/dotslash"
+  },
+  "description": "Command-line tool to facilitate fetching an executable, caching it, and then running it.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/facebook/dotslash.git"
+  },
+  "homepage": "https://dotslash-cli.com/",
+  "bugs": "https://github.com/facebook/dotslash/issues",
+  "contributors": [
+    "Michael Bolin <bolinfest@gmail.com>",
+    "Andres Suarez <zertosh@gmail.com>",
+    "Moti Zilberman <motiz88@gmail.com>"
+  ],
+  "main": "index.js",
+  "files": [
+    "bin",
+    "platforms.js",
+    "index.js"
+  ],
+  "scripts": {
+    "clean": "node scripts/clean-package",
+    "build": "npm run fix && node scripts/build-package",
+    "fix": "prettier --write .",
+    "lint": "prettier --check ."
+  },
+  "license": "(MIT OR Apache-2.0)",
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "prettier": "3.6.2"
+  }
+}
