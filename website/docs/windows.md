@@ -69,18 +69,21 @@ of this documentation.
 
 ### DotSlash Windows Shim
 
-**This is the preferred method.** The _DotSlash Windows Shim_ is a tiny `.exe`
-executable that is placed next to the DotSlash file that performs the same
-function as the [batch script](#sibling-batch-script) above, but is a native
-executable rather than a batch script. This is the _ideal_ method that allows
-for easy execution without any of the drawbacks of batch scripts. But this
-method requires compiling a small executable and keeping it next to the DotSlash
-file.
+**This is the preferred method.** The _DotSlash Windows Shim_ is a tiny 4KB
+`.exe` executable that is placed next to the DotSlash file that performs the
+same function as the [batch script](#sibling-batch-script) above, but is a
+native executable rather than a batch script. This is the _ideal_ method that
+allows for easy execution without any of the drawbacks of batch scripts. But
+this method requires compiling a small executable and keeping it next to the
+DotSlash file.
 
 The _DotSlash Windows Shim_ is available under the
 [`windows_shim`](https://github.com/facebook/dotslash/tree/main/windows_shim)
 folder in the
 [DotSlash GitHub repository](https://github.com/facebook/dotslash).
+
+A pre-built version can also be downloaded from there:
+[`dotslash_windows_shim-x86_64.exe`](https://github.com/facebook/dotslash/raw/main/windows_shim/dotslash_windows_shim-x86_64.exe)
 
 ## `MAX_PATH` limits
 

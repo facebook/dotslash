@@ -56,8 +56,11 @@ def main() -> None:
                 str(dotslash_windows_shim_root / "Cargo.toml"),
                 "--bin=dotslash_windows_shim",
                 "--release",
+                # UNCOMMENT to compile allowing std use - useful for debugging.
+                # "--no-default-features",
             ],
             check=True,
+            env={**os.environ, "RUSTC_BOOTSTRAP": "1"},
         )
         os.environ["DOTSLASH_WINDOWS_SHIM"] = str(
             (target_dir or (dotslash_windows_shim_root / "target"))
