@@ -24,5 +24,27 @@ The _DotSlash Windows Shim_ does this:
 
 ## Binary size
 
-The current "reference implementation" is rather large. A no_std version that
-uses only Windows APIs will be added soon. Stay tuned!
+_DotSlash Windows Shim_ builds without a standard library and only uses Windows
+APIs. Release binaries are around ~5KB.
+
+## Release
+
+```shell
+py release.py
+```
+
+## Testing
+
+```shell
+py run_tests.py
+```
+
+## Debugging
+
+It may be useful to have the standard library (e.g. `dbg!`) when debugging.
+Build with `--no-default-features` (avoids the default `no_std` feature) to have
+access to the standard library.
+
+```shell
+cargo build --no-default-features
+```

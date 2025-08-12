@@ -9,11 +9,13 @@
 
 
 import os
+import shutil
 import subprocess
-import sys
 from pathlib import Path
 
 IS_WINDOWS: bool = os.name == "nt"
+
+target_triplets: list[str] = ["x86_64-pc-windows-msvc", "aarch64-pc-windows-msvc"]
 
 
 def main() -> None:
@@ -21,7 +23,6 @@ def main() -> None:
         raise Exception("Only Windows is supported.")
 
     dotslash_windows_shim_root = Path(os.path.realpath(__file__)).parent
-    dotslash_root = dotslash_windows_shim_root.parent
 
     target_dir = (
         Path(os.environ["CARGO_TARGET_DIR"])
@@ -29,24 +30,7 @@ def main() -> None:
         else None
     )
 
-    if "DOTSLASH_BIN" not in os.environ:
-        subprocess.run(
-            [
-                "cargo",
-                "build",
-                "--quiet",
-                "--manifest-path",
-                str(dotslash_root / "Cargo.toml"),
-                "--bin=dotslash",
-                "--release",
-            ],
-            check=True,
-        )
-        os.environ["DOTSLASH_BIN"] = str(
-            (target_dir or (dotslash_root / "target")) / "release" / "dotslash.exe"
-        )
-
-    if "DOTSLASH_WINDOWS_SHIM" not in os.environ:
+    for triplet in target_triplets:
         subprocess.run(
             [
                 "cargo",
@@ -56,25 +40,27 @@ def main() -> None:
                 str(dotslash_windows_shim_root / "Cargo.toml"),
                 "--bin=dotslash_windows_shim",
                 "--release",
-                # UNCOMMENT to compile allowing std use - useful for debugging.
-                # "--no-default-features",
+                f"--target={triplet}",
             ],
             check=True,
-            env={**os.environ, "RUSTC_BOOTSTRAP": "1"},
+            env={
+                **os.environ,
+                "RUSTC_BOOTSTRAP": "1",
+                "RUSTFLAGS": "-Clink-arg=/DEBUG:NONE",  # Avoid embedded pdb path
+            },
         )
-        os.environ["DOTSLASH_WINDOWS_SHIM"] = str(
-            (target_dir or (dotslash_windows_shim_root / "target"))
+
+        src = (
+            (target_dir or (dotslash_windows_shim_root / "target" / triplet))
             / "release"
             / "dotslash_windows_shim.exe"
         )
 
-    subprocess.run(
-        [
-            sys.executable,
-            str(dotslash_windows_shim_root / "tests" / "test.py"),
-        ],
-        check=True,
-    )
+        arch = triplet.partition("-")[0]
+
+        dest = dotslash_windows_shim_root / f"dotslash_windows_shim-{arch}.exe"
+
+        shutil.copy(src, dest)
 
 
 if __name__ == "__main__":
