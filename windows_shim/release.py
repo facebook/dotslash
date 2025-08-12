@@ -15,6 +15,10 @@ from pathlib import Path
 
 IS_WINDOWS: bool = os.name == "nt"
 
+target_triplets: list[str] = [
+    "x86_64-pc-windows-msvc", "aarch64-pc-windows-msvc"
+]
+
 
 def main() -> None:
     if not IS_WINDOWS:
@@ -28,37 +32,40 @@ def main() -> None:
         else None
     )
 
-    subprocess.run(
-        [
-            "cargo",
-            "build",
-            "--quiet",
-            "--manifest-path",
-            str(dotslash_windows_shim_root / "Cargo.toml"),
-            "--bin=dotslash_windows_shim",
-            "--release",
-            "--target=x86_64-pc-windows-msvc",
-        ],
-        check=True,
-        env={
-            **os.environ,
-            "RUSTC_BOOTSTRAP": "1",
-            "RUSTFLAGS": "-Clink-arg=/DEBUG:NONE",  # Avoid embedded pdb path
-        },
-    )
-
-    src = (
-        (
-            target_dir
-            or (dotslash_windows_shim_root / "target" / "x86_64-pc-windows-msvc")
+    for triplet in target_triplets:
+        subprocess.run(
+            [
+                "cargo",
+                "build",
+                "--quiet",
+                "--manifest-path",
+                str(dotslash_windows_shim_root / "Cargo.toml"),
+                "--bin=dotslash_windows_shim",
+                "--release",
+                f"--target={triplet}",
+            ],
+            check=True,
+            env={
+                **os.environ,
+                "RUSTC_BOOTSTRAP": "1",
+                "RUSTFLAGS": "-Clink-arg=/DEBUG:NONE",  # Avoid embedded pdb path
+            },
         )
-        / "release"
-        / "dotslash_windows_shim.exe"
-    )
 
-    dest = dotslash_windows_shim_root / "dotslash_windows_shim-x86_64.exe"
+        src = (
+            (
+                target_dir
+                or (dotslash_windows_shim_root / "target" / triplet)
+            )
+            / "release"
+            / "dotslash_windows_shim.exe"
+        )
 
-    shutil.copy(src, dest)
+        arch = triplet.partition('-')[0]
+
+        dest = dotslash_windows_shim_root / f"dotslash_windows_shim-{arch}.exe"
+
+        shutil.copy(src, dest)
 
 
 if __name__ == "__main__":
