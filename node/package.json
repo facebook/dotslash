@@ -1,5 +1,5 @@
 {
-  "name": "@motizilberman/dotslash",
+  "name": "fb-dotslash",
   "version": "0.0.0-dev",
   "bin": {
     "dotslash": "bin/dotslash"

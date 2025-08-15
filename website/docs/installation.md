@@ -115,19 +115,19 @@ be better off [building from source](#build-from-source).
 To use DotSlash in Node.js projects, you can install it as a dependency:
 
 ```shell
-npm install --save @motizilberman/dotslash
+npm install --save fb-dotslash
 ```
 
 This will install a suitable `dotslash` binary in `node_modules/.bin` and ensure it's on the `PATH` when executing any `package.json` scripts, as well as during `npm exec`, etc.
 
 :::note
-You can also use `npx @motizilberman/dotslash ./some_dotslash_file` to run a DotSlash file from the command line without installing anything.
+You can also use `npx fb-dotslash ./some_dotslash_file` to run a DotSlash file from the command line without installing anything.
 :::
 
-For more advanced use cases, import the `@motizilberman/dotslash` package directly in your code:
+For more advanced use cases, import the `fb-dotslash` package directly in your code:
 
 ```js
-const dotslash = require('@motizilberman/dotslash');
+const dotslash = require('fb-dotslash');
 const {spawnSync} = require('child_process');
 spawnSync(dotslash, ['./some_dotslash_file'], {stdio: 'inherit']);
 ```
