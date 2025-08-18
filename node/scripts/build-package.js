@@ -23,11 +23,11 @@ const GITHUB_REPO = 'facebook/dotslash';
 
 async function main() {
   const {
-    values: { version, prerelease },
+    values: { tag, prerelease },
   } = parseArgs({
     options: {
-      version: {
-        short: 'v',
+      tag: {
+        short: 't',
         type: 'string',
       },
       prerelease: {
@@ -36,13 +36,33 @@ async function main() {
     },
   });
 
-  if (version == null) {
-    throw new Error('Missing required argument: --version');
+  if (tag == null) {
+    throw new Error('Missing required argument: --tag');
   }
 
   await deleteOldBinaries();
-  await fetchBinaries(version);
-  await updatePackageJson(version, prerelease);
+  const versionInfo = getVersionInfoFromArgs(tag, prerelease);
+  if (versionInfo.prerelease && !prerelease) {
+    console.warn(
+      `Building a prerelease version because the tag ${tag} does not seem to denote a valid semver string.`,
+    );
+  }
+  await fetchBinaries(tag);
+  await updatePackageJson(versionInfo);
+}
+
+function getVersionInfoFromArgs(tag, prerelease) {
+  // https://semver.org/#is-there-a-suggested-regular-expression-regex-to-check-a-semver-string
+  const SEMVER_WITH_LEADING_V =
+    /^v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/;
+  if (SEMVER_WITH_LEADING_V.test(tag)) {
+    return { tag, version: tag.slice(1), prerelease };
+  }
+  return {
+    tag,
+    version: '0.0.0-' + tag.replaceAll(/[^0-9a-zA-Z-]+/g, '-'),
+    prerelease: true,
+  };
 }
 
 async function deleteOldBinaries() {
@@ -58,7 +78,7 @@ async function deleteOldBinaries() {
   }
 }
 
-async function fetchBinaries(version) {
+async function fetchBinaries(tag) {
   const scratchDir = await fs.mkdtemp(path.join(os.tmpdir(), 'dotslash'));
   try {
     for (const [platform, archToArtifact] of Object.entries(
@@ -70,7 +90,7 @@ async function fetchBinaries(version) {
           `Fetching ${platform} ${arch} binary (${slug} ${binary})...`,
         );
         const tarballName = `dotslash-${slug}.tar.gz`;
-        const downloadURL = `https://github.com/${GITHUB_REPO}/releases/download/v${version}/${tarballName}`;
+        const downloadURL = `https://github.com/${GITHUB_REPO}/releases/download/${tag}/${tarballName}`;
         const tarballPath = path.join(scratchDir, tarballName);
         await download(downloadURL, tarballPath);
         const extractDir = path.join(BIN_PATH, slug);
@@ -104,7 +124,7 @@ async function download(url, dest) {
   });
 }
 
-async function updatePackageJson(version, prerelease) {
+async function updatePackageJson({ version, prerelease }) {
   const packageJson = await fs.readFile(PACKAGE_JSON_PATH, 'utf8');
   const packageJsonObj = JSON.parse(packageJson);
   packageJsonObj.version = version + (prerelease ? '-' + Date.now() : '');
@@ -112,6 +132,7 @@ async function updatePackageJson(version, prerelease) {
     PACKAGE_JSON_PATH,
     JSON.stringify(packageJsonObj, null, 2) + '\n',
   );
+  console.log('Updated package.json to version', packageJsonObj.version);
 }
 
 function spawnSyncSafe(command, args, options) {
