@@ -248,6 +248,9 @@ jobs:
     # Keep this job's dependencies in sync with node/platforms.js.
     needs: [macos, windows, windows-arm64, linux-musl-x86_64, linux-musl-arm64]
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
     defaults:
       run:
         working-directory: node
