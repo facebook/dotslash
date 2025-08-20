@@ -22,7 +22,7 @@ If your npm package declares `fb-dotslash` as a dependency, any commands execute
     "foo": "path/to/dotslash/file"
   },
   "dependencies": {
-    "fb-dotslash": "^0.5.7"
+    "fb-dotslash": "^0.5.8"
   }
 }
 ```

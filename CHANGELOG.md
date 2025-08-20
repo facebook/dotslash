@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.5.8 (2025-08-19)
+
+- DotSlash is now available as an
+  [npm package](https://www.npmjs.com/package/fb-dotslash):
+  <https://github.com/facebook/dotslash/pull/74>
+- Optimized the size of the
+  [DotSlash Windows shim](https://dotslash-cli.com/docs/windows/#dotslash-windows-shim):
+  <https://github.com/facebook/dotslash/pull/46>
+
 ## v0.5.7 (2025-07-09)
 
 - Fix release pipeline for ARM64 Windows:
