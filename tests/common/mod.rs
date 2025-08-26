@@ -29,7 +29,7 @@ pub mod ci;
 mod platform;
 
 macro_rules! if_win_else {
-    ($windows:expr_2021, $not_windows:expr_2021 $(,)?) => {
+    ($windows:expr, $not_windows:expr $(,)?) => {
         if cfg!(windows) {
             $windows
         } else {
