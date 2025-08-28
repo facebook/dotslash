@@ -2,6 +2,21 @@
 sidebar_position: 8
 ---
 
+<FbInternalOnly>
+
+:::info
+
+If you're a Meta Employee trying to use DotSlash on your Meta laptop, don't
+follow this doc.
+
+See the
+[internal Wiki page](https://www.internalfb.com/intern/wiki/?fbid=1082156404104844)
+instead.
+
+:::
+
+</FbInternalOnly>
+
 # Installing DotSlash
 
 We provide a number of ways to install DotSlash.
