@@ -16,9 +16,9 @@ use std::path::Path;
 
 use bzip2::read::BzDecoder;
 use flate2::bufread::GzDecoder;
-use tar::Archive;
 #[cfg(not(dotslash_internal))]
-use xz2::bufread::XzDecoder;
+use liblzma::bufread::XzDecoder;
+use tar::Archive;
 #[cfg(not(dotslash_internal))]
 use zip::ZipArchive;
 use zstd::stream::read::Decoder as ZstdDecoder;
