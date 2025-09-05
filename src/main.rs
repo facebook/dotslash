@@ -24,6 +24,7 @@ mod locate;
 mod platform;
 mod print_entry_for_url;
 mod provider;
+mod s3_provider;
 mod subcommand;
 mod util;
 

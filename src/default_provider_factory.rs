@@ -12,6 +12,7 @@ use crate::github_release_provider::GitHubReleaseProvider;
 use crate::http_provider::HttpProvider;
 use crate::provider::Provider;
 use crate::provider::ProviderFactory;
+use crate::s3_provider::S3Provider;
 
 pub struct DefaultProviderFactory;
 
@@ -20,6 +21,7 @@ impl ProviderFactory for DefaultProviderFactory {
         match provider_type {
             "http" => Ok(Box::new(HttpProvider {})),
             "github-release" => Ok(Box::new(GitHubReleaseProvider {})),
+            "s3" => Ok(Box::new(S3Provider {})),
             _ => Err(anyhow::format_err!(
                 "unknown provider type: `{provider_type}`",
             )),
