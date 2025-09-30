@@ -10,7 +10,7 @@ const darkCodeTheme = require('prism-react-renderer/themes/dracula');
 (module.exports = {
   title: 'DotSlash',
   tagline: 'Simplified executable deployment.',
-  url: 'https://engineering.fb.com/category/developer-tools/',
+  url: 'https://dotslash-cli.com',
   baseUrl: '/',
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'throw',
