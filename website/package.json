@@ -44,5 +44,8 @@
   },
   "devDependencies": {
     "yarn-audit-fix": "^9.3.10"
+  },
+  "resolutions": {
+    "**/image-size": "^1.2.1"
   }
 }
