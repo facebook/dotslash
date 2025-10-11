@@ -14,10 +14,6 @@ license = "MIT OR Apache-2.0"
 keywords = ["cli"]
 include = ["/LICENSE-APACHE", "/LICENSE-MIT", "/README.md", "/src/**", "/tests/**"]
 
-[[test]]
-name = "dotslash_tests_rs"
-path = "tests/dotslash_tests.rs"
-
 [dependencies]
 anyhow = "1.0.98"
 blake3 = { version = "=1.8.2", features = ["mmap", "rayon", "traits-preview"] }
@@ -42,6 +38,7 @@ zstd = { version = "0.13", features = ["experimental", "zstdmt"] }
 [dev-dependencies]
 assert_matches = "1.5"
 buck-resources = "1"
+criterion = { version = "0.5", features = ["html_reports"] }
 snapbox = { version = "0.6.18", features = ["color-auto", "diff", "json", "regex"], default-features = false }
 
 [target.'cfg(target_os = "linux")'.dependencies]
@@ -49,6 +46,14 @@ nix = { version = "0.30.1", features = ["dir", "event", "hostname", "inotify", "
 
 [target.'cfg(target_os = "macos")'.dependencies]
 nix = { version = "0.30.1", features = ["dir", "event", "hostname", "inotify", "ioctl", "mman", "mount", "net", "poll", "ptrace", "reboot", "resource", "sched", "signal", "term", "time", "user", "zerocopy"] }
+
+[[test]]
+name = "dotslash_tests_rs"
+path = "tests/dotslash_tests.rs"
+
+[[bench]]
+name = "parse_file"
+harness = false
 
 [profile.release]
 lto = true
