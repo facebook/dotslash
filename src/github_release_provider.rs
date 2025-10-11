@@ -13,7 +13,7 @@ use std::process::Command;
 
 use anyhow::Context as _;
 use serde::Deserialize;
-use serde_jsonrc::value::Value;
+use serde_json::Value;
 
 use crate::config::ArtifactEntry;
 use crate::provider::Provider;
