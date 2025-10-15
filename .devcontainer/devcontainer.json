@@ -9,7 +9,12 @@
 			"extensions": [
 				"GitHub.vscode-github-actions",
 				"nefrob.vscode-just-syntax"
-			]
+			],
+			"settings": {
+				"rust-analyzer.linkedProjects": [
+					"./Cargo.toml"
+				]
+			}
 		}
 	},
 	"features": {
@@ -19,6 +24,7 @@
 			// Install OSS Moby build instead of Docker CE.
 			"moby": true
 		},
+		"ghcr.io/devcontainers/features/rust:1": {},
 		"ghcr.io/devcontainers-extra/features/devcontainers-cli:1": {},
 		"ghcr.io/guiyomh/features/just:0": {}
 	}
