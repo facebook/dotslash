@@ -183,7 +183,7 @@ fn run_subcommand_impl(subcommand: &Subcommand, args: &mut ArgsOs) -> anyhow::Re
             let (original_json, _config_file) =
                 parse_file(&dotslash_data).context("failed to parse file")?;
             let json =
-                serde_jsonrc::to_string(&original_json).context("failed to serialize value")?;
+                serde_json::to_string(&original_json).context("failed to serialize value")?;
             println!("{json}");
         }
 

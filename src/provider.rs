@@ -10,7 +10,7 @@
 
 use std::path::Path;
 
-use serde_jsonrc::value::Value;
+use serde_json::Value;
 
 use crate::config::ArtifactEntry;
 use crate::util::FileLock;
