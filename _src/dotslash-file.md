@@ -121,7 +121,7 @@ properties:
 :::tip
 
 The JSON payload in a DotSlash file is parsed with a
-[lenient JSON parser](https://crates.io/crates/serde_jsonrc) that allows for
+[lenient JSON parser](https://crates.io/crates/jsonc-parser) that allows for
 trailing commas as well as `//` and `/*`-style comments.
 
 :::
