@@ -243,26 +243,14 @@ jobs:
         run: gh release upload %GITHUB_REF:~10% dotslash-windows-arm64.%GITHUB_REF:~10%.tar.gz
         shell: cmd
 
-  npm-publish:
+  publish-downstream:
     # This job depends on release assets uploaded by the previous jobs.
     # Keep this job's dependencies in sync with node/platforms.js.
     needs: [macos, windows, windows-arm64, linux-musl-x86_64, linux-musl-arm64]
-    runs-on: ubuntu-latest
+    uses: ./.github/workflows/release-downstream.yml
     permissions:
       contents: read
       id-token: write
-    defaults:
-      run:
-        working-directory: node
-    steps:
-      - uses: actions/checkout@v4
-      # Setup .npmrc file to publish to npm
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20.x'
-          registry-url: 'https://registry.npmjs.org'
-      - run: npm ci
-      - run: npm run build -- --tag ${GITHUB_REF#refs/tags/}
-      - run: npm publish --provenance --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+    with:
+      tag: ${{ github.ref_name }}
+    secrets: inherit

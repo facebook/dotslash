@@ -1,4 +1,14 @@
+# Global files
 .DS_Store
-/target
-**/node_modules
-node/bin/*/
+
+# Root directories
+/target/
+
+# Python
+__pycache__/
+/python/.ruff_cache/
+*.pyc
+
+# Node.js
+node_modules/
+/node/bin/*/

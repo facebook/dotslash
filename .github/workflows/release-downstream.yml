@@ -1,0 +1,134 @@
+name: publish downstream packages
+
+on:
+  workflow_call:
+    inputs:
+      tag:
+        description: The release tag to publish
+        required: true
+        type: string
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  nodejs-publish:
+    name: Publish Node.js release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    defaults:
+      run:
+        working-directory: node
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v5
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: "20.x"
+        registry-url: "https://registry.npmjs.org"
+
+    - name: Install dependencies cleanly
+      run: npm ci
+
+    - name: Build package
+      run: npm run build -- --tag ${{ inputs.tag }}
+
+    - name: Publish to NPM
+      run: npm publish --provenance --access public
+      env:
+        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  python-sdist:
+    name: Build source distribution
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: python
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v5
+
+    - name: Install UV
+      uses: astral-sh/setup-uv@v6
+
+    - name: Build source distribution
+      run: uv build --sdist
+      env:
+        DOTSLASH_VERSION: ${{ inputs.tag }}
+
+    - name: Upload source distribution artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: artifact-sdist
+        path: dist/*
+        if-no-files-found: error
+
+  python-wheels:
+    name: Build wheels for ${{ matrix.archs }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+        - os: ubuntu-24.04-arm
+          archs: aarch64
+        - os: ubuntu-latest
+          archs: x86_64
+        - os: macos-latest
+          archs: arm64
+        - os: macos-15-intel
+          archs: x86_64
+        - os: windows-11-arm
+          archs: ARM64
+        - os: windows-latest
+          archs: AMD64
+
+    defaults:
+      run:
+        working-directory: python
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v5
+
+    - name: Build wheels
+      uses: pypa/cibuildwheel@v3.2.1
+      env:
+        DOTSLASH_VERSION: ${{ inputs.tag }}
+        CIBW_ARCHS: ${{ matrix.archs }}
+
+    - name: Upload wheel artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: artifact-wheels-${{ matrix.os }}-${{ matrix.archs }}
+        path: wheelhouse/*.whl
+        if-no-files-found: error
+
+  python-publish:
+    name: Publish Python release
+    needs:
+    - python-sdist
+    - python-wheels
+    runs-on: ubuntu-latest
+
+    permissions:
+      id-token: write
+
+    steps:
+    - name: Download artifacts
+      uses: actions/download-artifact@v4
+      with:
+        pattern: artifact-*
+        merge-multiple: true
+        path: dist
+
+    - name: Push build artifacts to PyPI
+      uses: pypa/gh-action-pypi-publish@v1.13.0
+      with:
+        skip-existing: true
