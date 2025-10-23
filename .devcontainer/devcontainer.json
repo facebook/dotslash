@@ -28,10 +28,8 @@
 			// Install OSS Moby build instead of Docker CE.
 			"moby": true
 		},
-		"ghcr.io/devcontainers/features/python:1": {},
 		"ghcr.io/devcontainers/features/rust:1": {},
 		"ghcr.io/devcontainers-extra/features/devcontainers-cli:1": {},
-		"ghcr.io/devcontainers-extra/features/hatch:2": {},
 		"ghcr.io/guiyomh/features/just:0": {}
 	}
 }

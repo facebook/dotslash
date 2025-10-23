@@ -37,7 +37,7 @@ jobs:
         tool: just
 
     - name: Static analysis
-      run: just python-check
+      run: just check-python
 
     - name: Test
-      run: just python-test
+      run: just test-python
