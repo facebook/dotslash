@@ -34,9 +34,7 @@ Homepage = "https://dotslash-cli.com"
 Tracker = "https://github.com/facebook/dotslash/issues"
 Source = "https://github.com/facebook/dotslash"
 
-[tool.hatch.version]
-source = "env"
-variable = "DOTSLASH_VERSION"
+[tool.hatch.metadata.hooks.custom]
 
 [tool.hatch.metadata.hooks.fancy-pypi-readme]
 content-type = "text/markdown"

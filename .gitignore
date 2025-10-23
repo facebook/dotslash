@@ -1,7 +1,7 @@
-# Global files
+# Global Files
 .DS_Store
 
-# Root directories
+# Rust
 /target/
 
 # Python

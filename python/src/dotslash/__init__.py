@@ -26,7 +26,8 @@ def locate() -> str:
     else:
         binary_name = "dotslash"
 
-    # Map of normalized paths to the actual path
+    # Keep an insertion-ordered map of normalized paths to the actual path so
+    # that potential error messages are deterministic.
     seen_paths: dict[str, str] = {}
     for search_path in _search_paths():
         normalized_path = os.path.normcase(search_path)

@@ -15,10 +15,37 @@ from platform import machine
 from typing import TYPE_CHECKING, Any, BinaryIO
 
 from hatchling.builders.hooks.plugin.interface import BuildHookInterface
+from hatchling.metadata.plugin.interface import MetadataHookInterface
 
 if TYPE_CHECKING:
     from collections.abc import Generator
     from http.client import HTTPResponse
+
+
+class CustomMetadataHook(MetadataHookInterface):
+    def update(self, metadata: dict[str, Any]) -> None:
+        if (version := os.environ.get("DOTSLASH_VERSION")) is None:
+            msg = "DOTSLASH_VERSION environment variable is not set"
+            raise ValueError(msg)
+        elif version == "latest":
+            import json
+
+            headers = {
+                "Accept": "application/vnd.github+json",
+                "X-GitHub-Api-Version": "2022-11-28",
+            }
+            if github_token := (os.environ.get("GH_TOKEN") or os.environ.get("GITHUB_TOKEN")):
+                headers["Authorization"] = f"Bearer {github_token}"
+
+            with http_get(
+                "https://api.github.com/repos/facebook/dotslash/releases/latest",
+                headers=headers,
+            ) as response:
+                body = response.read().decode("utf-8")
+                release = json.loads(body)
+                version = release["tag_name"]
+
+        metadata["version"] = version.removeprefix("v")
 
 
 class CustomBuildHook(BuildHookInterface):
@@ -59,9 +86,8 @@ class CustomBuildHook(BuildHookInterface):
 
     @contextmanager
     def __release_asset(self) -> Generator[BinaryIO, None, None]:
-        tag = f"v{self.metadata.version.removeprefix('v')}"
-        url = f"https://github.com/facebook/dotslash/releases/download/{tag}/{self.__asset_name}"
-        with http_request(url) as response:
+        url = f"https://github.com/facebook/dotslash/releases/download/v{self.metadata.version}/{self.__asset_name}"
+        with http_get(url) as response:
             yield response
 
     @contextmanager
@@ -153,13 +179,19 @@ class CustomBuildHook(BuildHookInterface):
         return default_arch
 
 
-def http_request(url: str) -> HTTPResponse:
-    from urllib.request import HTTPError, URLError, urlopen
+def http_get(url: str, *, headers: dict[str, str] | None = None) -> HTTPResponse:
+    from urllib.request import HTTPError, Request, URLError, urlopen
+
+    final_headers = {"User-Agent": "DotSlash Python Package Builder"}
+    if headers:
+        final_headers.update(headers)
+
+    request = Request(url, method="GET", headers=final_headers)
 
     max_attempts = 3
     for attempt in range(1, max_attempts + 1):
         try:
-            return urlopen(url)
+            return urlopen(request)
         except (HTTPError, URLError) as e:
             import time
 

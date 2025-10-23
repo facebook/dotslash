@@ -13,21 +13,22 @@ import sysconfig
 
 
 def _search_paths():
-    # The scripts directory for the current Python installation
+    # This is the scripts directory for the current Python installation.
     yield sysconfig.get_path("scripts")
 
-    # The scripts directory for the base prefix if in a virtual environment
-    yield sysconfig.get_path("scripts", vars={"base": sys.base_prefix, "platbase": sys.base_exec_prefix})
+    # This is the scripts directory for the base prefix only if presently in a virtual environment.
+    yield sysconfig.get_path("scripts", vars={"base": sys.base_prefix})
 
     module_dir = os.path.dirname(os.path.abspath(__file__))
     package_parent, package_name = os.path.split(module_dir)
     if package_name == "dotslash":
-        # Above the package root e.g. when running `pip install --prefix` or `uv run --with`
-        # Windows: <prefix>\Lib\site-packages\dotslash
-        # macOS: <prefix>/lib/pythonX.Y/site-packages/dotslash
-        # Linux:
-        #   <prefix>/lib/pythonX.Y/site-packages/dotslash
-        #   <prefix>/lib/pythonX.Y/dist-packages/dotslash (Debian-based distributions)
+        # Running things like `pip install --prefix` or `uv run --with` will put the scripts directory
+        # above the package root. Examples:
+        # - Windows: <prefix>\Lib\site-packages\dotslash
+        # - macOS: <prefix>/lib/pythonX.Y/site-packages/dotslash
+        # - Linux:
+        #   - <prefix>/lib/pythonX.Y/site-packages/dotslash
+        #   - <prefix>/lib/pythonX.Y/dist-packages/dotslash (Debian-based distributions)
         head, tail = os.path.split(package_parent)
         if tail.endswith("-packages"):
             head, tail = os.path.split(head)
@@ -39,8 +40,9 @@ def _search_paths():
                 if tail == sys.platlibdir:
                     yield os.path.join(head, "bin")
         else:
-            # Adjacent to the package root e.g. when using the `--target` option of pip-like installers
+            # Using the `--target` option of pip-like installers will put the scripts directory
+            # adjacent to the package root in a subdirectory named `bin` regardless of the platform.
             yield os.path.join(package_parent, "bin")
 
-    # The scripts directory for user installations
+    # This is the scripts directory for user installations.
     yield sysconfig.get_path("scripts", scheme=sysconfig.get_preferred_scheme("user"))

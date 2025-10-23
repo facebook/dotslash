@@ -1,4 +1,4 @@
-name: test
+name: Test Python
 
 on:
   push:
@@ -12,9 +12,13 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 defaults:
   run:
     shell: bash
+    working-directory: python
 
 jobs:
   test:
@@ -23,13 +27,17 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v5
+      uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
-    - name: Install uv
-      uses: astral-sh/setup-uv@v6
+    - name: Install UV
+      uses: astral-sh/setup-uv@2ddd2b9cb38ad8efd50337e8ab201519a34c9f24 # v7.1.1
+
+    - uses: taiki-e/install-action@ebb229c6baa68383264f2822689b07b4916d9177 # v2.62.36
+      with:
+        tool: just
 
     - name: Static analysis
-      run: uvx ruff check src
+      run: just python-check
 
-    - name: Formatting
-      run: uvx ruff format --check --diff src
+    - name: Test
+      run: just python-test
