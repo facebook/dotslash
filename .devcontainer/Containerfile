@@ -11,3 +11,4 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --chmod=755 --from=uv /uv /usr/local/bin/uv
+COPY --chmod=755 --from=uv /uvx /usr/local/bin/uvx
