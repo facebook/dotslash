@@ -1,3 +1,4 @@
+---
 name: publish downstream packages
 
 on:
