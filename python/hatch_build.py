@@ -12,7 +12,7 @@ import sys
 from contextlib import contextmanager
 from functools import cached_property
 from platform import machine
-from typing import TYPE_CHECKING, Any, BinaryIO
+from typing import Any, BinaryIO, TYPE_CHECKING
 
 from hatchling.builders.hooks.plugin.interface import BuildHookInterface
 from hatchling.metadata.plugin.interface import MetadataHookInterface
@@ -34,7 +34,9 @@ class CustomMetadataHook(MetadataHookInterface):
                 "Accept": "application/vnd.github+json",
                 "X-GitHub-Api-Version": "2022-11-28",
             }
-            if github_token := (os.environ.get("GH_TOKEN") or os.environ.get("GITHUB_TOKEN")):
+            if github_token := (
+                os.environ.get("GH_TOKEN") or os.environ.get("GITHUB_TOKEN")
+            ):
                 headers["Authorization"] = f"Bearer {github_token}"
 
             with http_get(
@@ -49,12 +51,16 @@ class CustomMetadataHook(MetadataHookInterface):
 
 
 class CustomBuildHook(BuildHookInterface):
-    def initialize(self, version: str, build_data: dict[str, Any]) -> None:  # noqa: ARG002
+    def initialize(
+        self, version: str, build_data: dict[str, Any]
+    ) -> None:  # noqa: ARG002
         if self.__source == "release":
             asset = self.__release_asset
         elif os.path.isdir(self.__source):
             asset = self.__local_asset
-        elif not os.path.isabs(self.__source) and os.path.isfile(os.path.join(self.root, "PKG-INFO")):
+        elif not os.path.isabs(self.__source) and os.path.isfile(
+            os.path.join(self.root, "PKG-INFO")
+        ):
             msg = (
                 "The current directory has a `PKG-INFO` file, which likely means that the wheel is being "
                 "built from an unpacked source distribution. You must do one of the following:\n"
@@ -79,7 +85,9 @@ class CustomBuildHook(BuildHookInterface):
         build_data["shared_scripts"][self.__binary_path] = self.__binary_name
         build_data["tag"] = f"py3-none-{self.__wheel_arch}"
 
-    def finalize(self, version: str, build_data: dict[str, Any], artifact: str) -> None:  # noqa: ARG002
+    def finalize(
+        self, version: str, build_data: dict[str, Any], artifact: str
+    ) -> None:  # noqa: ARG002
         import shutil
 
         shutil.rmtree(self.__temp_dir)
@@ -121,9 +129,15 @@ class CustomBuildHook(BuildHookInterface):
     def __target_data(self) -> tuple[str, str]:
         match self.__platform, self.__arch:
             case "linux", "aarch64":
-                return "dotslash-linux-musl.aarch64.tar.gz", self.__get_linux_wheel_arch()
+                return (
+                    "dotslash-linux-musl.aarch64.tar.gz",
+                    self.__get_linux_wheel_arch(),
+                )
             case "linux", "x86_64":
-                return "dotslash-linux-musl.x86_64.tar.gz", self.__get_linux_wheel_arch()
+                return (
+                    "dotslash-linux-musl.x86_64.tar.gz",
+                    self.__get_linux_wheel_arch(),
+                )
             case "windows", "arm64":
                 return "dotslash-windows-arm64.tar.gz", "win_arm64"
             case "windows", "amd64":
@@ -146,7 +160,9 @@ class CustomBuildHook(BuildHookInterface):
 
     @cached_property
     def __source(self) -> str:
-        return os.environ.get("DOTSLASH_SOURCE") or self.config.get("source") or "release"
+        return (
+            os.environ.get("DOTSLASH_SOURCE") or self.config.get("source") or "release"
+        )
 
     @cached_property
     def __temp_dir(self) -> str:

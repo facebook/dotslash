@@ -1,7 +1,0 @@
-line-length = 120
-
-[lint.flake8-tidy-imports]
-ban-relative-imports = "all"
-
-[lint.isort]
-known-first-party = ["dotslash"]

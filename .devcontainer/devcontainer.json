@@ -9,12 +9,17 @@
 			"extensions": [
 				"GitHub.vscode-github-actions",
 				"ms-python.python",
-				"nefrob.vscode-just-syntax"
+				"nefrob.vscode-just-syntax",
+				"omnilib.ufmt"
 			],
 			"settings": {
 				"python.analysis.include": [
 					"python/**"
 				],
+				"python.defaultInterpreterPath": ".venv/bin/python3",
+				"python.editor.defaultFormatter": "omnilib.ufmt",
+				"python.editor.formatOnSave": true,
+				"python.terminal.activateEnvInCurrentTerminal": true,
 				"rust-analyzer.linkedProjects": [
 					"./Cargo.toml"
 				]
@@ -31,5 +36,8 @@
 		"ghcr.io/devcontainers/features/rust:1": {},
 		"ghcr.io/devcontainers-extra/features/devcontainers-cli:1": {},
 		"ghcr.io/guiyomh/features/just:0": {}
+	},
+	"postCreateCommand": {
+		"installPythonDependencies": "cd /workspaces/dotslash/python && uv venv --no-project && uv pip install -r requirements-fmt.txt"
 	}
 }

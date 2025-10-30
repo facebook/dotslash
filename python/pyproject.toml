@@ -69,3 +69,13 @@ repair-wheel-command = ""
 
 [tool.cibuildwheel.linux]
 environment-pass = ["DOTSLASH_SOURCE", "DOTSLASH_VERSION"]
+
+[tool.black]
+target-version = ["py310"]
+
+[tool.usort]
+first_party_detection = false
+
+[tool.ufmt]
+formatter = "ruff-api"
+sorter = "ruff-api"

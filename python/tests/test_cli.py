@@ -13,7 +13,11 @@ from importlib import metadata
 
 
 def test_cli() -> None:
-    result = subprocess.run([sys.executable, "-m", "dotslash", "--version"], capture_output=True, encoding="utf-8")
+    result = subprocess.run(
+        [sys.executable, "-m", "dotslash", "--version"],
+        capture_output=True,
+        encoding="utf-8",
+    )
     output = result.stdout.strip()
     assert result.returncode == 0, output
 
