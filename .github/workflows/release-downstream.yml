@@ -1,0 +1,160 @@
+---
+name: publish downstream packages
+
+on:
+  workflow_call:
+    inputs:
+      tag:
+        description: The release tag to publish
+        required: true
+        type: string
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  nodejs-publish:
+    name: Publish Node.js release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    defaults:
+      run:
+        working-directory: node
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+
+    - name: Setup Node.js
+      uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+      with:
+        node-version: "20.x"
+        registry-url: "https://registry.npmjs.org"
+
+    - name: Install dependencies cleanly
+      run: npm ci
+
+    - name: Build package
+      run: npm run build -- --tag ${{ inputs.tag }}
+
+    - name: Publish to NPM
+      run: npm publish --provenance --access public
+      env:
+        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  python-sdist:
+    name: Build source distribution
+    runs-on: ubuntu-latest
+
+    outputs:
+      artifact-name: ${{ steps.locate-artifact.outputs.file-name }}
+
+    defaults:
+      run:
+        working-directory: python
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+
+    - name: Install UV
+      uses: astral-sh/setup-uv@2ddd2b9cb38ad8efd50337e8ab201519a34c9f24 # v7.1.1
+
+    - name: Build source distribution
+      run: uv build --sdist
+      env:
+        DOTSLASH_VERSION: ${{ inputs.tag }}
+
+    - name: Locate source distribution
+      id: locate-artifact
+      run: |-
+        sdist_name=$(basename dist/*)
+        echo "file-name=${sdist_name}" >> $GITHUB_OUTPUT
+
+    - name: Upload source distribution artifact
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      with:
+        name: artifact-sdist
+        path: dist/${{ steps.locate-artifact.outputs.file-name }}
+        if-no-files-found: error
+
+  python-wheels:
+    name: Build wheels for ${{ matrix.archs }} on ${{ matrix.os }}
+    needs:
+    - python-sdist
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+        - os: ubuntu-24.04-arm
+          archs: aarch64
+        - os: ubuntu-latest
+          archs: x86_64
+        - os: macos-latest
+          archs: arm64
+        - os: macos-15-intel
+          archs: x86_64
+        - os: windows-11-arm
+          archs: ARM64
+        - os: windows-latest
+          archs: AMD64
+
+    defaults:
+      run:
+        working-directory: python
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+
+    - name: Download source distribution
+      uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
+      with:
+        name: artifact-sdist
+        path: dist
+
+    # TODO: Remove this once the action supports specifying extras, see:
+    # https://github.com/pypa/cibuildwheel/pull/2630
+    - name: Install UV
+      if: runner.os != 'Linux'
+      uses: astral-sh/setup-uv@2ddd2b9cb38ad8efd50337e8ab201519a34c9f24 # v7.1.1
+
+    - name: Build wheels
+      uses: pypa/cibuildwheel@9c00cb4f6b517705a3794b22395aedc36257242c # v3.2.1
+      with:
+        package-dir: dist/${{ needs.python-sdist.outputs.artifact-name }}
+      env:
+        DOTSLASH_VERSION: ${{ inputs.tag }}
+        CIBW_ARCHS: ${{ matrix.archs }}
+
+    - name: Upload wheel artifacts
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      with:
+        name: artifact-wheels-${{ matrix.os }}-${{ matrix.archs }}
+        path: wheelhouse/*.whl
+        if-no-files-found: error
+
+  python-publish:
+    name: Publish Python release
+    needs:
+    - python-sdist
+    - python-wheels
+    runs-on: ubuntu-latest
+
+    permissions:
+      id-token: write
+
+    steps:
+    - name: Download artifacts
+      uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
+      with:
+        pattern: artifact-*
+        merge-multiple: true
+        path: dist
+
+    - name: Push build artifacts to PyPI
+      uses: pypa/gh-action-pypi-publish@ed0c53931b1dc9bd32cbe73a98c7f6766f8a527e # v1.13.0
+      with:
+        skip-existing: true

@@ -1,4 +1,14 @@
+# Global Files
 .DS_Store
-/target
-**/node_modules
-node/bin/*/
+
+# Rust
+/target/
+
+# Python
+__pycache__/
+.venv/
+*.pyc
+
+# Node.js
+node_modules/
+/node/bin/*/
