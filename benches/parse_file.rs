@@ -56,7 +56,7 @@ fn large_config() -> String {
         REQUIRED_HEADER
     );
 
-    let platforms = vec![
+    let platforms = [
         "linux-x86_64",
         "linux-aarch64",
         "macos-x86_64",
@@ -65,7 +65,7 @@ fn large_config() -> String {
         "windows-aarch64",
     ];
 
-    let digests = vec![
+    let digests = [
         "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
         "bf1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
         "cf1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
