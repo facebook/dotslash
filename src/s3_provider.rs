@@ -43,9 +43,9 @@ impl Provider for S3Provider {
             region,
         } = <_>::deserialize(provider_config)?;
         let mut command = std::process::Command::new("aws");
-        command.args(&["s3", "cp"]);
+        command.args(["s3", "cp"]);
         if let Some(region) = region {
-            command.args(&["--region", &region]);
+            command.args(["--region", &region]);
         }
         command.arg(format!("s3://{bucket}/{key}"));
         command.arg(destination);
