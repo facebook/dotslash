@@ -15,7 +15,7 @@ path = "dotslash_windows_shim.rs"
 test = false
 
 [dependencies]
-cfg-if = "1.0.1"
+cfg-if = "1.0"
 windows-sys = { version = "0.59.0", features = ["Win32_Foundation", "Win32_Globalization", "Win32_Security", "Win32_Security_Credentials", "Win32_Storage_FileSystem", "Win32_System_Console", "Win32_System_Environment", "Win32_System_IO", "Win32_System_LibraryLoader", "Win32_System_Memory", "Win32_System_Threading", "Win32_UI_Shell"] }
 
 [features]
