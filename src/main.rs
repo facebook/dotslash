@@ -18,6 +18,7 @@ mod dotslash_cache;
 mod download;
 mod execution;
 mod fetch_method;
+mod gcs_provider;
 mod github_release_provider;
 mod http_provider;
 mod locate;
