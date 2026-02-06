@@ -9,6 +9,7 @@
  */
 
 use std::path::Path;
+use std::process::Command;
 
 use anyhow::Context as _;
 use serde::Deserialize;
@@ -28,6 +29,36 @@ struct GcsProviderConfig {
     object: String,
 }
 
+/// Environment variables checked for a bearer token, in order.
+const TOKEN_ENV_VARS: &[&str] = &[
+    "GOOGLE_AUTH_TOKEN",
+    "CLOUDSDK_AUTH_ACCESS_TOKEN",
+    "GOOGLE_OAUTH_ACCESS_TOKEN",
+];
+
+fn get_bearer_token() -> Option<String> {
+    // First, check environment variables.
+    let from_env = TOKEN_ENV_VARS
+        .iter()
+        .find_map(|var| std::env::var(var).ok())
+        .filter(|t| !t.is_empty());
+    if from_env.is_some() {
+        return from_env;
+    }
+
+    // Fall back to gcloud, if available.
+    let output = Command::new("gcloud")
+        .args(["auth", "print-access-token"])
+        .output()
+        .ok()?;
+    if !output.status.success() {
+        return None;
+    }
+    let token = String::from_utf8(output.stdout).ok()?;
+    let token = token.trim().to_owned();
+    if token.is_empty() { None } else { Some(token) }
+}
+
 impl Provider for GcsProvider {
     fn fetch_artifact(
         &self,
@@ -38,14 +69,25 @@ impl Provider for GcsProvider {
     ) -> anyhow::Result<()> {
         let GcsProviderConfig { bucket, object } =
             <_>::deserialize(provider_config)?;
-        let mut command = std::process::Command::new("gcloud");
-        command.args(["storage", "cp"]);
-        command.arg(format!("gs://{bucket}/{object}"));
-        command.arg(destination);
+        let url = format!(
+            "https://storage.googleapis.com/{}/{}",
+            bucket, object,
+        );
+        let output_arg = destination.to_str().unwrap();
+
+        let mut command = Command::new("curl");
+        command.args(["--location", "--retry", "3"]);
+        command.args(["--fail", "--silent", "--show-error"]);
+        if let Some(token) = get_bearer_token() {
+            command.args(["-H", &format!("Authorization: Bearer {}", token)]);
+        }
+        command.args(["--output", output_arg]);
+        command.arg(&url);
+
         let output = command
             .output()
             .with_context(|| format!("{}", CommandDisplay::new(&command)))
-            .context("failed to run the Google Cloud CLI")?;
+            .context("failed to run curl for GCS download")?;
 
         if !output.status.success() {
             return Err(anyhow::format_err!(
@@ -53,7 +95,7 @@ impl Provider for GcsProvider {
                 CommandStderrDisplay::new(&output)
             ))
             .with_context(|| format!("{}", CommandDisplay::new(&command)))
-            .context("the Google Cloud CLI failed");
+            .context("curl failed to download from GCS");
         }
         Ok(())
     }
