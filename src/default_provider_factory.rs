@@ -8,6 +8,7 @@
  * above-listed licenses.
  */
 
+use crate::gcs_provider::GcsProvider;
 use crate::github_release_provider::GitHubReleaseProvider;
 use crate::http_provider::HttpProvider;
 use crate::provider::Provider;
@@ -20,6 +21,7 @@ impl ProviderFactory for DefaultProviderFactory {
     fn get_provider(&self, provider_type: &str) -> anyhow::Result<Box<dyn Provider>> {
         match provider_type {
             "http" => Ok(Box::new(HttpProvider {})),
+            "gcs" => Ok(Box::new(GcsProvider {})),
             "github-release" => Ok(Box::new(GitHubReleaseProvider {})),
             "s3" => Ok(Box::new(S3Provider {})),
             _ => Err(anyhow::format_err!(
