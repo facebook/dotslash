@@ -46,6 +46,7 @@ assert_matches = "1.5"
 buck-resources = "1"
 criterion = "0.5.1"
 snapbox = { version = "0.6.24", features = ["color-auto", "diff", "json", "regex"], default-features = false }
+zstd = { version = "0.13.3", features = ["experimental", "zstdmt"] }
 
 [target.'cfg(target_os = "linux")'.dependencies]
 nix = { version = "0.30.1", features = ["dir", "event", "hostname", "inotify", "ioctl", "mman", "mount", "net", "poll", "ptrace", "reboot", "resource", "sched", "signal", "term", "time", "user", "zerocopy"] }
