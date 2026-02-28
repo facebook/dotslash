@@ -44,6 +44,7 @@ zstd = { version = "0.13", features = ["experimental", "zstdmt"] }
 anyhow = "1.0.101"
 assert_matches = "1.5"
 buck-resources = "1"
+bzip2 = "0.5.2"
 criterion = "0.5.1"
 snapbox = { version = "0.6.24", features = ["color-auto", "diff", "json", "regex"], default-features = false }
 zstd = { version = "0.13.3", features = ["experimental", "zstdmt"] }
