@@ -31,7 +31,7 @@ pub trait Provider {
     /// artifact_entry: In general, the Provider should not rely on the
     ///     information in the entry to perform the fetch, as such information
     ///     should be defined in the provider_config. It is primarily provided
-    ///     so the Provider can show an appropriate progess indicator based on
+    ///     so the Provider can show an appropriate progress indicator based on
     ///     the expected size of the artifact.
     fn fetch_artifact(
         &self,
