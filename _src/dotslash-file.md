@@ -201,10 +201,13 @@ DotSlash what type of provider it is, though if unspecified, `"http"` is
 assumed. Each provider defines its own schema with respect to the other fields
 that must be specified on the JSON object.
 
-Currently, DotSlash supports two providers out of the box: the **HTTP Provider**
-(`"type": "http"`) and the **GitHub Release Provider**
-(`"type": "github-release"`). (At the time of this writing, there is no way to
-add custom providers without forking DotSlash.)
+Currently, DotSlash incldues three providers:
+- HTTP Provider: `"type": "http"`
+- GitHub Release Provider: `"type": "github-release"`
+- S3 Provider: `"type": "s3"`
+
+At the time of this writing, there is no way to
+add custom providers without forking DotSlash.
 
 Each provider in the `providers` list will be tried, in order by default, to
 fetch the artifact, until one succeeds. The provider type need not be unique
