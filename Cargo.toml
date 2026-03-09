@@ -41,7 +41,7 @@ zip = { version = "3.0.0", features = ["deflate"], default-features = false }
 zstd = { version = "0.13", features = ["experimental", "zstdmt"] }
 
 [dev-dependencies]
-anyhow = "1.0.101"
+anyhow = "1.0.102"
 assert_matches = "1.5"
 buck-resources = "1"
 bzip2 = "0.5.2"
