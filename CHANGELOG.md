@@ -1,5 +1,10 @@
 # Changelog
 
+## Not yet released
+
+- Added `get-extracted-cache-path` command to print the cache path for an
+  artifact without downloading or executing it
+
 ## v0.5.8 (2025-08-19)
 
 - DotSlash is now available as an

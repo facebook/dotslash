@@ -48,6 +48,10 @@ pub enum Subcommand {
     /// Fetch and cache an artifact but do not execute it
     Fetch,
 
+    /// Print the path to the extracted artifact in the cache without running
+    /// the binary
+    GetExtractedCachePath,
+
     /// Parse a DotSlash file and print its data as JSON
     Parse,
 
@@ -70,6 +74,7 @@ impl fmt::Display for Subcommand {
             Self::CreateUrlEntry => "create-url-entry",
             Self::CacheDir => "cache-dir",
             Self::Fetch => "fetch",
+            Self::GetExtractedCachePath => "get-extracted-cache-path",
             Self::Parse => "parse",
             Self::Sha256 => "sha256",
             Self::Version => "version",
@@ -88,6 +93,7 @@ impl FromStr for Subcommand {
             "create-url-entry" => Ok(Subcommand::CreateUrlEntry),
             "cache-dir" => Ok(Subcommand::CacheDir),
             "fetch" => Ok(Subcommand::Fetch),
+            "get-extracted-cache-path" => Ok(Subcommand::GetExtractedCachePath),
             "parse" => Ok(Subcommand::Parse),
             "sha256" => Ok(Subcommand::Sha256),
             "version" => Ok(Subcommand::Version),
@@ -177,6 +183,15 @@ fn run_subcommand_impl(subcommand: &Subcommand, args: &mut ArgsOs) -> anyhow::Re
             println!("{}", artifact_location.executable.display());
         }
 
+        Subcommand::GetExtractedCachePath => {
+            let file_arg = take_exactly_one_arg(args)?;
+            let dotslash_data = fs_ctx::read_to_string(file_arg)?;
+            let dotslash_cache = DotslashCache::new();
+            let (_artifact_entry, artifact_location) =
+                locate_artifact(&dotslash_data, &dotslash_cache)?;
+            println!("{}", artifact_location.executable.display());
+        }
+
         Subcommand::Parse => {
             let file_arg = take_exactly_one_arg(args)?;
             let dotslash_data = fs_ctx::read_to_string(file_arg)?;
@@ -227,6 +242,9 @@ dotslash also has these special experimental commands:
   dotslash -- cache-dir             Print path to the cache directory
   dotslash -- fetch DOTSLASH_FILE   Prepare for execution, but print exe path
                                     instead of executing
+  dotslash -- get-extracted-cache-path DOTSLASH_FILE
+                                    Print the path to the extracted artifact in
+                                    the cache without running the binary
   dotslash -- parse DOTSLASH_FILE   Parse the dotslash file
   dotslash -- sha256 FILE           Compute sha256 sum of the file
 
