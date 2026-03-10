@@ -538,6 +538,9 @@ dotslash also has these special experimental commands:
   dotslash -- cache-dir             Print path to the cache directory
   dotslash -- fetch DOTSLASH_FILE   Prepare for execution, but print exe path
                                     instead of executing
+  dotslash -- get-extracted-cache-path DOTSLASH_FILE
+                                    Print the path to the extracted artifact in
+                                    the cache without running the binary
   dotslash -- parse DOTSLASH_FILE   Parse the dotslash file
   dotslash -- sha256 FILE           Compute sha256 sum of the file
 
@@ -875,6 +878,111 @@ fn fetch_simple() -> anyhow::Result<()> {
 
     let metadata = fs::metadata(artifact)?;
     assert!(metadata.is_file());
+
+    Ok(())
+}
+
+//
+// "get-extracted-cache-path" Command
+//
+
+#[test]
+fn get_extracted_cache_path_simple() -> anyhow::Result<()> {
+    let mut test_env = DotslashTestEnv::try_new()?;
+    test_env.path_redaction(
+        "[ARTIFACT_EXE]",
+        "[DOTSLASH_CACHE_DIR]/[PACK_TGZ_HTTP_ARCHIVE_CACHE_DIR]/subdir/[PRINT_ARGV_EXECUTABLE]",
+    );
+
+    test_env
+        .dotslash_command()
+        .arg("--")
+        .arg("get-extracted-cache-path")
+        .arg("tests/fixtures/http__tar_gz__print_argv")
+        .assert()
+        .code(0)
+        .stderr_eq("")
+        .stdout_eq("[ARTIFACT_EXE]\n");
+
+    Ok(())
+}
+
+#[test]
+fn get_extracted_cache_path_no_args() {
+    DotslashTestEnv::try_new()
+        .unwrap()
+        .dotslash_command()
+        .arg("--")
+        .arg("get-extracted-cache-path")
+        .assert()
+        .code(1)
+        .stdout_eq("")
+        .stderr_eq(
+            "\
+dotslash error: 'get-extracted-cache-path' command failed
+caused by: expected exactly one argument but received none
+",
+        );
+}
+
+#[test]
+fn get_extracted_cache_path_extra_args() {
+    DotslashTestEnv::try_new()
+        .unwrap()
+        .dotslash_command()
+        .arg("--")
+        .arg("get-extracted-cache-path")
+        .arg("tests/fixtures/http__tar_gz__print_argv")
+        .arg("extra_arg")
+        .assert()
+        .code(1)
+        .stdout_eq("")
+        .stderr_eq(
+            "\
+dotslash error: 'get-extracted-cache-path' command failed
+caused by: expected exactly one argument but received more
+",
+        );
+}
+
+#[test]
+fn get_extracted_cache_path_nonexistent_file() {
+    let env = DotslashTestEnv::try_new().unwrap();
+    let output = env
+        .dotslash_command()
+        .arg("--")
+        .arg("get-extracted-cache-path")
+        .arg("nonexistent_file")
+        .output()
+        .unwrap();
+
+    assert!(!output.status.success());
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(stderr.contains("'get-extracted-cache-path' command failed"));
+    assert!(
+        stderr.contains("No such file or directory")
+            || stderr.contains("cannot find the file")
+            || stderr.contains("The system cannot find the file specified")
+    );
+}
+
+#[test]
+fn get_extracted_cache_path_invalid_dotslash_file() -> anyhow::Result<()> {
+    let mut invalid_file = NamedTempFile::new()?;
+    std::io::Write::write_all(&mut invalid_file, b"not a dotslash file")?;
+
+    let env = DotslashTestEnv::try_new()?;
+    let output = env
+        .dotslash_command()
+        .arg("--")
+        .arg("get-extracted-cache-path")
+        .arg(invalid_file.path())
+        .output()?;
+
+    assert!(!output.status.success());
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(stderr.contains("'get-extracted-cache-path' command failed"));
+    assert!(stderr.contains("failed to parse"));
 
     Ok(())
 }
