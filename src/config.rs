@@ -14,6 +14,7 @@ use anyhow::Context as _;
 use serde::Deserialize;
 use serde::Serialize;
 use serde_json::Value;
+use thiserror::Error;
 
 use crate::artifact_path::ArtifactPath;
 use crate::digest::Digest;
@@ -109,6 +110,20 @@ pub enum HashAlgorithm {
     Sha256,
 }
 
+/// Returned when `parse_file` fails to deserialize the JSON into a
+/// `ConfigFile` and the JSON contains an `"oncall"` field, indicating
+/// this is an internal (Meta) DotSlash file rather than an OSS one.
+#[derive(Debug, Error)]
+#[error(
+    "this appears to be an internal (Meta) DotSlash file \
+     (it has an \"oncall\" field) and is not supported by \
+     the open-source DotSlash binary"
+)]
+pub struct IncompatibleDotslashBinaryError {
+    #[source]
+    pub source: serde_json::Error,
+}
+
 pub fn parse_file(data: &str) -> anyhow::Result<(Value, ConfigFile)> {
     // Check to see whether the DotSlash file starts with the proper shebang.
     let data = data
@@ -123,7 +138,13 @@ pub fn parse_file(data: &str) -> anyhow::Result<(Value, ConfigFile)> {
 
     let value = jsonc_parser::parse_to_serde_value(data, &Default::default())?
         .with_context(|| anyhow::format_err!("Failed to parse JSON"))?;
-    let config_file = ConfigFile::deserialize(&value)?;
+    let config_file = ConfigFile::deserialize(&value).map_err(|err| {
+        if value.get("oncall").is_some() {
+            anyhow::Error::from(IncompatibleDotslashBinaryError { source: err })
+        } else {
+            anyhow::Error::from(err)
+        }
+    })?;
     Ok((value, config_file))
 }
 

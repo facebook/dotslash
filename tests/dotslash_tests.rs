@@ -468,6 +468,29 @@ caused by: [IO_ERROR_NOT_FOUND]
 }
 
 #[test]
+fn internal_dotslash_file_detected() {
+    DotslashTestEnv::try_new()
+        .unwrap()
+        .path_redaction(
+            "[DOTSLASH_FILE]",
+            "[CURRENT_DIR]/tests/fixtures/internal_oncall_file",
+        )
+        .dotslash_command()
+        .arg("tests/fixtures/internal_oncall_file")
+        .assert()
+        .code(1)
+        .stdout_eq("")
+        .stderr_eq(
+            "\
+dotslash error: problem with `[DOTSLASH_FILE]`
+caused by: failed to parse DotSlash file
+caused by: this appears to be an internal (Meta) DotSlash file (it has an \"oncall\" field) and is not supported by the open-source DotSlash binary
+caused by: [..]
+",
+        );
+}
+
+#[test]
 fn dotslash_file_is_a_directory() {
     DotslashTestEnv::try_new()
         .unwrap()

@@ -1,0 +1,17 @@
+#!/usr/bin/env dotslash
+
+{
+  "name": "js1",
+  "oncall": "oncall+react_native@xmail.facebook.com",
+  "platforms": {
+    "linux": {
+      "scheme": "cas",
+      "use_case_id": "dotslash_msdk_prod",
+      "digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa:12345",
+      "extract": {
+        "path": "entry-point",
+        "decompress": "tar.zst"
+      }
+    }
+  }
+}
