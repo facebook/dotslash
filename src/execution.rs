@@ -15,6 +15,7 @@ use std::io;
 #[cfg(unix)]
 use std::os::unix::process::CommandExt;
 use std::path::Path;
+use std::path::PathBuf;
 use std::process::Command;
 use std::process::ExitCode;
 
@@ -22,6 +23,7 @@ use anyhow::Context as _;
 
 #[cfg(unix)]
 use crate::config::Arg0;
+use crate::config::IncompatibleDotslashBinaryError;
 use crate::dotslash_cache::DotslashCache;
 use crate::download::download_artifact;
 use crate::locate::locate_artifact;
@@ -77,7 +79,18 @@ fn run_dotslash_file<P: ProviderFactory>(
     };
 
     let dotslash_cache = DotslashCache::new();
-    let (artifact_entry, artifact_location) = locate_artifact(&dotslash_data, &dotslash_cache)?;
+    let (artifact_entry, artifact_location) = match locate_artifact(&dotslash_data, &dotslash_cache)
+    {
+        Ok(result) => result,
+        Err(err)
+            if err
+                .chain()
+                .any(|cause| cause.is::<IncompatibleDotslashBinaryError>()) =>
+        {
+            return delegate_to_other_dotslash_binary(file_arg, args, err);
+        }
+        Err(err) => return Err(err),
+    };
 
     let mut command = Command::new(&artifact_location.executable);
     command.args(args);
@@ -143,6 +156,67 @@ fn run_dotslash_file<P: ProviderFactory>(
     };
 
     Err(execv_error).context(err_context)
+}
+
+/// Try to find another `dotslash` binary on PATH and delegate to it.
+/// If no fallback is found, returns the original error.
+fn delegate_to_other_dotslash_binary(
+    file_arg: &OsStr,
+    args: ArgsOs,
+    original_err: anyhow::Error,
+) -> anyhow::Result<()> {
+    let Some(fallback) = find_next_dotslash() else {
+        return Err(original_err);
+    };
+
+    let mut command = Command::new(&fallback);
+    command.arg(file_arg);
+    command.args(args);
+
+    let error = util::execv(&mut command);
+    Err(error).context(format!(
+        "failed to execute fallback dotslash `{}`",
+        fallback.display()
+    ))
+}
+
+/// Search PATH for a `dotslash` binary that is not the currently running
+/// executable. To prevent infinite delegation loops, if the current exe
+/// appears anywhere in PATH, only consider candidates that come *after*
+/// the last PATH entry matching the current exe.
+fn find_next_dotslash() -> Option<PathBuf> {
+    let current_exe = std::env::current_exe().ok()?;
+    let current_exe = dunce::canonicalize(&current_exe).unwrap_or(current_exe);
+
+    let path_var = std::env::var_os("PATH")?;
+    let bin_name = if cfg!(windows) {
+        "dotslash.exe"
+    } else {
+        "dotslash"
+    };
+
+    // Collect all dotslash candidates on PATH, noting which ones are us.
+    let mut entries: Vec<(PathBuf, bool)> = Vec::new();
+    for dir in std::env::split_paths(&path_var) {
+        let candidate = dir.join(bin_name);
+        if candidate.is_file() {
+            let resolved = dunce::canonicalize(&candidate).unwrap_or_else(|_| candidate.clone());
+            let is_self = resolved == current_exe;
+            entries.push((candidate, is_self));
+        }
+    }
+
+    // Find the last position where we appear in PATH.
+    let last_self_pos = entries.iter().rposition(|&(_, is_self)| is_self);
+
+    // Return the first non-self candidate after that position (or from
+    // the beginning if we don't appear in PATH at all).
+    let start = last_self_pos.map_or(0, |pos| pos + 1);
+    entries
+        .into_iter()
+        .skip(start)
+        .find(|(_, is_self)| !*is_self)
+        .map(|(path, _)| path)
 }
 
 enum DotslashFlagResult {

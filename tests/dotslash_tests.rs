@@ -476,6 +476,8 @@ fn internal_dotslash_file_detected() {
             "[CURRENT_DIR]/tests/fixtures/internal_oncall_file",
         )
         .dotslash_command()
+        // Clear PATH so no fallback dotslash binary can be found.
+        .env("PATH", "")
         .arg("tests/fixtures/internal_oncall_file")
         .assert()
         .code(1)
