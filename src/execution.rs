@@ -83,9 +83,9 @@ fn run_dotslash_file<P: ProviderFactory>(
     {
         Ok(result) => result,
         Err(err)
-            if err.chain().any(
-                <(dyn std::error::Error + 'static)>::is::<IncompatibleDotslashBinaryError>,
-            ) =>
+            if err
+                .chain()
+                .any(<dyn std::error::Error + 'static>::is::<IncompatibleDotslashBinaryError>) =>
         {
             return delegate_to_other_dotslash_binary(file_arg, args, err);
         }
