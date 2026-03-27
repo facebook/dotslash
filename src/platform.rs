@@ -11,6 +11,7 @@
 macro_rules! if_platform {
     (
         linux_aarch64 = $linux_aarch64:tt,
+        linux_riscv64 = $linux_riscv64:tt,
         linux_x86_64 = $linux_x86_64:tt,
         macos_aarch64 = $macos_aarch64:tt,
         macos_x86_64 = $macos_x86_64:tt,
@@ -19,6 +20,8 @@ macro_rules! if_platform {
     ) => {
         if cfg!(all(target_os = "linux", target_arch = "aarch64")) {
             $linux_aarch64
+        } else if cfg!(all(target_os = "linux", target_arch = "riscv64")) {
+            $linux_riscv64
         } else if cfg!(all(target_os = "linux", target_arch = "x86_64")) {
             $linux_x86_64
         } else if cfg!(all(target_os = "macos", target_arch = "aarch64")) {
@@ -39,6 +42,7 @@ pub(crate) use if_platform;
 
 pub const SUPPORTED_PLATFORM: &str = if_platform! {
     linux_aarch64 = "linux-aarch64",
+    linux_riscv64 = "linux-riscv64",
     linux_x86_64 = "linux-x86_64",
     macos_aarch64 = "macos-aarch64",
     macos_x86_64 = "macos-x86_64",
