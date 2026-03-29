@@ -56,6 +56,7 @@ const USER_AGENT: &str = concat!(
 
 const PRINT_ARGV_EXECUTABLE: &str = platform::if_platform! {
     linux_aarch64 = "print_argv.linux.aarch64",
+    linux_riscv64 = "print_argv.linux.riscv64",
     linux_x86_64 = "print_argv.linux.x86_64",
     macos_aarch64 = "print_argv.macos.aarch64",
     macos_x86_64 = "print_argv.macos.x86_64",
@@ -65,6 +66,7 @@ const PRINT_ARGV_EXECUTABLE: &str = platform::if_platform! {
 
 const PACK_GZ_HTTP_ARCHIVE_CACHE_DIR: &str = platform::if_platform! {
     linux_aarch64 = "bb/1a78fe5c9fb5a4efd2665d2385853c86733822",
+    linux_riscv64 = "00/00000000000000000000000000000000000000",
     linux_x86_64 = "15/8f0652f1ef9276f3c1aa647a2f1ac9f28dde32",
     macos_aarch64 = "13/676cc4457e6bcc0344c0a823701d4ec2337432",
     macos_x86_64 = "f4/b9233113f64ded6bf42f0e5c4236ef31552733",
@@ -74,6 +76,7 @@ const PACK_GZ_HTTP_ARCHIVE_CACHE_DIR: &str = platform::if_platform! {
 
 const PACK_XZ_HTTP_ARCHIVE_CACHE_DIR: &str = platform::if_platform! {
     linux_aarch64 = "f8/379be6815479ec5466d1d8d0b064e2344b22d2",
+    linux_riscv64 = "00/00000000000000000000000000000000000000",
     linux_x86_64 = "26/5d340b2c556a7098aaa82732991bb3f820aa36",
     macos_aarch64 = "8a/60f78296c051ed9f020cef2df4a41ed76f5cd9",
     macos_x86_64 = "d6/e288c5470cd5bcba63f1734a3780a1dca53d84",
@@ -83,6 +86,7 @@ const PACK_XZ_HTTP_ARCHIVE_CACHE_DIR: &str = platform::if_platform! {
 
 const PACK_ZST_HTTP_ARCHIVE_CACHE_DIR: &str = platform::if_platform! {
     linux_aarch64 = "88/04463f5ce3ef56616faeddbc9936ae0ed1c2a1",
+    linux_riscv64 = "00/00000000000000000000000000000000000000",
     linux_x86_64 = "0d/dcd334203082641b987ebd46a758bb032d8961",
     macos_aarch64 = "68/2ea5eacaf1881b15876f63b5aba2437ddf4b0d",
     macos_x86_64 = "26/13225b385a72a4656eac271304b14b9dbf689c",
@@ -92,6 +96,7 @@ const PACK_ZST_HTTP_ARCHIVE_CACHE_DIR: &str = platform::if_platform! {
 
 const PACK_PLAIN_HTTP_ARCHIVE_CACHE_DIR: &str = platform::if_platform! {
     linux_aarch64 = "07/2c58ff3a1560e08b300834964fc8ee60af5aab",
+    linux_riscv64 = "00/00000000000000000000000000000000000000",
     linux_x86_64 = "e9/6c95f9ab97c0175a4a86b0da31c98f8e7b1d6f",
     macos_aarch64 = "c5/4434b1de7f5718a3acd3e2e04924c9abc2fccf",
     macos_x86_64 = "2b/7c3edc2287dfd5cf2f0b772e92d89dd226ba7e",
