@@ -17,7 +17,7 @@ use std::path::PathBuf;
 
 use anyhow::Context as _;
 use digest::Digest as _;
-use rand::distributions::Distribution;
+use rand::distr::Distribution;
 use serde_json::Value;
 use sha2::Sha256;
 
@@ -67,7 +67,7 @@ pub fn download_artifact<P: ProviderFactory>(
 
     // Build a list of provider references,
     // and if randomization is enabled, shuffle them.
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
     let providers = providers_in_order(
         &mut rng,
         &artifact_entry.providers,
@@ -184,7 +184,7 @@ fn providers_in_order<'b>(
 
             // Shuffle the providers using weighted sampling of indexes
             // without duplicates in the result.
-            let dist = rand::distributions::weighted::WeightedIndex::new(&weights)
+            let dist = rand::distr::weighted::WeightedIndex::new(&weights)
                 .map_err(|e| anyhow::anyhow!("error initializing weights: {}", e))?;
             let mut seen = std::collections::HashSet::new();
             while ordered_providers.len() < providers.len() {
@@ -336,7 +336,7 @@ mod tests {
 
     #[test]
     fn providers_in_order_sequential() {
-        let mut rng = rand::thread_rng(); // doesn't matter
+        let mut rng = rand::rng(); // doesn't matter
 
         let providers = vec![
             serde_json::from_str(r#"{"type": "a"}"#).unwrap(),
@@ -370,7 +370,7 @@ mod tests {
 
         assert_eq!(
             ordered_providers,
-            vec![&providers[0], &providers[2], &providers[1]]
+            vec![&providers[2], &providers[0], &providers[1]]
         );
     }
 
@@ -391,7 +391,7 @@ mod tests {
 
         assert_eq!(
             ordered_providers,
-            vec![&providers[1], &providers[2], &providers[0], &providers[3]]
+            vec![&providers[2], &providers[3], &providers[1], &providers[0]]
         );
     }
 
