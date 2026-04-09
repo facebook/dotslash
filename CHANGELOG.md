@@ -1,9 +1,23 @@
 # Changelog
 
-## Not yet released
+## v0.5.9 (2026-04-09)
 
 - Added `get-extracted-cache-path` command to print the cache path for an
-  artifact without downloading or executing it
+  artifact without downloading or executing it:
+  <https://github.com/facebook/dotslash/pull/109>
+- Added [S3 provider](https://dotslash-cli.com/docs/providers/) for fetching
+  artifacts from Amazon S3 buckets:
+  <https://github.com/facebook/dotslash/pull/79>
+- Added [GCS provider](https://dotslash-cli.com/docs/providers/) for fetching
+  artifacts from Google Cloud Storage buckets:
+  <https://github.com/facebook/dotslash/pull/104>
+- DotSlash is now available as a
+  [Python package](https://pypi.org/project/dotslash/):
+  <https://github.com/facebook/dotslash/pull/87>
+- Retry on `CURLE_SSL_CONNECT_ERROR` for transient SSL/TLS failures:
+  <https://github.com/facebook/dotslash/pull/90>
+- Replaced `serde_jsonrc` with `jsonc-parser`:
+  <https://github.com/facebook/dotslash/pull/82>
 
 ## v0.5.8 (2025-08-19)
 
