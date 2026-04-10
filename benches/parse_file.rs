@@ -25,6 +25,7 @@ mod fetch_method;
 #[expect(dead_code)]
 mod util;
 
+use std::fmt::Write as _;
 use std::fs;
 
 use criterion::Criterion;
@@ -75,7 +76,8 @@ fn large_config() -> String {
     ];
 
     for (i, platform) in platforms.iter().enumerate() {
-        config.push_str(&format!(
+        let _ = write!(
+            config,
             r#"        // Platform: {}
         "{}": {{
             "size": {},
@@ -154,7 +156,7 @@ fn large_config() -> String {
                 "tar.gz"
             },
             if i < platforms.len() - 1 { "," } else { "" }
-        ));
+        );
         config.push('\n');
     }
 
