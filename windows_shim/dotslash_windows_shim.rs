@@ -31,7 +31,6 @@ use core::mem;
 use core::ptr;
 use core::str;
 
-use windows_sys::Win32::Foundation::BOOL;
 use windows_sys::Win32::Foundation::CloseHandle;
 use windows_sys::Win32::Foundation::ERROR_FILE_NOT_FOUND;
 use windows_sys::Win32::Foundation::GetLastError;
@@ -63,6 +62,7 @@ use windows_sys::Win32::System::Threading::WaitForSingleObject;
 use windows_sys::Win32::UI::Shell::PathCchRemoveExtension;
 use windows_sys::Win32::UI::Shell::PathGetArgsW;
 use windows_sys::Win32::UI::Shell::PathQuoteSpacesW;
+use windows_sys::core::BOOL;
 use windows_sys::core::PCWSTR;
 use windows_sys::core::PWSTR;
 use windows_sys::w;
