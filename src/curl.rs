@@ -28,6 +28,12 @@ use crate::util::HttpStatus;
 const NUM_RETRYABLE_CURL_MAX_ATTEMPTS: u8 = 3;
 const NUM_TRANSIENT_ERROR_CURL_MAX_ATTEMPTS: u64 = 3;
 
+/// Environment variable to set the maximum time for curl operations (in seconds).
+const DOTSLASH_CURL_TIMEOUT_SEC_ENV: &str = "DOTSLASH_CURL_TIMEOUT_SEC";
+
+/// Environment variable to set the connection timeout for curl operations (in seconds).
+const DOTSLASH_CURL_CONNECT_TIMEOUT_SEC_ENV: &str = "DOTSLASH_CURL_CONNECT_TIMEOUT_SEC";
+
 /// Specify a custom user-agent when making requests. In the unfortunate event
 /// that a site hosting an artifact gets overloaded with requests, hopefully
 /// this will help them identify whether DotSlash is involed.
@@ -261,6 +267,25 @@ impl CurlCommand<'_> {
 
         // Follow redirects.
         curl_command.arg("--location");
+
+        // Set timeouts if specified via environment variables.
+        if let Some(max_time) = std::env::var(DOTSLASH_CURL_TIMEOUT_SEC_ENV)
+            .ok()
+            .and_then(|v| v.parse::<u64>().ok())
+            .filter(|&v| v > 0)
+        {
+            curl_command.arg("--max-time");
+            curl_command.arg(max_time.to_string());
+        }
+
+        if let Some(connect_timeout) = std::env::var(DOTSLASH_CURL_CONNECT_TIMEOUT_SEC_ENV)
+            .ok()
+            .and_then(|v| v.parse::<u64>().ok())
+            .filter(|&v| v > 0)
+        {
+            curl_command.arg("--connect-timeout");
+            curl_command.arg(connect_timeout.to_string());
+        }
 
         //
         // https://curl.haxx.se/docs/manpage.html
