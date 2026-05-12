@@ -366,7 +366,7 @@ that are not accessible via HTTP (e.g. private).
 gets translated into the following command in order to do the fetch:
 
 ```shell
-aws s3 cp --region us-weset-2 s3://example/key TEMPFILE_IN_DOTSLASH_CACHE
+aws s3 cp --region us-west-2 s3://example/key TEMPFILE_IN_DOTSLASH_CACHE
 ```
 
 Note: the "region" key is optional. By default, your default AWS region will be
@@ -374,7 +374,7 @@ used.
 
 You will need to have the `aws` CLI configured to pick up the required
 credentials. Either via its built-in credentials mechanism, or wrapping the
-`dotslash` invocation tools such as
+`dotslash` invocation with tools such as
 [`aws-vault`](https://github.com/99designs/aws-vault).
 
 ## Artifact Format
