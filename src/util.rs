@@ -19,7 +19,7 @@ mod is_not_found_error;
 #[cfg(unix)]
 mod is_path_safe_to_own;
 mod mv_no_clobber;
-mod progress;
+pub mod progress;
 mod tree_perms;
 pub mod unarchive;
 mod update_mtime;

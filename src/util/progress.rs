@@ -8,7 +8,7 @@
  * above-listed licenses.
  */
 
-use std::fs::File;
+use std::fs;
 use std::path::Path;
 use std::sync::mpsc;
 use std::sync::mpsc::Receiver;
@@ -25,6 +25,19 @@ const NUM_PROGRESS_BAR_CHARS: u8 = 70;
 pub fn display_progress(content_length: u64, output_path: &Path) -> (Sender<()>, JoinHandle<()>) {
     let path = output_path.to_path_buf();
 
+    display_progress_with_size(content_length, move || {
+        fs::metadata(&path).ok().map(|attr| attr.len())
+    })
+}
+
+#[must_use]
+pub fn display_progress_with_size<F>(
+    content_length: u64,
+    mut current_size: F,
+) -> (Sender<()>, JoinHandle<()>)
+where
+    F: FnMut() -> Option<u64> + Send + 'static,
+{
     // Channel to inform the progress thread that the download has finished
     // early. This can be because of an error (`send` is dropped) or because
     // the `content_length` is incorrect (`send` sends `()`).
@@ -35,25 +48,24 @@ pub fn display_progress(content_length: u64, output_path: &Path) -> (Sender<()>,
         let mut last_progress: u8 = 0;
         eprint!("[{}]", " ".repeat(NUM_PROGRESS_BAR_CHARS as usize));
 
-        // Poll for the creation of the file.
+        // Poll quickly for the download to start
         let short_pause = Duration::from_millis(10);
-        let output_file = loop {
+        loop {
             if should_end_progress(&recv) {
                 return;
             }
-            if let Ok(file) = File::open(&path) {
-                break file;
+            if current_size().is_some() {
+                break;
             }
-            // File was not created yet: pause and try again.
+            // Download hasn't started: pause and try again.
             thread::sleep(short_pause);
-        };
+        }
 
         let pause = Duration::from_millis(100);
         loop {
-            let attr = output_file.metadata().unwrap();
-            let size = attr.len();
+            let size = current_size().unwrap_or(0);
             let is_complete = size >= content_length;
-            let delta = if is_complete {
+            let delta = if is_complete || content_length == 0 {
                 NUM_PROGRESS_BAR_CHARS - last_progress
             } else {
                 let current_progress = (f64::from(NUM_PROGRESS_BAR_CHARS)
