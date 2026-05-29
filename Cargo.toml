@@ -34,7 +34,7 @@ rand = { version = "0.9", features = ["small_rng"] }
 serde = { version = "1.0.219", features = ["derive", "rc"] }
 serde_json = "1.0.140"
 sha2 = "0.10.6"
-tar = "0.4.44"
+tar = "0.4.46"
 tempfile = "3.22"
 thiserror = "2.0.18"
 zip = { version = "3.0.0", features = ["deflate"], default-features = false }
@@ -48,7 +48,7 @@ bzip2 = "0.5.2"
 criterion = "0.5.1"
 liblzma = { version = "0.4.6", features = ["parallel", "static"] }
 snapbox = { version = "0.6.24", features = ["color-auto", "diff", "json", "regex"], default-features = false }
-tar = "0.4.45"
+tar = "0.4.46"
 tempfile = "3.27.0"
 zstd = { version = "0.13.3", features = ["experimental", "zstdmt"] }
 
