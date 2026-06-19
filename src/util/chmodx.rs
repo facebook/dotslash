@@ -16,7 +16,7 @@ use std::path::Path;
 
 use crate::util::fs_ctx;
 
-const DEFAULT_FILE_PERMISSIONS: u32 = 0o500;
+const DEFAULT_FILE_PERMISSIONS: u32 = 0o555;
 
 pub fn chmodx<P: AsRef<Path>>(path: P) -> io::Result<()> {
     fn inner(path: &Path) -> io::Result<()> {

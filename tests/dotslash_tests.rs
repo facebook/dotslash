@@ -14,6 +14,8 @@ mod common;
 
 use std::ffi::OsString;
 use std::fs;
+#[cfg(unix)]
+use std::os::unix::fs::PermissionsExt as _;
 use std::str;
 
 use tempfile::NamedTempFile;
@@ -903,6 +905,34 @@ fn fetch_simple() -> anyhow::Result<()> {
 
     let metadata = fs::metadata(artifact)?;
     assert!(metadata.is_file());
+
+    Ok(())
+}
+
+#[cfg(unix)]
+#[test]
+fn fetch_plain_sets_default_executable_permissions() -> anyhow::Result<()> {
+    let mut test_env = DotslashTestEnv::try_new()?;
+    test_env.path_redaction(
+        "[ARTIFACT_EXE]",
+        "[DOTSLASH_CACHE_DIR]/[PACK_PLAIN_HTTP_ARCHIVE_CACHE_DIR]/subdir/[PRINT_ARGV_EXECUTABLE]",
+    );
+
+    let assert = test_env
+        .dotslash_command()
+        .arg("--")
+        .arg("fetch")
+        .arg("tests/fixtures/http__plain__print_argv")
+        .assert()
+        .code(0)
+        .stderr_eq("")
+        .stdout_eq("[ARTIFACT_EXE]\n");
+
+    let artifact = str::from_utf8(&assert.get_output().stdout)?.trim_end();
+
+    let metadata = fs::metadata(artifact)?;
+    assert!(metadata.is_file());
+    assert_eq!(metadata.permissions().mode() & 0o777, 0o555);
 
     Ok(())
 }
