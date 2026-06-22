@@ -475,6 +475,9 @@ At Meta, we have found compression to be a win, but if for some reason you
 prefer to fetch your executable as an uncompressed single file, you can omit the
 `"format"` field, but `"path"` is still required.
 
+For single-file artifacts on Unix, if the fetched file has no executable bits,
+DotSlash makes the cached file executable with mode `0555` (`r-xr-xr-x`).
+
 ## Arg0
 
 There is an optional `arg0` field on an artifact entry. It defaults to
