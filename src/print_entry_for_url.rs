@@ -47,7 +47,7 @@ pub fn print_entry_for_url(url: &OsStr) -> anyhow::Result<()> {
     let mut file = File::open(tempfile.path())?;
     let mut hasher = blake3::Hasher::new();
     let size = io::copy(&mut file, &mut hasher)?;
-    let hex_digest = format!("{:x}", hasher.finalize());
+    let hex_digest = hasher.finalize().to_hex().to_string();
 
     let entry_json = serialize_entry(url, size, hex_digest)?;
     println!("{}", entry_json);

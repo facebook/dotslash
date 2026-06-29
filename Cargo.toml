@@ -20,7 +20,7 @@ harness = false
 
 [dependencies]
 anyhow = "1.0.98"
-blake3 = { version = "=1.8.2", features = ["mmap", "rayon", "traits-preview"] }
+blake3 = { version = "=1.8.5" }
 bzip2 = "0.6"
 digest = { version = "0.10", features = ["rand_core"] }
 dirs = "6.0"
