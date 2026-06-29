@@ -28,7 +28,7 @@ dunce = "1.0.5"
 filetime = "0.2.25"
 flate2 = { version = "1.0.33", features = ["rust_backend"], default-features = false }
 fs2 = "0.4"
-jsonc-parser = { version = "0.26", features = ["serde"] }
+jsonc-parser = { version = "0.32", features = ["serde"] }
 liblzma = { version = "0.4.4", features = ["parallel", "static"] }
 rand = { version = "0.9", features = ["small_rng"] }
 serde = { version = "1.0.219", features = ["derive", "rc"] }
