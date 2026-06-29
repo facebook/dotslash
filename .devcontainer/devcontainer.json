@@ -27,7 +27,7 @@
 		}
 	},
 	"features": {
-		"ghcr.io/devcontainers/features/docker-in-docker:3": {
+		"ghcr.io/devcontainers/features/docker-in-docker:4": {
 			// We do not need this.
 			"dockerDashComposeVersion": "none",
 			// Install OSS Moby build instead of Docker CE.
