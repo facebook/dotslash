@@ -22,6 +22,20 @@ from pathlib import Path
 from typing import Final
 
 EMPTY_STR_LIST: Final[list[str]] = []
+WINDOWS_SHIM_ROOT: Final[Path] = Path(__file__).resolve().parent.parent
+
+# CreateProcessW limits lpCommandLine to 32,767 UTF-16 code units, including
+# the terminating null character.
+# https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-createprocessw#parameters
+MAX_COMMAND_LINE_LENGTH: Final[int] = 32767
+
+# Keep size changes visible in review: both increases and improvements should
+# update these expectations in the same PR as the regenerated artifacts.
+RELEASE_ARTIFACT_SIZES: Final[dict[str, int]] = {
+    "dotslash_windows_linker_stub.exe": 69,
+    "dotslash_windows_shim-aarch64.exe": 2560,
+    "dotslash_windows_shim-x86_64.exe": 2560,
+}
 
 try:
     from .fb.ci import set_ci_envs
@@ -51,6 +65,20 @@ class TestPathEnv(unittest.TestCase):
     def test_require_dotslash_windows_shim_env(self) -> None:
         self.assertIn("DOTSLASH_WINDOWS_SHIM", os.environ)
         self.assertTrue(os.path.exists(os.environ["DOTSLASH_WINDOWS_SHIM"]))
+
+
+class ReleaseArtifactSizeTest(unittest.TestCase):
+    def test_release_artifact_sizes(self) -> None:
+        for filename, expected_bytes in RELEASE_ARTIFACT_SIZES.items():
+            with self.subTest(filename=filename):
+                artifact = WINDOWS_SHIM_ROOT / filename
+                actual_bytes = artifact.stat().st_size
+                self.assertEqual(
+                    actual_bytes,
+                    expected_bytes,
+                    f"{filename} changed from {expected_bytes} bytes "
+                    f"to {actual_bytes} bytes",
+                )
 
 
 def generate_dotslash_file(name: str) -> str:
@@ -190,29 +218,6 @@ class DotslashWindowsShimTest(unittest.TestCase):
         self.assertRegex(ret.stdout, PRINT_ARGS_ARG0)
         self.assertEqual(ret.returncode, 0)
 
-    def test_args_none_with_no_extension(self) -> None:
-        with move_cwd(self._fixtures):
-            shutil.move("print_args.exe", "print_args")
-
-        # This executes because CreateProcessW adds an implicit `.exe`.
-        # PathCchRemoveExtension won't have an extension to remove,
-        # so we'll pass the exetuable to `dotslash`, which will then
-        # fail because it's not an actual DotSlash file.
-        print_args_path = self._fixtures / "print_args"
-        ret = subprocess.run(
-            [print_args_path],
-            capture_output=True,
-            encoding="utf8",
-        )
-        self.assertEqual(
-            ret.stderr,
-            f"dotslash error: problem with `{print_args_path}`\n"
-            "caused by: failed to read DotSlash file\n"
-            "caused by: stream did not contain valid UTF-8\n",
-        )
-        self.assertEqual(ret.stdout, "")
-        self.assertEqual(ret.returncode, 1)
-
     def test_args_none_with_unc_path(self) -> None:
         ret = subprocess.run(
             ["\\\\?\\" + str(self._fixtures / "print_args.exe")],
@@ -272,6 +277,52 @@ class DotslashWindowsShimTest(unittest.TestCase):
             encoding="utf8",
         )
         self.assertEqual(ret.stderr, "1:a\n2:b\n3:c\n")
+        self.assertRegex(ret.stdout, PRINT_ARGS_ARG0)
+        self.assertEqual(ret.returncode, 0)
+
+    def test_raw_command_lines(self) -> None:
+        actual_shim = self._fixtures / "print_args.exe"
+
+        # A copy of the shim whose own path contains a space, to check that a
+        # quoted argv[0] is still skipped correctly.
+        spaced_manifest = self._fixtures / "print args"
+        spaced_shim = self._fixtures / "print args.exe"
+        shutil.copy(self._fixtures / "print_args", spaced_manifest)
+        shutil.copy(actual_shim, spaced_shim)
+
+        cases = [
+            (actual_shim, "print_args.exe", ""),
+            (actual_shim, "print_args.exe one two", "1:one\n2:two\n"),
+            (actual_shim, 'print_args.exe "one two"', "1:one two\n"),
+            (actual_shim, 'print_args.exe "" "a\\\"b" trailing\\', '1:\n2:a"b\n3:trailing\\\n'),
+            (actual_shim, "print_args.exe\tone\ttwo", "1:one\n2:two\n"),
+            (actual_shim, 'print" args".exe one', "1:one\n"),
+            (actual_shim, '"print_args.exe"suffix one', "1:one\n"),
+            (actual_shim, '"print_args.exe"one', ""),
+            (spaced_shim, f'"{spaced_shim}" one', "1:one\n"),
+            (spaced_shim, f'"{spaced_shim}" "one two"', "1:one two\n"),
+        ]
+        for shim, raw_command_line, stderr in cases:
+            with self.subTest(raw_command_line=raw_command_line):
+                ret = subprocess.run(
+                    raw_command_line,
+                    executable=str(shim),
+                    capture_output=True,
+                    encoding="utf8",
+                )
+                self.assertEqual(ret.stderr, stderr)
+                self.assertRegex(ret.stdout, PRINT_ARGS_ARG0)
+                self.assertEqual(ret.returncode, 0)
+
+    def test_args_none_with_uppercase_exe_extension(self) -> None:
+        uppercase_shim = self._fixtures / "print_args.EXE"
+        shutil.move(self._fixtures / "print_args.exe", uppercase_shim)
+        ret = subprocess.run(
+            [str(uppercase_shim)],
+            capture_output=True,
+            encoding="utf8",
+        )
+        self.assertEqual(ret.stderr, "")
         self.assertRegex(ret.stdout, PRINT_ARGS_ARG0)
         self.assertEqual(ret.returncode, 0)
 
@@ -367,15 +418,12 @@ class DotslashWindowsShimTest(unittest.TestCase):
         self.assertEqual(ret.returncode, 0)
 
     def test_args_long_args(self) -> None:
-        # Windows CreateProcess API has a length limit of 32,768.
         # The shim will actually use a bit more than the original call:
         #   Original: foo.exe a b c
         #   Shim:     dotslash foo a b c
         # Actually more than the above because "foo" is resolved to an
         # absolute path. So here we test staying a bit below this limit.
-        # https://docs.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-createprocessa#parameters
-        MAX_COMMAND_LINE = 32768
-        long_arg = "x" * (MAX_COMMAND_LINE - 512)
+        long_arg = "x" * (MAX_COMMAND_LINE_LENGTH - 512)
         ret = subprocess.run(
             [str(self._fixtures / "print_args.exe"), long_arg],
             capture_output=True,
@@ -384,6 +432,26 @@ class DotslashWindowsShimTest(unittest.TestCase):
         self.assertEqual(ret.stderr, f"1:{long_arg}\n")
         self.assertRegex(ret.stdout, PRINT_ARGS_ARG0)
         self.assertEqual(ret.returncode, 0)
+
+    def test_args_over_command_buffer_boundary(self) -> None:
+        actual_shim = self._fixtures / "print_args.exe"
+        manifest = self._fixtures / "print_args"
+        capacity = MAX_COMMAND_LINE_LENGTH - 1
+        fixed_command_length = len('dotslash "') + len(str(manifest)) + len('" ')
+        overflowing_tail = "x" * (capacity - fixed_command_length + 1)
+
+        ret = subprocess.run(
+            f"print_args.exe {overflowing_tail}",
+            executable=str(actual_shim),
+            capture_output=True,
+            encoding="utf8",
+        )
+        self.assertEqual(
+            ret.stderr,
+            "dotslash-windows-shim: Buffer overflow\n",
+        )
+        self.assertEqual(ret.stdout, "")
+        self.assertEqual(ret.returncode, 1)
 
     def test_stdin_to_stdout(self) -> None:
         ret = subprocess.run(
@@ -427,6 +495,23 @@ class DotslashWindowsShimTest(unittest.TestCase):
         self.assertEqual(
             ret.stderr,
             "dotslash-windows-shim: dotslash executable not found.\n",
+        )
+        self.assertEqual(ret.stdout, "")
+        self.assertEqual(ret.returncode, 1)
+
+    def test_invalid_dotslash_executable(self) -> None:
+        invalid_bin = self._fixtures / "invalid_bin"
+        invalid_bin.mkdir()
+        (invalid_bin / "dotslash.exe").write_bytes(b"not a Windows executable")
+        with prepend_path(invalid_bin):
+            ret = subprocess.run(
+                [str(self._fixtures / "exit_code.exe"), "0"],
+                capture_output=True,
+                encoding="utf8",
+            )
+        self.assertEqual(
+            ret.stderr,
+            "dotslash-windows-shim: could not execute dotslash command.\n",
         )
         self.assertEqual(ret.stdout, "")
         self.assertEqual(ret.returncode, 1)
