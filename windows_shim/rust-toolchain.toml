@@ -1,2 +1,6 @@
 [toolchain]
-channel = "nightly"
+# Pinned so the checked-in shim binaries stay byte-for-byte reproducible: the
+# CI job in .github/workflows/verify-windows-shim.yml rebuilds the shim and
+# fails if the result differs from what is committed. Bump this and regenerate
+# the binaries (`py release.py`) in the same change.
+channel = "nightly-2026-07-28"

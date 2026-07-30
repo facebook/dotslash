@@ -69,8 +69,9 @@ of this documentation.
 
 ### DotSlash Windows Shim
 
-**This is the preferred method.** The _DotSlash Windows Shim_ is a tiny 4KB
-`.exe` executable that is placed next to the DotSlash file that performs the
+**This is the preferred method.** The _DotSlash Windows Shim_ is a tiny
+(a few kilobytes) `.exe` executable that is placed next to the DotSlash file
+that performs the
 same function as the [batch script](#sibling-batch-script) above, but is a
 native executable rather than a batch script. This is the _ideal_ method that
 allows for easy execution without any of the drawbacks of batch scripts. But

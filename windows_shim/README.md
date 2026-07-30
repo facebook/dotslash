@@ -25,13 +25,44 @@ The _DotSlash Windows Shim_ does this:
 ## Binary size
 
 _DotSlash Windows Shim_ builds without a standard library and only uses Windows
-APIs. Release binaries are around ~5KB.
+APIs to stay small. It is meant to be checked into source control next to every
+DotSlash file that needs to run on Windows, so the release binaries are only a
+few kilobytes.
 
 ## Release
+
+The checked-in `dotslash_windows_shim-x86_64.exe` and
+`dotslash_windows_shim-aarch64.exe` are built from `dotslash_windows_shim.rs`.
+Regenerate them on Windows with:
 
 ```shell
 py release.py
 ```
+
+Building both architectures requires their targets to be installed
+(`rustup target add x86_64-pc-windows-msvc aarch64-pc-windows-msvc`). Pass a
+single target triple to build just one architecture:
+
+```shell
+py release.py aarch64-pc-windows-msvc
+```
+
+The build is byte-for-byte reproducible. It links with the Rust-bundled
+`rust-lld` — which, unlike MSVC's `link.exe`, embeds no toolchain-specific
+"Rich" header — and passes `/Brepro` so timestamps are content hashes rather
+than wall-clock time. The output therefore depends only on the toolchain pinned
+in `rust-toolchain.toml`. The `verify windows shim` GitHub Actions workflow
+rebuilds the shim whenever anything under `windows_shim/` changes and fails if
+the committed binaries are stale, so regenerate and commit them in the same
+change as any edit to the source or a bump of the pinned toolchain.
+
+If you do not have a Windows machine, let CI build the binaries for you: push
+your change (or trigger the workflow manually), then download the
+`dotslash_windows_shim-x86_64` and `dotslash_windows_shim-aarch64` artifacts
+from the workflow run — each contains the freshly built `.exe`. Because the
+build is reproducible, those artifacts are exactly what a local `py release.py`
+would produce; commit them into `windows_shim/` and re-run the workflow to
+confirm it passes.
 
 ## Testing
 
