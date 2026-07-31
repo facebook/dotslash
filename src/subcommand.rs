@@ -48,8 +48,7 @@ pub enum Subcommand {
     /// Fetch and cache an artifact but do not execute it
     Fetch,
 
-    /// Print the path to the extracted artifact in the cache without running
-    /// the binary
+    /// Print where the artifact would be cached, without fetching it
     GetExtractedCachePath,
 
     /// Parse a DotSlash file and print its data as JSON
@@ -243,8 +242,8 @@ dotslash also has these special experimental commands:
   dotslash -- fetch DOTSLASH_FILE   Prepare for execution, but print exe path
                                     instead of executing
   dotslash -- get-extracted-cache-path DOTSLASH_FILE
-                                    Print the path to the extracted artifact in
-                                    the cache without running the binary
+                                    Print where the artifact would be cached,
+                                    without fetching it
   dotslash -- parse DOTSLASH_FILE   Parse the dotslash file
   dotslash -- sha256 FILE           Compute sha256 sum of the file
 
