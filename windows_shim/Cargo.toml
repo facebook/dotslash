@@ -27,6 +27,7 @@ opt-level = "z"
 lto = true
 codegen-units = 1
 panic = "abort"
+strip = true
 
 [profile.dev]
 opt-level = 1

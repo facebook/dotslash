@@ -31,9 +31,7 @@ few kilobytes.
 
 ## Release
 
-The checked-in `dotslash_windows_shim-x86_64.exe` and
-`dotslash_windows_shim-aarch64.exe` are built from `dotslash_windows_shim.rs`.
-Regenerate them on Windows with:
+The checked-in `dotslash_windows_shim-x86_64.exe` and `dotslash_windows_shim-aarch64.exe` are built from `dotslash_windows_shim.rs`, and `dotslash_windows_linker_stub.exe` is generated as their linker input. Regenerate all three on Windows with:
 
 ```shell
 py release.py
@@ -56,13 +54,7 @@ rebuilds the shim whenever anything under `windows_shim/` changes and fails if
 the committed binaries are stale, so regenerate and commit them in the same
 change as any edit to the source or a bump of the pinned toolchain.
 
-If you do not have a Windows machine, let CI build the binaries for you: push
-your change (or trigger the workflow manually), then download the
-`dotslash_windows_shim-x86_64` and `dotslash_windows_shim-aarch64` artifacts
-from the workflow run — each contains the freshly built `.exe`. Because the
-build is reproducible, those artifacts are exactly what a local `py release.py`
-would produce; commit them into `windows_shim/` and re-run the workflow to
-confirm it passes.
+If you do not have a Windows machine, let CI build the artifacts for you: push your change (or trigger the workflow manually), then download `dotslash_windows_shim-x86_64` and `dotslash_windows_shim-aarch64` from the workflow run. Each contains the freshly built architecture-specific shim and the shared linker stub. Because the build is reproducible, those files are exactly what a local `py release.py` would produce; commit them into `windows_shim/` and re-run the workflow to confirm it passes.
 
 ## Testing
 

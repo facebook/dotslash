@@ -22,7 +22,8 @@
 #![cfg_attr(feature = "no_std", feature(lang_items))]
 #![cfg_attr(feature = "no_std", no_std)]
 #![cfg_attr(feature = "no_std", no_main)]
-#![cfg_attr(feature = "no_std", windows_subsystem = "console")] // Set Entrypoint to "mainCRTStartup"
+// Select the console subsystem; the no_std entry point is `mainCRTStartup` below.
+#![cfg_attr(feature = "no_std", windows_subsystem = "console")]
 
 #[allow(clippy::upper_case_acronyms)]
 type DWORD = u32;
@@ -31,25 +32,17 @@ use core::mem;
 use core::ptr;
 use core::str;
 
-use windows_sys::Win32::Foundation::CloseHandle;
 use windows_sys::Win32::Foundation::ERROR_FILE_NOT_FOUND;
 use windows_sys::Win32::Foundation::GetLastError;
 use windows_sys::Win32::Foundation::HANDLE;
-use windows_sys::Win32::Foundation::HMODULE;
-use windows_sys::Win32::Foundation::S_FALSE;
-use windows_sys::Win32::Foundation::S_OK;
 use windows_sys::Win32::Foundation::TRUE;
 use windows_sys::Win32::Foundation::WAIT_OBJECT_0;
-use windows_sys::Win32::Globalization::lstrcatW;
-use windows_sys::Win32::Globalization::lstrlenW;
 use windows_sys::Win32::Storage::FileSystem::WriteFile;
 use windows_sys::Win32::System::Console::GetStdHandle;
 use windows_sys::Win32::System::Console::STD_ERROR_HANDLE;
 use windows_sys::Win32::System::Environment::GetCommandLineW;
 use windows_sys::Win32::System::LibraryLoader::GetModuleFileNameW;
-use windows_sys::Win32::System::LibraryLoader::GetModuleHandleW;
 use windows_sys::Win32::System::Memory::GetProcessHeap;
-use windows_sys::Win32::System::Memory::HEAP_ZERO_MEMORY;
 use windows_sys::Win32::System::Memory::HeapAlloc;
 use windows_sys::Win32::System::Memory::HeapFree;
 use windows_sys::Win32::System::Threading::CreateProcessW;
@@ -59,12 +52,8 @@ use windows_sys::Win32::System::Threading::INFINITE;
 use windows_sys::Win32::System::Threading::PROCESS_INFORMATION;
 use windows_sys::Win32::System::Threading::STARTUPINFOW;
 use windows_sys::Win32::System::Threading::WaitForSingleObject;
-use windows_sys::Win32::UI::Shell::PathCchRemoveExtension;
-use windows_sys::Win32::UI::Shell::PathGetArgsW;
-use windows_sys::Win32::UI::Shell::PathQuoteSpacesW;
 use windows_sys::core::BOOL;
 use windows_sys::core::PCWSTR;
-use windows_sys::core::PWSTR;
 use windows_sys::w;
 
 fn write_stderr(text: &str) -> BOOL {
@@ -72,9 +61,9 @@ fn write_stderr(text: &str) -> BOOL {
     // parameter is not NULL.
     let mut bytes_written: u32 = 0;
     unsafe {
-        let stdout: HANDLE = GetStdHandle(STD_ERROR_HANDLE);
+        let stderr: HANDLE = GetStdHandle(STD_ERROR_HANDLE);
         let ok: BOOL = WriteFile(
-            stdout,                         /* hFile */
+            stderr,                         /* hFile */
             text.as_ptr(),                  /* lpBuffer */
             text.len() as u32,              /* nNumberOfBytesToWrite */
             &mut bytes_written as *mut u32, /* lpNumberOfBytesWritten */
@@ -85,14 +74,48 @@ fn write_stderr(text: &str) -> BOOL {
 }
 
 fn fatal(text: &str) -> ! {
+    // Diagnostics are best-effort because there is no useful recovery if
+    // stderr itself cannot be written.
     write_stderr("dotslash-windows-shim: ");
     write_stderr(text);
     write_stderr("\n");
     unsafe { ExitProcess(1) }
 }
 
-// CreateProcessW's lpCommandLine has a maximum length of 32,767
-// characters.
+// Find the raw argument tail without parsing and reconstructing it, so the
+// caller's quoting and backslashes reach dotslash unchanged. Only argv[0] is
+// scanned: quotes may delimit spans anywhere within it, while spaces and tabs
+// terminate it only when outside quotes.
+//
+// SAFETY: `p` must point to a readable, null-terminated UTF-16 string.
+unsafe fn command_line_args(mut p: *const u16) -> *const u16 {
+    let mut in_quotes = false;
+
+    loop {
+        let ch = unsafe { *p };
+
+        if ch == 0 {
+            return p;
+        }
+
+        if ch == b'"' as u16 {
+            in_quotes = !in_quotes;
+        } else if !in_quotes && (ch == b' ' as u16 || ch == b'\t' as u16) {
+            break;
+        }
+
+        p = unsafe { p.add(1) };
+    }
+
+    while unsafe { *p } == b' ' as u16 || unsafe { *p } == b'\t' as u16 {
+        p = unsafe { p.add(1) };
+    }
+
+    p
+}
+
+// CreateProcessW's lpCommandLine has a maximum length of 32,767 UTF-16 code
+// units, including its terminating null.
 const BUF_MAX_SIZE: usize = 32767;
 
 struct PoorMansString {
@@ -101,51 +124,41 @@ struct PoorMansString {
 }
 
 impl PoorMansString {
-    fn append(&mut self, other: *const u16) {
-        let other_len = unsafe { lstrlenW(other) as usize };
-        if self.len + other_len > BUF_MAX_SIZE {
-            fatal("Buffer overflow");
-        }
-        unsafe {
-            // Concatenate other string to self.buf
-            if lstrcatW(self.buf, other).is_null() {
-                fatal("string concatenation failed");
+    fn append(&mut self, mut other: *const u16) {
+        while unsafe { *other } != 0 {
+            if self.len == self.capacity() {
+                fatal("Buffer overflow");
             }
+            unsafe {
+                *self.buf.add(self.len) = *other;
+                other = other.add(1);
+            }
+            self.len += 1;
         }
-
-        self.len = self.len + other_len;
+        unsafe { *self.buf.add(self.len) = 0 };
     }
 
     fn capacity(&self) -> usize {
+        // append() writes a null after every copy, so one code unit is never
+        // available for content.
         BUF_MAX_SIZE - 1
     }
 
     fn new() -> Self {
-        // Allocate BUF_MAX_SIZE upfront to avoid growing buffers.
+        // Allocate once at the API's maximum size. Zero-initialization is
+        // unnecessary because append() writes both content and its terminator.
         let buf = unsafe {
-            HeapAlloc(
-                GetProcessHeap(),
-                HEAP_ZERO_MEMORY,
-                BUF_MAX_SIZE * mem::size_of::<u16>(),
-            ) as *mut u16
+            HeapAlloc(GetProcessHeap(), 0, BUF_MAX_SIZE * mem::size_of::<u16>()) as *mut u16
         };
         Self { buf, len: 0 }
-    }
-}
-
-impl Drop for PoorMansString {
-    fn drop(&mut self) {
-        unsafe {
-            HeapFree(GetProcessHeap(), 0, self.buf as *mut _);
-        }
     }
 }
 
 fn main_impl() -> ! {
     let mut ds_cmd = PoorMansString::new();
 
-    // Append "dotslash " to the command string.
-    ds_cmd.append(w!("dotslash "));
+    // Append `dotslash "` to the command string.
+    ds_cmd.append(w!("dotslash \""));
 
     // Append the DotSlash file path to the command string.
     //
@@ -153,24 +166,18 @@ fn main_impl() -> ! {
     // command string will happen in-place in the command string.
     unsafe {
         let ds_file_ptr = ds_cmd.buf.add(ds_cmd.len);
-        // Get a handle to this executable.
-        //
-        // When passed NULL, GetModuleHandle returns a handle to the file
-        // used to create the calling process (.exe file).
-        let handle: HMODULE = GetModuleHandleW(ptr::null_mut());
-
         // Append the fully qualified path for this executable to the
         // command string.
         //
         // For an executable named `foo.exe` we should now have a command
-        // string that looks like `dotslash C:\path\to\foo.exe`.
+        // string that looks like `dotslash "C:\path\to\foo.exe`.
         //
-        // GetModuleFileName requires you to keep growing a buffer until it
-        // fits the path. No need to do this because the command buffer
-        // is already as large as can be.
+        // GetModuleFileNameW reports truncation when its buffer is too small.
+        // Retrying with a larger allocation cannot help because the completed
+        // CreateProcessW command must fit in this same maximum-sized buffer.
         let remaining_capacity = ds_cmd.capacity() - ds_cmd.len;
         let new_len = GetModuleFileNameW(
-            handle,                  /* hModule */
+            ptr::null_mut(),         /* hModule */
             ds_file_ptr,             /* lpFilename */
             remaining_capacity as _, /* nSize */
         ) as usize;
@@ -179,42 +186,29 @@ fn main_impl() -> ! {
         }
         ds_cmd.len += new_len;
 
-        // Remove the extension from this executable's full path.
+        // Remove the final `.exe` extension from this executable's full path.
         //
-        // We assume that the DotSlash file is named just like this executable but
-        // without the `.exe`.
+        // The shim contract requires it to be named `<DotSlash-file>.exe`, so
+        // the suffix is unconditionally removed as four UTF-16 code units. No
+        // case check is needed, which also handles the conventional `.EXE`.
         //
-        // For an executable named `foo.exe` we should now have a command string that
-        // looks like `dotslash C:\path\to\foo`.
+        // The command now looks like `dotslash "C:\path\to\foo`.
         //
-        // PathCchRemoveExtension returns `S_OK` when an extension was found and
-        // removed. It returns `S_FALSE` when there is no extension. In this case, we'll
-        // pass this executable as the DotSlash file path. `dotslash` will fail and
-        // complain that it's not a valid DotSlash file.
-        //
-        let found_extension = PathCchRemoveExtension(ds_file_ptr, new_len + 1);
-        if found_extension != S_OK && found_extension != S_FALSE {
-            fatal("PathCchRemoveExtension failed.");
-        }
+        ds_cmd.len -= 4;
 
-        // Quote the entire DotSlash file path if there are spaces.
-        //
-        // No need to worry about escaping quotes because those aren't
-        // allowed in Windows paths.
-        //
-        // For an executable named `foo.exe` this is a noop.
-        //
-        // For an executable named `foo bar.exe` we should now have a command
-        // string that looks like `dotslash "C:\path\to\foo bar"`.
-        PathQuoteSpacesW(ds_file_ptr);
+        // Always close the quote around the DotSlash file path. Quoting paths
+        // without spaces is valid, and no escaping is needed because quotes
+        // are not allowed in Windows paths.
+        ds_cmd.append(w!("\""));
 
         // Get the arguments that were passed to us.
         let line_ptr: PCWSTR = GetCommandLineW();
         // Skip `argv[0]` and focus on the remaining arguments.
-        let args_ptr: PWSTR = PathGetArgsW(line_ptr);
+        let args_ptr = command_line_args(line_ptr);
         // Append the arguments to the command string if there are any.
         if *args_ptr != 0 {
-            // Append a separator for the arguments.
+            // Normalize the discarded argv[0] separator whitespace to one
+            // space. The argument tail itself remains untouched.
             ds_cmd.append(w!(" "));
             ds_cmd.append(args_ptr);
         }
@@ -226,6 +220,10 @@ fn main_impl() -> ! {
     si.cb = mem::size_of::<STARTUPINFOW>() as DWORD;
     let mut pi: PROCESS_INFORMATION = unsafe { mem::zeroed() };
 
+    // A null application name makes CreateProcessW resolve the first command
+    // token (`dotslash`) normally, including through PATH. Handles, the
+    // environment, and the working directory are inherited so the shim is
+    // transparent to the child process.
     let status = unsafe {
         CreateProcessW(
             ptr::null_mut(), // lpApplicationName
@@ -241,10 +239,12 @@ fn main_impl() -> ! {
         )
     };
 
-    // Once CreateProcessW is called, there is no need to hold onto
-    // lpCommandLine.
-    // https://stackoverflow.com/a/31031165
-    drop(ds_cmd);
+    // CreateProcessW has finished reading the command line when it returns, so
+    // release the maximum-sized buffer before a potentially long child wait.
+    // Capture a failure code first because cleanup may change the thread's
+    // last-error value.
+    let err = unsafe { GetLastError() };
+    unsafe { HeapFree(GetProcessHeap(), 0, ds_cmd.buf.cast()) };
 
     if status == TRUE {
         let res = unsafe { WaitForSingleObject(pi.hProcess, INFINITE) };
@@ -258,14 +258,11 @@ fn main_impl() -> ! {
             fatal("could not get dotslash command exit code.");
         }
 
-        unsafe {
-            CloseHandle(pi.hProcess);
-            CloseHandle(pi.hThread);
-            ExitProcess(status)
-        };
+        // Process teardown closes both handles in pi. Closing the thread handle
+        // earlier would add code and an import without materially reducing RSS.
+        unsafe { ExitProcess(status) };
     }
 
-    let err = unsafe { GetLastError() };
     if err == ERROR_FILE_NOT_FOUND {
         fatal("dotslash executable not found.");
     }
