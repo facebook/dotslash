@@ -202,9 +202,11 @@ assumed. Each provider defines its own schema with respect to the other fields
 that must be specified on the JSON object.
 
 Currently, DotSlash incldues three providers:
+
 - HTTP Provider: `"type": "http"`
 - GitHub Release Provider: `"type": "github-release"`
 - S3 Provider: `"type": "s3"`
+- GCS Provider: `"type": "gcs"`
 
 At the time of this writing, there is no way to
 add custom providers without forking DotSlash.
