@@ -14,7 +14,6 @@ use std::io;
 use std::io::IsTerminal as _;
 
 use anyhow::Context as _;
-use digest::Digest as _;
 use tempfile::NamedTempFile;
 
 use crate::config::Arg0;
@@ -47,7 +46,7 @@ pub fn print_entry_for_url(url: &OsStr) -> anyhow::Result<()> {
     let mut file = File::open(tempfile.path())?;
     let mut hasher = blake3::Hasher::new();
     let size = io::copy(&mut file, &mut hasher)?;
-    let hex_digest = format!("{:x}", hasher.finalize());
+    let hex_digest = format!("{}", hasher.finalize().to_hex());
 
     let entry_json = serialize_entry(url, size, hex_digest)?;
     println!("{}", entry_json);

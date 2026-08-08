@@ -134,7 +134,7 @@ fn run_subcommand_impl(subcommand: &Subcommand, args: &mut ArgsOs) -> anyhow::Re
             let mut file = fs_ctx::file_open(file_arg)?;
             let mut hasher = blake3::Hasher::new();
             io::copy(&mut file, &mut hasher)?;
-            let hex_digest = format!("{:x}", hasher.finalize());
+            let hex_digest = format!("{}", hasher.finalize().to_hex());
             println!("{}", hex_digest);
         }
 

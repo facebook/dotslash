@@ -224,7 +224,7 @@ fn verify_artifact(
         HashAlgorithm::Blake3 => {
             let mut hasher = blake3::Hasher::new();
             io::copy(&mut file, &mut hasher).map(|size_in_bytes| {
-                let digest = format!("{:x}", hasher.finalize());
+                let digest = format!("{}", hasher.finalize().to_hex());
                 (size_in_bytes, digest)
             })
         }
