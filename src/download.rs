@@ -16,9 +16,9 @@ use std::path::Path;
 use std::path::PathBuf;
 
 use anyhow::Context as _;
-use digest::Digest as _;
 use rand::distr::Distribution;
 use serde_json::Value;
+use sha2::Digest as _;
 use sha2::Sha256;
 
 use crate::artifact_location::ArtifactLocation;

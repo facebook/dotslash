@@ -15,7 +15,7 @@ use std::io;
 use std::str::FromStr;
 
 use anyhow::Context as _;
-use digest::Digest as _;
+use sha2::Digest as _;
 use sha2::Sha256;
 use thiserror::Error;
 
