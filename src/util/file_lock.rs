@@ -81,6 +81,37 @@ impl FileLock {
         }
         inner(path.as_ref())
     }
+
+    /// Like [`acquire`](Self::acquire), but returns `Ok(None)` if the lock is
+    /// already held instead of blocking.
+    pub fn try_acquire<P>(path: P) -> Result<Option<FileLock>, FileLockError>
+    where
+        P: AsRef<Path>,
+    {
+        fn inner(path: &Path) -> Result<Option<FileLock>, FileLockError> {
+            let lock_file = File::options()
+                .read(true)
+                .write(true)
+                .create(true)
+                .truncate(false)
+                .open(path)
+                .map_err(|e| FileLockError::Create(path.to_path_buf(), e))?;
+
+            match fs2::FileExt::try_lock_exclusive(&lock_file) {
+                Ok(()) => Ok(Some(FileLock {
+                    file: Some(lock_file),
+                })),
+                Err(e) if is_lock_contended(&e) => Ok(None),
+                Err(e) => Err(FileLockError::LockExclusive(path.to_path_buf(), e)),
+            }
+        }
+        inner(path.as_ref())
+    }
+}
+
+fn is_lock_contended(err: &io::Error) -> bool {
+    err.kind() == io::ErrorKind::WouldBlock
+        || err.raw_os_error() == fs2::lock_contended_error().raw_os_error()
 }
 
 impl Drop for FileLock {

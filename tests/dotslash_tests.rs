@@ -14,6 +14,7 @@ mod common;
 
 use std::ffi::OsString;
 use std::fs;
+use std::io;
 #[cfg(unix)]
 use std::os::unix::fs::PermissionsExt as _;
 use std::str;
@@ -560,7 +561,7 @@ dotslash also has these special experimental commands:
   dotslash --help                   Print this message
   dotslash --version                Print the version of dotslash
   dotslash -- b3sum FILE            Compute blake3 hash
-  dotslash -- clean                 Clean dotslash cache
+  dotslash -- clean [--size SIZE]   Wipe cache, or LRU-evict until <= SIZE
   dotslash -- create-url-entry URL  Generate \"http\" provider entry
   dotslash -- cache-dir             Print path to the cache directory
   dotslash -- fetch DOTSLASH_FILE   Prepare for execution, but print exe path
@@ -807,6 +808,8 @@ fn clean_command_extra_args() {
         .dotslash_command()
         .arg("--")
         .arg("clean")
+        .arg("--size")
+        .arg("10G")
         .arg("foo")
         .assert()
         .code(1)
@@ -814,7 +817,208 @@ fn clean_command_extra_args() {
         .stderr_eq(
             "\
 dotslash error: 'clean' command failed
-caused by: expected no arguments but received some
+caused by: unexpected argument `foo`
+use `dotslash -- clean` to wipe, or `dotslash -- clean --size SIZE` to trim
+",
+        );
+}
+
+#[test]
+fn clean_command_rejects_positional_size() {
+    DotslashTestEnv::try_new()
+        .unwrap()
+        .dotslash_command()
+        .arg("--")
+        .arg("clean")
+        .arg("10G")
+        .assert()
+        .code(1)
+        .stdout_eq("")
+        .stderr_eq(
+            "\
+dotslash error: 'clean' command failed
+caused by: unexpected argument `10G`
+use `dotslash -- clean` to wipe, or `dotslash -- clean --size SIZE` to trim
+",
+        );
+}
+
+fn artifact_dirs(cache: &std::path::Path) -> anyhow::Result<Vec<std::path::PathBuf>> {
+    let mut dirs = Vec::new();
+    let Ok(prefixes) = fs::read_dir(cache) else {
+        return Ok(dirs);
+    };
+    for prefix in prefixes {
+        let prefix = prefix?;
+        if prefix.file_name() == "locks" {
+            continue;
+        }
+        if !prefix.file_type()?.is_dir() {
+            continue;
+        }
+        for artifact in fs::read_dir(prefix.path())? {
+            let artifact = artifact?;
+            if artifact.file_name().to_string_lossy().starts_with('.') {
+                continue;
+            }
+            if artifact.file_type()?.is_dir() {
+                dirs.push(artifact.path());
+            }
+        }
+    }
+    Ok(dirs)
+}
+
+fn dir_size(path: &std::path::Path) -> io::Result<u64> {
+    let mut size = 0;
+    for entry in fs::read_dir(path)? {
+        let entry = entry?;
+        let metadata = entry.metadata()?;
+        if metadata.is_dir() {
+            size += dir_size(&entry.path())?;
+        } else if metadata.is_file() {
+            size += metadata.len();
+        }
+    }
+    Ok(size)
+}
+
+#[test]
+fn clean_command_evicts_to_size() -> anyhow::Result<()> {
+    let test_env = DotslashTestEnv::try_new()?;
+
+    test_env
+        .dotslash_command()
+        .arg("--")
+        .arg("fetch")
+        .arg("tests/fixtures/http__tar_gz__print_argv")
+        .assert()
+        .success();
+
+    let dirs_before = artifact_dirs(test_env.dotslash_cache())?;
+    assert_eq!(dirs_before.len(), 1);
+
+    test_env
+        .dotslash_command()
+        .arg("--")
+        .arg("clean")
+        .arg("--size")
+        .arg("1")
+        .assert()
+        .code(0)
+        .stdout_eq("");
+
+    let dirs_after = artifact_dirs(test_env.dotslash_cache())?;
+    assert!(dirs_after.is_empty());
+
+    Ok(())
+}
+
+#[test]
+fn clean_command_evicts_oldest_of_two() -> anyhow::Result<()> {
+    let test_env = DotslashTestEnv::try_new()?;
+
+    test_env
+        .dotslash_command()
+        .arg("--")
+        .arg("fetch")
+        .arg("tests/fixtures/http__tar_gz__print_argv")
+        .assert()
+        .success();
+
+    let after_first = artifact_dirs(test_env.dotslash_cache())?;
+    assert_eq!(after_first.len(), 1);
+    let older = after_first[0].clone();
+
+    test_env
+        .dotslash_command()
+        .arg("--")
+        .arg("fetch")
+        .arg("tests/fixtures/http__plain__print_argv")
+        .assert()
+        .success();
+
+    let dirs = artifact_dirs(test_env.dotslash_cache())?;
+    assert_eq!(dirs.len(), 2);
+    let newer = dirs.iter().find(|d| *d != &older).unwrap();
+
+    let older_size = dir_size(&older)?;
+    let newer_size = dir_size(newer)?;
+    // Keep the newer artifact: trim exactly to its size so the older one must go.
+    let max = newer_size.max(1);
+    assert!(
+        older_size + newer_size > max,
+        "limit {max} should be below total {} so GC runs",
+        older_size + newer_size
+    );
+
+    test_env
+        .dotslash_command()
+        .arg("--")
+        .arg("clean")
+        .arg("--size")
+        .arg(max.to_string())
+        .assert()
+        .success();
+
+    assert!(!older.exists(), "older artifact should be evicted");
+    assert!(newer.exists(), "newer artifact should be retained");
+
+    Ok(())
+}
+
+#[test]
+fn gc_after_download_protects_new_artifact() -> anyhow::Result<()> {
+    let test_env = DotslashTestEnv::try_new()?;
+
+    test_env
+        .dotslash_command()
+        .env("DOTSLASH_CACHE_MAX_SIZE", "1")
+        .arg("--")
+        .arg("fetch")
+        .arg("tests/fixtures/http__tar_gz__print_argv")
+        .assert()
+        .success();
+
+    let dirs = artifact_dirs(test_env.dotslash_cache())?;
+    assert_eq!(dirs.len(), 1, "just-downloaded artifact must be retained");
+
+    test_env
+        .dotslash_command()
+        .env("DOTSLASH_CACHE_MAX_SIZE", "1")
+        .arg("--")
+        .arg("fetch")
+        .arg("tests/fixtures/http__plain__print_argv")
+        .assert()
+        .success();
+
+    let dirs = artifact_dirs(test_env.dotslash_cache())?;
+    assert_eq!(
+        dirs.len(),
+        1,
+        "second download should evict the first artifact"
+    );
+
+    Ok(())
+}
+
+#[test]
+fn clean_command_invalid_size() {
+    DotslashTestEnv::try_new()
+        .unwrap()
+        .dotslash_command()
+        .arg("--")
+        .arg("clean")
+        .arg("--size")
+        .arg("nope")
+        .assert()
+        .code(1)
+        .stdout_eq("")
+        .stderr_eq(
+            "\
+dotslash error: 'clean' command failed
+caused by: invalid --size
+caused by: invalid size `nope`
 ",
         );
 }
@@ -822,7 +1026,6 @@ caused by: expected no arguments but received some
 //
 // "create-url-entry" Command
 //
-
 #[test]
 fn create_url_entry_tar_gz() {
     DotslashTestEnv::try_new()
