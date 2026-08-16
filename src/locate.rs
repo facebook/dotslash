@@ -40,8 +40,13 @@ pub fn locate_artifact(
 
     let artifact_location = determine_location(&artifact_entry, dotslash_cache);
 
-    // Update the mtime to work around tmpwatch and tmpreaper behavior
-    // with old artifacts.
+    // Bump the artifact *directory* mtime so LRU eviction can treat this as
+    // a recent use. Touching the directory avoids the executable-mtime path
+    // that we skip on macOS/Windows below. Ignored on read-only volumes.
+    let _ = util::update_mtime(&artifact_location.artifact_directory);
+
+    // Also update the executable mtime to work around tmpwatch and tmpreaper
+    // behavior with old artifacts.
     //
     // Not on macOS because something (macOS security?) adds a 50-100ms
     // delay after modifying the file.

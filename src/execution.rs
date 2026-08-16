@@ -21,6 +21,7 @@ use std::process::ExitCode;
 
 use anyhow::Context as _;
 
+use crate::cache_gc;
 #[cfg(unix)]
 use crate::config::Arg0;
 use crate::config::IncompatibleDotslashBinaryError;
@@ -114,15 +115,18 @@ fn run_dotslash_file<P: ProviderFactory>(
         ));
     }
 
-    download_artifact(&artifact_entry, &artifact_location, provider_factory).with_context(
-        || {
+    let installed = download_artifact(&artifact_entry, &artifact_location, provider_factory)
+        .with_context(|| {
             format!(
                 "failed to download artifact into cache `{}` artifact location `{}`",
                 dotslash_cache.cache_dir().display(),
                 artifact_location.artifact_directory.display()
             )
-        },
-    )?;
+        })?;
+
+    if installed {
+        cache_gc::maybe_gc_after_download(&dotslash_cache, &artifact_location.artifact_directory);
+    }
 
     // Since we just unpacked the executable for the first time, we can
     // afford to pay the macOS cost mentioned above.

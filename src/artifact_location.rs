@@ -25,6 +25,12 @@ use crate::fetch_method::ArtifactFormat;
 /// Risk of collision is still quite low despite not using the full hash.
 const NUM_HASH_BYTES_FOR_PATH: usize = 20;
 
+/// Length of the two-hex-digit prefix directory under `$DOTSLASH_CACHE`.
+pub const ARTIFACT_HASH_PREFIX_LEN: usize = 2;
+
+/// Length of the remaining hex directory name under the prefix directory.
+pub const ARTIFACT_HASH_REST_LEN: usize = NUM_HASH_BYTES_FOR_PATH * 2 - ARTIFACT_HASH_PREFIX_LEN;
+
 /// Paths of interest for reading/writing the artifact for use by a Provider.
 /// All paths are expected to be absolute.
 pub struct ArtifactLocation {
