@@ -8,7 +8,7 @@
  * above-listed licenses.
  */
 
-//! Wrapper around `fs2::lock_exclusive`.
+//! Wrapper around `std::fs::File::lock`.
 
 use std::fs::File;
 use std::io;
@@ -49,7 +49,8 @@ impl FileLock {
                 .open(path)
                 .map_err(|e| FileLockError::Create(path.to_path_buf(), e))?;
 
-            fs2::FileExt::lock_exclusive(&lock_file)
+            lock_file
+                .lock()
                 .map_err(|e| FileLockError::LockExclusive(path.to_path_buf(), e))?;
 
             Ok(FileLock {
@@ -72,7 +73,8 @@ impl FileLock {
                 .open(path)
                 .map_err(|e| FileLockError::Create(path.to_path_buf(), e))?;
 
-            fs2::FileExt::lock_shared(&lock_file)
+            lock_file
+                .lock_shared()
                 .map_err(|e| FileLockError::LockShared(path.to_path_buf(), e))?;
 
             Ok(FileLock {
@@ -86,7 +88,7 @@ impl FileLock {
 impl Drop for FileLock {
     fn drop(&mut self) {
         if let Some(file) = self.file.take() {
-            drop(fs2::FileExt::unlock(&file));
+            drop(file.unlock());
         }
     }
 }

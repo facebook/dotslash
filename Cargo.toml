@@ -26,7 +26,6 @@ dirs = "6.0"
 dunce = "1.0.5"
 filetime = "0.2.29"
 flate2 = { version = "1.0.33", features = ["rust_backend"], default-features = false }
-fs2 = "0.4"
 jsonc-parser = { version = "0.26", features = ["serde"] }
 liblzma = { version = "0.4.7", features = ["parallel", "static"] }
 rand = "0.10.2"
