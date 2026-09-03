@@ -25,6 +25,13 @@ pub enum FileLockError {
     #[error("failed to get exclusive lock `{0}`")]
     LockExclusive(PathBuf, #[source] io::Error),
 
+    #[cfg_attr(
+        not(dotslash_internal),
+        expect(
+            dead_code,
+            reason = "only constructed by `FileLock::acquire_shared_lock`"
+        )
+    )]
     #[error("failed to get shared lock `{0}`")]
     LockShared(PathBuf, #[source] io::Error),
 }
@@ -60,6 +67,10 @@ impl FileLock {
         inner(path.as_ref())
     }
 
+    #[cfg_attr(
+        not(dotslash_internal),
+        expect(dead_code, reason = "only used by the internal release")
+    )]
     pub fn acquire_shared_lock<P>(path: P) -> Result<FileLock, FileLockError>
     where
         P: AsRef<Path>,
