@@ -19,6 +19,7 @@ use sha2::Digest as _;
 use sha2::Sha256;
 use thiserror::Error;
 
+use crate::cache_gc;
 use crate::config::REQUIRED_HEADER;
 use crate::config::parse_file;
 use crate::default_provider_factory::DefaultProviderFactory;
@@ -36,7 +37,7 @@ pub enum Subcommand {
     /// only the hash
     B3Sum,
 
-    /// Clean the cache directory
+    /// Clean the cache directory, or LRU-evict to `--size`
     Clean,
 
     /// Create a the artifact entry for DotSlash file from a URL
@@ -139,18 +140,37 @@ fn run_subcommand_impl(subcommand: &Subcommand, args: &mut ArgsOs) -> anyhow::Re
         }
 
         Subcommand::Clean => {
-            if args.next().is_some() {
-                return Err(anyhow::format_err!(
-                    "expected no arguments but received some",
-                ));
-            }
-
+            let max_size = parse_clean_args(args)?;
             let dotslash_cache = DotslashCache::new();
-            eprintln!("Cleaning `{}`", dotslash_cache.cache_dir().display());
-            // Make sure nothing is read-only first.
-            let _ = util::make_tree_entries_writable(dotslash_cache.cache_dir());
-            // Then delete the contents.
-            fs_ctx::remove_dir_all(dotslash_cache.cache_dir())?;
+            match max_size {
+                None => {
+                    eprintln!("Cleaning `{}`", dotslash_cache.cache_dir().display());
+                    // Make sure nothing is read-only first.
+                    let _ = util::make_tree_entries_writable(dotslash_cache.cache_dir());
+                    // Then delete the contents.
+                    fs_ctx::remove_dir_all(dotslash_cache.cache_dir())?;
+                }
+                Some(max_bytes) => {
+                    let stats = cache_gc::gc_cache(&dotslash_cache, max_bytes, None)?;
+                    if stats.artifacts_evicted == 0 {
+                        eprintln!(
+                            "cache size: {} ({} artifacts); limit {}; nothing to evict",
+                            cache_gc::format_bytes(stats.bytes_after),
+                            stats.artifacts_before,
+                            cache_gc::format_bytes(max_bytes),
+                        );
+                    } else {
+                        eprintln!(
+                            "evicted {} artifacts ({}); cache {} -> {} (limit {})",
+                            stats.artifacts_evicted,
+                            cache_gc::format_bytes(stats.bytes_evicted),
+                            cache_gc::format_bytes(stats.bytes_before),
+                            cache_gc::format_bytes(stats.bytes_after),
+                            cache_gc::format_bytes(max_bytes),
+                        );
+                    }
+                }
+            }
         }
 
         Subcommand::CreateUrlEntry => {
@@ -177,7 +197,12 @@ fn run_subcommand_impl(subcommand: &Subcommand, args: &mut ArgsOs) -> anyhow::Re
                 locate_artifact(&dotslash_data, &dotslash_cache)?;
             if !artifact_location.executable.exists() {
                 let provider_factory = DefaultProviderFactory {};
-                download_artifact(&artifact_entry, &artifact_location, &provider_factory)?;
+                if download_artifact(&artifact_entry, &artifact_location, &provider_factory)? {
+                    cache_gc::maybe_gc_after_download(
+                        &dotslash_cache,
+                        &artifact_location.artifact_directory,
+                    );
+                }
             }
             println!("{}", artifact_location.executable.display());
         }
@@ -236,7 +261,7 @@ dotslash also has these special experimental commands:
   dotslash --help                   Print this message
   dotslash --version                Print the version of dotslash
   dotslash -- b3sum FILE            Compute blake3 hash
-  dotslash -- clean                 Clean dotslash cache
+  dotslash -- clean [--size SIZE]   Wipe cache, or LRU-evict until <= SIZE
   dotslash -- create-url-entry URL  Generate "http" provider entry
   dotslash -- cache-dir             Print path to the cache directory
   dotslash -- fetch DOTSLASH_FILE   Prepare for execution, but print exe path
@@ -280,4 +305,29 @@ fn take_exactly_one_arg(args: &mut ArgsOs) -> anyhow::Result<OsString> {
         )),
         (Some(arg), None) => Ok(arg),
     }
+}
+
+/// `None` means wipe the cache. `Some(bytes)` is `--size`.
+fn parse_clean_args(args: &mut ArgsOs) -> anyhow::Result<Option<u64>> {
+    let mut max_size = None;
+    while let Some(arg) = args.next() {
+        let s = arg.to_string_lossy();
+        let raw = if let Some(value) = s.strip_prefix("--size=") {
+            value.to_string()
+        } else if s == "--size" {
+            args.next()
+                .ok_or_else(|| anyhow::format_err!("--size requires a value"))?
+                .to_string_lossy()
+                .into_owned()
+        } else {
+            return Err(anyhow::format_err!(
+                "unexpected argument `{s}`\nuse `dotslash -- clean` to wipe, or `dotslash -- clean --size SIZE` to trim"
+            ));
+        };
+        let parsed = cache_gc::parse_byte_size(&raw).context("invalid --size")?;
+        if max_size.replace(parsed).is_some() {
+            return Err(anyhow::format_err!("--size specified more than once"));
+        }
+    }
+    Ok(max_size)
 }

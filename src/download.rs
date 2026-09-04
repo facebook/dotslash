@@ -41,11 +41,15 @@ pub const DEFAULT_PROVDIER_TYPE: &str = "http";
 /// 2. Verifying that the size and digest match the ArtifactEntry.
 /// 3. Decompressing the artifact, as appropriate.
 /// 4. Atomically moving it from its temp location to its final location.
+///
+/// Returns `true` if this process installed the artifact, `false` if it was
+/// already present (for example another process finished the fetch while we
+/// waited for the download lock).
 pub fn download_artifact<P: ProviderFactory>(
     artifact_entry: &ArtifactEntry,
     artifact_location: &ArtifactLocation,
     provider_factory: &P,
-) -> anyhow::Result<()> {
+) -> anyhow::Result<bool> {
     let artifact_parent_dir = artifact_location
         .artifact_directory
         .parent()
@@ -61,6 +65,11 @@ pub fn download_artifact<P: ProviderFactory>(
     // We must maintain a reference to the FileLock until the download is complete.
     let file_lock = acquire_download_lock_for_artifact(artifact_location)
         .context("failed to get artifact lock")?;
+
+    // Another process may have finished the fetch while we waited for the lock.
+    if artifact_location.artifact_directory.exists() {
+        return Ok(false);
+    }
 
     // Record warnings: only reported if no provider succeeds.
     let mut warnings = vec![];
@@ -130,7 +139,7 @@ pub fn download_artifact<P: ProviderFactory>(
                         perms.set_readonly(true);
                         fs_ctx::set_permissions(&artifact_location.artifact_directory, perms)?;
                     }
-                    return Ok(());
+                    return Ok(true);
                 }
                 Err(e) => warnings.push(format!("warning: failed to verify artifact {:?}", e)),
             },

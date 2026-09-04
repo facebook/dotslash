@@ -43,6 +43,7 @@ $ dotslash -- cache-dir
 | ---------------------- | ------------------------------------------------------------------------------------ |
 | `b3sum FILE`           | prints the BLAKE3 hash of `FILE`                                                     |
 | `cache-dir`            | prints the absolute path to the user's DotSlash cache and exits                      |
+| `clean [--size SIZE]`  | wipes the cache, or LRU-evicts artifacts until the cache is `<= SIZE`                |
 | `create-url-entry URL` | generates the DotSlash JSON snippet for the artifact at the URL                      |
 | `fetch DOTSLASH_FILE`  | fetches the artifact identified by `DOTSLASH_FILE` if it is not already in the cache |
 | `parse DOTSLASH_FILE`  | parses `DOTSLASH_FILE` and prints the data as pure JSON to stdout                    |
@@ -62,3 +63,22 @@ location of the DotSlash cache. By default, the DotSlash cache resides at:
 DotSlash relies on
 [`dirs::cache_dir()`](https://docs.rs/dirs/5.0.1/dirs/fn.cache_dir.html) to use
 the appropriate default directory on each platform.
+
+The `DOTSLASH_CACHE_MAX_SIZE` environment variable enables automatic LRU
+eviction. When set to a size (plain bytes, or a suffix such as `10G`,
+`512MiB`), DotSlash trims the cache after a download if a running total of
+cached bytes exceeds that limit. Least-recently-used artifacts are then deleted
+until the cache is around 80% of the limit. The artifact that was just
+downloaded is never evicted. A value of `0` is a cap of zero bytes (everything
+but the just-downloaded artifact is eligible for eviction).
+
+Cache hits do not scan the cache: recency is recorded by updating the artifact
+directory's mtime (a single syscall; ignored if the volume is read-only). The
+running total (`$DOTSLASH_CACHE/usage`) is updated on download; a cache-wide
+walk happens only when that total is over the limit, the file is missing, or
+you run `dotslash -- clean --size SIZE`. If another process is already
+evicting, the walk is skipped.
+
+If `DOTSLASH_CACHE_MAX_SIZE` is unset, the cache is unbounded until you run
+`dotslash -- clean` (wipe) or `dotslash -- clean --size SIZE` (LRU trim
+to `SIZE`, with no 80% hysteresis).
