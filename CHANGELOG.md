@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- Added LRU cache eviction. Set `DOTSLASH_CACHE_MAX_SIZE` (e.g. `10G`) to
+  automatically trim the cache after a download, or run
+  `dotslash -- clean --size SIZE` by hand. A running total avoids walking
+  the cache when it is still under the limit. Recency is the artifact
+  directory mtime (touched on use).
+
 ## v0.5.9 (2026-04-09)
 
 - Added `get-extracted-cache-path` command to print the cache path for an

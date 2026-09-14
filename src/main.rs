@@ -10,6 +10,7 @@
 
 mod artifact_location;
 mod artifact_path;
+mod cache_gc;
 mod config;
 mod curl;
 mod default_provider_factory;

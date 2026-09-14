@@ -28,3 +28,8 @@ flowchart TD
     EXEC_TAKE2(<code>exec $DOTSLASH_CACHE/fe/40b2ce9a.../node --version</code>)
     EXEC_TAKE2 --> EXEC_SUCCEEDS
 ```
+
+If `DOTSLASH_CACHE_MAX_SIZE` is set, a successful fetch updates a running
+byte total and, only if that total is over the limit, runs LRU eviction before
+the second `exec` (down to about 80% of the limit). Cache hits only bump the
+artifact directory's mtime.
