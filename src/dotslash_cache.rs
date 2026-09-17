@@ -21,6 +21,10 @@ use crate::util;
 
 pub const DOTSLASH_CACHE_ENV: &str = "DOTSLASH_CACHE";
 
+/// If set to a byte size (e.g. `10G`), DotSlash LRU-evicts cached artifacts
+/// after a download when the cache exceeds this limit. Unset means unbounded.
+pub const DOTSLASH_CACHE_MAX_SIZE_ENV: &str = "DOTSLASH_CACHE_MAX_SIZE";
+
 #[derive(Debug)]
 pub struct DotslashCache {
     cache_dir: PathBuf,
@@ -30,13 +34,14 @@ pub struct DotslashCache {
 /// - Any subfolder that starts with two lowercase hex digits is the parent
 ///   folder for artifacts whose *artifact hash* starts with those two hex
 ///   digits (see `ArtifactLocation::artifact_directory`).
-/// - The only other subfolder is `locks/`, which internally is organized
-///   to the root of the cache folder.
+/// - `locks/` holds advisory lock files, separate so it can be blown away
+///   independent of the artifacts.
+/// - `usage` is a running total of cached artifact bytes used as the LRU
+///   eviction gate. It is not under `locks/` so deleting locks does not reset
+///   the counter to "empty."
 ///
 /// The motivation behind this organization is to keep the paths to artifacts
 /// as short as reasonably possible to avoid exceeding `MAX_PATH` on Windows.
-/// The `locks/` folder is kept separate so it can be blown away independent of
-/// the artifacts.
 impl DotslashCache {
     pub fn new() -> Self {
         Self::new_in(get_dotslash_cache())
@@ -59,6 +64,21 @@ impl DotslashCache {
     /// artifact_hash_prefix should be two lowercase hex digits.
     pub fn locks_dir(&self, artifact_hash_prefix: &str) -> PathBuf {
         self.cache_dir.join("locks").join(artifact_hash_prefix)
+    }
+
+    /// Advisory lock used so only one process runs cache GC at a time.
+    pub fn gc_lock_path(&self) -> PathBuf {
+        self.cache_dir.join("locks").join("gc")
+    }
+
+    /// Advisory lock for read-modify-write of [`Self::usage_path`].
+    pub fn usage_lock_path(&self) -> PathBuf {
+        self.cache_dir.join("locks").join("usage")
+    }
+
+    /// Running total of cached artifact bytes. Missing means "unknown," not 0.
+    pub fn usage_path(&self) -> PathBuf {
+        self.cache_dir.join("usage")
     }
 }
 
