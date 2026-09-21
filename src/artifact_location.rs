@@ -133,6 +133,7 @@ fn create_key_for_format(format: ArtifactFormat, path: &ArtifactPath) -> Cow<'st
         ArtifactFormat::TarXz => Cow::Borrowed("tar.xz"),
         ArtifactFormat::TarZstd => Cow::Borrowed("tar.zst"),
         ArtifactFormat::Zip => Cow::Borrowed("zip"),
+        ArtifactFormat::Pkg => Cow::Borrowed("pkg"),
     }
 }
 

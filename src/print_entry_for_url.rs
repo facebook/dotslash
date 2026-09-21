@@ -96,6 +96,8 @@ fn guess_artifact_format_from_url(url: &[u8]) -> ArtifactFormat {
         ArtifactFormat::Xz
     } else if url.ends_with(b".zst") {
         ArtifactFormat::Zstd
+    } else if url.ends_with(b".pkg") {
+        ArtifactFormat::Pkg
     } else {
         ArtifactFormat::Plain
     }
@@ -174,6 +176,7 @@ mod tests {
         test("http://example.com/foo.gz", ArtifactFormat::Gz);
         test("http://example.com/foo.zip", ArtifactFormat::Zip);
         test("http://example.com/foo.zst", ArtifactFormat::Zstd);
+        test("http://example.com/foo.pkg", ArtifactFormat::Pkg);
 
         // These "backwards" extensions are interpreted as Tar.
         test("http://example.com/foo.zst.tar", ArtifactFormat::Tar);

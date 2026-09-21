@@ -393,6 +393,7 @@ properties:
 | `tar.zst` | yes      | zstd        |
 | `tar`     | yes      | _none_      |
 | `zip`     | yes      | zip         |
+| `pkg`     | yes      | package-defined |
 | `bz2`     | no       | bzip2       |
 | `gz`      | no       | gzip        |
 | `xz`      | no       | xz          |
@@ -523,3 +524,12 @@ DotSlash file may not be in a position to change that.
 In this case, setting `readonly: false` will disable the logic that marks all of
 the entries in the temporary folder read-only before it is moved to its final
 location in the cache.
+
+### macOS installer packages
+
+`"format": "pkg"` supports flat macOS installer packages. Extraction requires macOS
+and uses `pkgutil --expand-full` and `ditto`; installer scripts are never executed.
+`path` is relative to the extracted payload root, ignoring the package's installation
+location. Component payloads in a distribution package are merged in lexical order;
+later payloads overwrite overlapping files. Packages without a file payload are rejected.
+Other platforms can parse manifests containing `pkg` entries but cannot extract them.

@@ -43,6 +43,8 @@ pub enum ArchiveType {
     TarZstd,
     #[cfg(not(dotslash_internal))]
     Zip,
+    #[cfg(not(dotslash_internal))]
+    Pkg,
 }
 
 /// Attempts to extract the tar/zip archive into the specified directory
@@ -82,6 +84,9 @@ where
             archive.extract(destination)?;
             Ok(())
         }
+
+        #[cfg(not(dotslash_internal))]
+        ArchiveType::Pkg => unpack_pkg(reader, destination),
     }
 }
 
@@ -93,6 +98,77 @@ where
     let mut output_file = fs_ctx::file_create(destination_dir)?;
     io::copy(&mut reader, &mut output_file)?;
     Ok(())
+}
+
+#[cfg(all(not(dotslash_internal), target_os = "macos"))]
+fn unpack_pkg<R>(mut reader: R, destination: &Path) -> io::Result<()>
+where
+    R: BufRead + Seek,
+{
+    let destination = fs_ctx::canonicalize(destination)?;
+    let work = tempfile::tempdir()?;
+    let package = work.path().join("artifact.pkg");
+    io::copy(&mut reader, &mut fs_ctx::file_create(&package)?)?;
+    let expanded = work.path().join("expanded");
+    let output = std::process::Command::new("/usr/sbin/pkgutil")
+        .arg("--expand-full")
+        .arg(&package)
+        .arg(&expanded)
+        .output()?;
+    if !output.status.success() {
+        return Err(io::Error::other(format!(
+            "pkgutil failed: {}",
+            String::from_utf8_lossy(&output.stderr)
+        )));
+    }
+
+    // Expand payloads without installing the package or executing its scripts.
+    let mut pending = vec![expanded];
+    let mut payloads = Vec::new();
+    while let Some(directory) = pending.pop() {
+        for entry in std::fs::read_dir(directory)? {
+            let entry = entry?;
+            if !entry.file_type()?.is_dir() {
+                continue;
+            }
+            if entry.file_name() == "Payload" {
+                payloads.push(entry.path());
+            } else {
+                pending.push(entry.path());
+            }
+        }
+    }
+    if payloads.is_empty() {
+        return Err(io::Error::new(
+            io::ErrorKind::InvalidData,
+            "PKG contains no file payload",
+        ));
+    }
+    payloads.sort();
+    for payload in payloads {
+        let output = std::process::Command::new("/usr/bin/ditto")
+            .arg(payload)
+            .arg(&destination)
+            .output()?;
+        if !output.status.success() {
+            return Err(io::Error::other(format!(
+                "ditto failed: {}",
+                String::from_utf8_lossy(&output.stderr)
+            )));
+        }
+    }
+    Ok(())
+}
+
+#[cfg(all(not(dotslash_internal), not(target_os = "macos")))]
+fn unpack_pkg<R>(_reader: R, _destination: &Path) -> io::Result<()>
+where
+    R: BufRead + Seek,
+{
+    Err(io::Error::new(
+        io::ErrorKind::Unsupported,
+        "PKG extraction is only supported on macOS",
+    ))
 }
 
 fn unpack_tar<R>(reader: R, destination_dir: &Path) -> io::Result<()>
@@ -127,4 +203,122 @@ where
     archive.set_preserve_permissions(true);
     archive.set_preserve_mtime(true);
     archive.unpack(destination_dir)
+}
+
+#[cfg(all(test, not(dotslash_internal), target_os = "macos"))]
+mod pkg_tests {
+    use super::{ArchiveType, unarchive};
+    use std::fs;
+    use std::io;
+    use std::io::BufReader;
+    use std::os::unix::fs::{PermissionsExt, symlink};
+    use std::path::Path;
+    use std::process::Command;
+
+    fn run(command: &mut Command) {
+        let output = command.output().unwrap();
+        assert!(
+            output.status.success(),
+            "{}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+    }
+
+    fn build_package(work: &Path, name: &str) -> std::path::PathBuf {
+        let root = work.join(format!("{name}-root"));
+        fs::create_dir_all(root.join("bin")).unwrap();
+        let executable = root.join("bin").join(name);
+        fs::write(&executable, b"#!/bin/sh\necho package-ok\n").unwrap();
+        fs::set_permissions(&executable, fs::Permissions::from_mode(0o755)).unwrap();
+        symlink(name, root.join("bin").join(format!("{name}-link"))).unwrap();
+        let scripts = work.join(format!("{name}-scripts"));
+        fs::create_dir(&scripts).unwrap();
+        let script = scripts.join("preinstall");
+        fs::write(&script, b"#!/bin/sh\nexit 99\n").unwrap();
+        fs::set_permissions(&script, fs::Permissions::from_mode(0o755)).unwrap();
+        let package = work.join(format!("{name}.pkg"));
+        run(Command::new("/usr/bin/pkgbuild")
+            .arg("--root")
+            .arg(root)
+            .arg("--identifier")
+            .arg(format!("org.example.{name}"))
+            .args(["--version", "1", "--install-location", "/opt/example"])
+            .arg("--scripts")
+            .arg(scripts)
+            .arg(&package));
+        package
+    }
+
+    #[test]
+    fn extracts_component_and_distribution_payloads() {
+        let work = tempfile::Builder::new()
+            .prefix("dotslash pkg's ")
+            .tempdir()
+            .unwrap();
+        let first = build_package(work.path(), "first");
+        let second = build_package(work.path(), "second");
+        let distribution = work.path().join("distribution.pkg");
+        run(Command::new("/usr/bin/productbuild")
+            .arg("--package")
+            .arg(&first)
+            .arg("--package")
+            .arg(second)
+            .arg(&distribution));
+        for (package, names) in [
+            (&first, vec!["first"]),
+            (&distribution, vec!["first", "second"]),
+        ] {
+            let destination = tempfile::Builder::new()
+                .prefix("payload's ")
+                .tempdir()
+                .unwrap();
+            unarchive(
+                BufReader::new(fs::File::open(package).unwrap()),
+                destination.path(),
+                ArchiveType::Pkg,
+            )
+            .unwrap();
+            for name in names {
+                let executable = destination.path().join("bin").join(name);
+                assert_eq!(
+                    fs::read(&executable).unwrap(),
+                    b"#!/bin/sh\necho package-ok\n"
+                );
+                assert_ne!(
+                    fs::metadata(&executable).unwrap().permissions().mode() & 0o111,
+                    0
+                );
+                assert_eq!(
+                    fs::read_link(destination.path().join("bin").join(format!("{name}-link")))
+                        .unwrap(),
+                    Path::new(name)
+                );
+            }
+            assert!(!destination.path().join("opt").exists());
+            assert!(!destination.path().join("Scripts").exists());
+        }
+    }
+
+    #[test]
+    fn rejects_invalid_package() {
+        let destination = tempfile::tempdir().unwrap();
+        let result = unarchive(
+            io::Cursor::new(b"not a package"),
+            destination.path(),
+            ArchiveType::Pkg,
+        );
+        assert!(result.unwrap_err().to_string().contains("pkgutil failed"));
+    }
+}
+
+#[cfg(all(test, not(dotslash_internal), not(target_os = "macos")))]
+#[test]
+fn pkg_extraction_requires_macos() {
+    let error = unarchive(
+        io::Cursor::new(b"not a package"),
+        Path::new("unused"),
+        ArchiveType::Pkg,
+    )
+    .unwrap_err();
+    assert_eq!(error.kind(), io::ErrorKind::Unsupported);
 }

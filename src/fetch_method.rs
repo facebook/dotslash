@@ -50,6 +50,9 @@ pub enum ArtifactFormat {
 
     #[serde(rename = "zip")]
     Zip,
+
+    #[serde(rename = "pkg")]
+    Pkg,
 }
 
 impl ArtifactFormat {
@@ -67,6 +70,7 @@ impl ArtifactFormat {
             Self::TarXz => Some(ArchiveType::TarXz),
             Self::TarZstd => Some(ArchiveType::TarZstd),
             Self::Zip => Some(ArchiveType::Zip),
+            Self::Pkg => Some(ArchiveType::Pkg),
         }
     }
 
@@ -74,9 +78,13 @@ impl ArtifactFormat {
     pub fn is_container(self) -> bool {
         match self {
             Self::Plain | Self::Bzip2 | Self::Gz | Self::Xz | Self::Zstd => false,
-            Self::Tar | Self::TarBzip2 | Self::TarGz | Self::TarXz | Self::TarZstd | Self::Zip => {
-                true
-            }
+            Self::Tar
+            | Self::TarBzip2
+            | Self::TarGz
+            | Self::TarXz
+            | Self::TarZstd
+            | Self::Zip
+            | Self::Pkg => true,
         }
     }
 }
