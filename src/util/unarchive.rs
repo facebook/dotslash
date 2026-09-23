@@ -55,6 +55,29 @@ pub fn unarchive<R>(reader: R, destination: &Path, archive_type: ArchiveType) ->
 where
     R: BufRead + Seek,
 {
+    #[cfg(not(dotslash_internal))]
+    if matches!(archive_type, ArchiveType::Zip) {
+        let destination = fs_ctx::canonicalize(destination)?;
+        let mut archive = ZipArchive::new(reader)?;
+        archive.extract(destination)?;
+        return Ok(());
+    }
+
+    unarchive_stream(reader, destination, archive_type)
+}
+
+/// Like [`unarchive`], but for a reader that cannot seek (a pipe, a socket).
+///
+/// Every archive type except zip is a forward-only stream, so this lets the
+/// extraction overlap with the download that produces `reader`.
+pub fn unarchive_stream<R>(
+    reader: R,
+    destination: &Path,
+    archive_type: ArchiveType,
+) -> io::Result<()>
+where
+    R: BufRead,
+{
     match archive_type {
         ArchiveType::Tar => unpack_tar(reader, destination),
 
@@ -76,12 +99,10 @@ where
         ArchiveType::TarZstd => unpack_tar(ZstdDecoder::with_buffer(reader)?, destination),
 
         #[cfg(not(dotslash_internal))]
-        ArchiveType::Zip => {
-            let destination = fs_ctx::canonicalize(destination)?;
-            let mut archive = ZipArchive::new(reader)?;
-            archive.extract(destination)?;
-            Ok(())
-        }
+        ArchiveType::Zip => Err(io::Error::new(
+            io::ErrorKind::InvalidInput,
+            "zip archives need a seekable reader",
+        )),
     }
 }
 
