@@ -45,6 +45,9 @@ pub enum Subcommand {
     /// Print the cache directory
     CacheDir,
 
+    /// Download and decompress the artifact without executing it
+    DownloadOnly,
+
     /// Fetch and cache an artifact but do not execute it
     Fetch,
 
@@ -72,6 +75,7 @@ impl fmt::Display for Subcommand {
             Self::Clean => "clean",
             Self::CreateUrlEntry => "create-url-entry",
             Self::CacheDir => "cache-dir",
+            Self::DownloadOnly => "download-only",
             Self::Fetch => "fetch",
             Self::GetExtractedCachePath => "get-extracted-cache-path",
             Self::Parse => "parse",
@@ -91,6 +95,7 @@ impl FromStr for Subcommand {
             "clean" => Ok(Subcommand::Clean),
             "create-url-entry" => Ok(Subcommand::CreateUrlEntry),
             "cache-dir" => Ok(Subcommand::CacheDir),
+            "download-only" => Ok(Subcommand::DownloadOnly),
             "fetch" => Ok(Subcommand::Fetch),
             "get-extracted-cache-path" => Ok(Subcommand::GetExtractedCachePath),
             "parse" => Ok(Subcommand::Parse),
@@ -169,7 +174,7 @@ fn run_subcommand_impl(subcommand: &Subcommand, args: &mut ArgsOs) -> anyhow::Re
             println!("{}", dotslash_cache.cache_dir().display());
         }
 
-        Subcommand::Fetch => {
+        Subcommand::DownloadOnly | Subcommand::Fetch => {
             let file_arg = take_exactly_one_arg(args)?;
             let dotslash_data = fs_ctx::read_to_string(file_arg)?;
             let dotslash_cache = DotslashCache::new();
@@ -179,7 +184,9 @@ fn run_subcommand_impl(subcommand: &Subcommand, args: &mut ArgsOs) -> anyhow::Re
                 let provider_factory = DefaultProviderFactory {};
                 download_artifact(&artifact_entry, &artifact_location, &provider_factory)?;
             }
-            println!("{}", artifact_location.executable.display());
+            if matches!(subcommand, Subcommand::Fetch) {
+                println!("{}", artifact_location.executable.display());
+            }
         }
 
         Subcommand::GetExtractedCachePath => {
@@ -239,6 +246,9 @@ dotslash also has these special experimental commands:
   dotslash -- clean                 Clean dotslash cache
   dotslash -- create-url-entry URL  Generate "http" provider entry
   dotslash -- cache-dir             Print path to the cache directory
+  dotslash -- download-only DOTSLASH_FILE
+                                    Download and decompress the artifact
+                                    without executing it
   dotslash -- fetch DOTSLASH_FILE   Prepare for execution, but print exe path
                                     instead of executing
   dotslash -- get-extracted-cache-path DOTSLASH_FILE

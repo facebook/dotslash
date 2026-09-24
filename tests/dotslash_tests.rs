@@ -16,6 +16,7 @@ use std::ffi::OsString;
 use std::fs;
 #[cfg(unix)]
 use std::os::unix::fs::PermissionsExt as _;
+use std::path::Path;
 use std::str;
 
 use tempfile::NamedTempFile;
@@ -563,6 +564,9 @@ dotslash also has these special experimental commands:
   dotslash -- clean                 Clean dotslash cache
   dotslash -- create-url-entry URL  Generate \"http\" provider entry
   dotslash -- cache-dir             Print path to the cache directory
+  dotslash -- download-only DOTSLASH_FILE
+                                    Download and decompress the artifact
+                                    without executing it
   dotslash -- fetch DOTSLASH_FILE   Prepare for execution, but print exe path
                                     instead of executing
   dotslash -- get-extracted-cache-path DOTSLASH_FILE
@@ -876,6 +880,109 @@ fn create_url_entry_tar_zst() {
   ]
 }
 "#,
+        );
+}
+
+#[test]
+fn download_only_downloads_and_reuses_cache() -> anyhow::Result<()> {
+    let test_env = DotslashTestEnv::try_new()?;
+    let dotslash_file = "tests/fixtures/http__tar_gz__print_argv";
+    let contents = fs::read_to_string(test_env.current_dir().join(dotslash_file))?;
+    let unavailable_file = NamedTempFile::new()?;
+    fs::write(
+        unavailable_file.path(),
+        contents.replace(r#""url":"#, r#""type": "unavailable", "url":"#),
+    )?;
+
+    let assert = test_env
+        .dotslash_command()
+        .arg("--")
+        .arg("get-extracted-cache-path")
+        .arg(dotslash_file)
+        .assert()
+        .code(0)
+        .stderr_eq("");
+    let artifact = Path::new(str::from_utf8(&assert.get_output().stdout)?.trim_end());
+    assert!(!artifact.exists());
+
+    test_env
+        .dotslash_command()
+        .arg("--")
+        .arg("download-only")
+        .arg(unavailable_file.path())
+        .assert()
+        .code(1)
+        .stdout_eq("")
+        .stderr_eq(
+            "\
+dotslash error: 'download-only' command failed
+caused by: unknown provider type: `unavailable`
+",
+        );
+    assert!(!artifact.exists());
+
+    test_env
+        .dotslash_command()
+        .arg("--")
+        .arg("download-only")
+        .arg(dotslash_file)
+        .assert()
+        .code(0)
+        .stdout_eq("")
+        .stderr_eq("");
+    let metadata = fs::metadata(artifact)?;
+    assert!(metadata.is_file());
+    assert!(metadata.len() > 0);
+
+    test_env
+        .dotslash_command()
+        .arg("--")
+        .arg("download-only")
+        .arg(unavailable_file.path())
+        .assert()
+        .code(0)
+        .stdout_eq("")
+        .stderr_eq("");
+    assert!(artifact.is_file());
+
+    Ok(())
+}
+
+#[test]
+fn download_only_no_args() {
+    DotslashTestEnv::try_new()
+        .unwrap()
+        .dotslash_command()
+        .arg("--")
+        .arg("download-only")
+        .assert()
+        .code(1)
+        .stdout_eq("")
+        .stderr_eq(
+            "\
+dotslash error: 'download-only' command failed
+caused by: expected exactly one argument but received none
+",
+        );
+}
+
+#[test]
+fn download_only_extra_args() {
+    DotslashTestEnv::try_new()
+        .unwrap()
+        .dotslash_command()
+        .arg("--")
+        .arg("download-only")
+        .arg("tests/fixtures/http__tar_gz__print_argv")
+        .arg("extra_arg")
+        .assert()
+        .code(1)
+        .stdout_eq("")
+        .stderr_eq(
+            "\
+dotslash error: 'download-only' command failed
+caused by: expected exactly one argument but received more
+",
         );
 }
 
