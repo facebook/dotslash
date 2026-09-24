@@ -23,16 +23,25 @@ pub fn locate_artifact(
     dotslash_data: &str,
     dotslash_cache: &DotslashCache,
 ) -> anyhow::Result<(ArtifactEntry, ArtifactLocation)> {
+    locate_artifact_for_platforms(dotslash_data, dotslash_cache, &[SUPPORTED_PLATFORM])
+}
+
+/// Locate the artifact using the requested platforms in preference order.
+pub fn locate_artifact_for_platforms(
+    dotslash_data: &str,
+    dotslash_cache: &DotslashCache,
+    platforms: &[&str],
+) -> anyhow::Result<(ArtifactEntry, ArtifactLocation)> {
     let (_original_json, mut config_file) =
         config::parse_file(dotslash_data).context("failed to parse DotSlash file")?;
 
-    let (_platform, artifact_entry) = config_file
-        .platforms
-        .remove_entry(SUPPORTED_PLATFORM)
+    let (_platform, artifact_entry) = platforms
+        .iter()
+        .find_map(|platform| config_file.platforms.remove_entry(*platform))
         .ok_or_else(|| {
             anyhow::format_err!(
-                "expected platform `{}` - but found {}",
-                SUPPORTED_PLATFORM,
+                "expected platform {} - but found {}",
+                ListOf::new(platforms),
                 ListOf::new(config_file.platforms.keys()),
             )
         })

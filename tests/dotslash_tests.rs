@@ -564,9 +564,10 @@ dotslash also has these special experimental commands:
   dotslash -- clean                 Clean dotslash cache
   dotslash -- create-url-entry URL  Generate \"http\" provider entry
   dotslash -- cache-dir             Print path to the cache directory
-  dotslash -- download-only DOTSLASH_FILE
+  dotslash -- download-only [--platform PLATFORM] DOTSLASH_FILE
                                     Download and decompress the artifact
                                     without executing it
+                                    PLATFORM: e.g. linux-aarch64 (default: host)
   dotslash -- fetch DOTSLASH_FILE   Prepare for execution, but print exe path
                                     instead of executing
   dotslash -- get-extracted-cache-path DOTSLASH_FILE
@@ -984,6 +985,132 @@ dotslash error: 'download-only' command failed
 caused by: expected exactly one argument but received more
 ",
         );
+}
+
+#[test]
+fn download_only_platform_override() -> anyhow::Result<()> {
+    let test_env = DotslashTestEnv::try_new()?;
+    let (target_platform, target_os, target_executable) = if_win_else!(
+        ("linux-aarch64", "linux", "print_argv.linux.aarch64"),
+        ("windows-x86_64", "windows", "print_argv.windows.x86_64.exe"),
+    );
+    let url = concat!(
+        "https://github.com/zertosh/dotslash_fixtures/raw/",
+        "5adea95f2eac6509cad9ca87eb770596a1a21379/pack.tar.gz",
+    );
+    let artifact_entry = format!(
+        r#"{{
+  "size": 155817,
+  "hash": "blake3",
+  "digest": "0a7ec8e59cc9f7266b89db9a3e81558dee49650cc341252b1cab29e60cee7da0",
+  "format": "tar.gz",
+  "path": "subdir/{target_executable}",
+  "providers": [{{"url": "{url}"}}]
+}}"#,
+    );
+    let unavailable_entry = artifact_entry
+        .replace(target_executable, "unavailable")
+        .replace(r#""url":"#, r#""type": "unavailable", "url":"#);
+    let contents = format!(
+        r#"#!/usr/bin/env dotslash
+{{"name": "foreign", "platforms": {{
+  "{target_platform}": {artifact_entry},
+  "{target_os}": {unavailable_entry}
+}}}}
+"#,
+    );
+    let dotslash_file = NamedTempFile::new()?;
+    fs::write(dotslash_file.path(), &contents)?;
+
+    let assert = test_env
+        .dotslash_command()
+        .args(["--", "get-extracted-cache-path"])
+        .arg("tests/fixtures/http__tar_gz__print_argv")
+        .assert()
+        .code(0)
+        .stderr_eq("");
+    let artifact = Path::new(str::from_utf8(&assert.get_output().stdout)?.trim_end())
+        .with_file_name(target_executable);
+    assert!(!artifact.exists());
+
+    test_env
+        .dotslash_command()
+        .args(["--", "download-only", "--platform", target_platform])
+        .arg(dotslash_file.path())
+        .assert()
+        .code(0)
+        .stdout_eq("")
+        .stderr_eq("");
+    let metadata = fs::metadata(&artifact)?;
+    assert!(metadata.is_file());
+    assert!(metadata.len() > 0);
+
+    fs::write(
+        dotslash_file.path(),
+        contents
+            .replace(&format!("\"{target_platform}\": {artifact_entry},"), "")
+            .replace(&unavailable_entry, &artifact_entry),
+    )?;
+    for platform in [target_platform, target_os] {
+        test_env
+            .dotslash_command()
+            .args(["--", "download-only"])
+            .arg(dotslash_file.path())
+            .args(["--platform", platform])
+            .assert()
+            .code(0)
+            .stdout_eq("")
+            .stderr_eq("");
+    }
+
+    Ok(())
+}
+
+#[test]
+fn download_only_unavailable_platform() {
+    DotslashTestEnv::try_new()
+        .unwrap()
+        .dotslash_command()
+        .args(["--", "download-only", "--platform", "unsupported-x86_64"])
+        .arg("tests/fixtures/http__tar_gz__print_argv")
+        .assert()
+        .code(1)
+        .stdout_eq("")
+        .stderr_eq(
+            "\
+dotslash error: 'download-only' command failed
+caused by: platform not supported
+caused by: expected platform `unsupported`, `unsupported-x86_64` - but found [..]
+",
+        );
+}
+
+#[test]
+fn download_only_platform_argument_errors() {
+    for (args, message) in [
+        (vec!["--platform"], "expected a value after --platform"),
+        (
+            vec![
+                "--platform",
+                "linux-aarch64",
+                "--platform",
+                "windows-x86_64",
+            ],
+            "--platform may only be specified once",
+        ),
+    ] {
+        DotslashTestEnv::try_new()
+            .unwrap()
+            .dotslash_command()
+            .args(["--", "download-only"])
+            .args(args)
+            .assert()
+            .code(1)
+            .stdout_eq("")
+            .stderr_eq(format!(
+                "dotslash error: 'download-only' command failed\ncaused by: {message}\n"
+            ));
+    }
 }
 
 //

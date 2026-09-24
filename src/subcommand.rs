@@ -12,6 +12,7 @@ use std::env::ArgsOs;
 use std::ffi::OsString;
 use std::fmt;
 use std::io;
+use std::iter;
 use std::str::FromStr;
 
 use anyhow::Context as _;
@@ -25,6 +26,7 @@ use crate::default_provider_factory::DefaultProviderFactory;
 use crate::dotslash_cache::DotslashCache;
 use crate::download::download_artifact;
 use crate::locate::locate_artifact;
+use crate::locate::locate_artifact_for_platforms;
 use crate::platform::SUPPORTED_PLATFORM;
 use crate::print_entry_for_url::print_entry_for_url;
 use crate::util;
@@ -175,11 +177,23 @@ fn run_subcommand_impl(subcommand: &Subcommand, args: &mut ArgsOs) -> anyhow::Re
         }
 
         Subcommand::DownloadOnly | Subcommand::Fetch => {
-            let file_arg = take_exactly_one_arg(args)?;
+            let (file_arg, platform) = if matches!(subcommand, Subcommand::DownloadOnly) {
+                take_download_only_args(args)?
+            } else {
+                (take_exactly_one_arg(args)?, None)
+            };
             let dotslash_data = fs_ctx::read_to_string(file_arg)?;
             let dotslash_cache = DotslashCache::new();
-            let (artifact_entry, artifact_location) =
-                locate_artifact(&dotslash_data, &dotslash_cache)?;
+            let platforms = platform.as_deref().map(|platform| {
+                iter::once(platform)
+                    .chain(platform.split_once('-').map(|(os, _)| os))
+                    .collect::<Vec<_>>()
+            });
+            let (artifact_entry, artifact_location) = locate_artifact_for_platforms(
+                &dotslash_data,
+                &dotslash_cache,
+                platforms.as_deref().unwrap_or(&[SUPPORTED_PLATFORM]),
+            )?;
             if !artifact_location.executable.exists() {
                 let provider_factory = DefaultProviderFactory {};
                 download_artifact(&artifact_entry, &artifact_location, &provider_factory)?;
@@ -246,9 +260,10 @@ dotslash also has these special experimental commands:
   dotslash -- clean                 Clean dotslash cache
   dotslash -- create-url-entry URL  Generate "http" provider entry
   dotslash -- cache-dir             Print path to the cache directory
-  dotslash -- download-only DOTSLASH_FILE
+  dotslash -- download-only [--platform PLATFORM] DOTSLASH_FILE
                                     Download and decompress the artifact
                                     without executing it
+                                    PLATFORM: e.g. linux-aarch64 (default: host)
   dotslash -- fetch DOTSLASH_FILE   Prepare for execution, but print exe path
                                     instead of executing
   dotslash -- get-extracted-cache-path DOTSLASH_FILE
@@ -290,4 +305,26 @@ fn take_exactly_one_arg(args: &mut ArgsOs) -> anyhow::Result<OsString> {
         )),
         (Some(arg), None) => Ok(arg),
     }
+}
+
+fn take_download_only_args(args: &mut ArgsOs) -> anyhow::Result<(OsString, Option<String>)> {
+    let mut file_arg = None;
+    let mut platform = None;
+
+    while let Some(arg) = args.next() {
+        if arg == "--platform" {
+            anyhow::ensure!(platform.is_none(), "--platform may only be specified once");
+            let value = args.next().context("expected a value after --platform")?;
+            platform = Some(
+                value
+                    .into_string()
+                    .map_err(|_| anyhow::format_err!("platform must be valid UTF-8"))?,
+            );
+        } else if file_arg.replace(arg).is_some() {
+            anyhow::bail!("expected exactly one argument but received more");
+        }
+    }
+
+    let file_arg = file_arg.context("expected exactly one argument but received none")?;
+    Ok((file_arg, platform))
 }
