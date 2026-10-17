@@ -149,3 +149,23 @@ where
     archive.set_preserve_mtime(true);
     archive.unpack(destination_dir)
 }
+
+#[cfg(all(test, not(dotslash_internal)))]
+mod tests {
+    use std::io::Cursor;
+
+    use super::*;
+
+    #[test]
+    fn unarchive_zip_lzma() {
+        // Created with `7z a -tzip -mm=LZMA`, so the entry uses zip compression
+        // method 14.
+        let zip = Cursor::new(&include_bytes!("testdata/lzma.zip")[..]);
+        let dest = tempfile::tempdir().unwrap();
+        unarchive(zip, dest.path(), ArchiveType::Zip).unwrap();
+        assert_eq!(
+            std::fs::read_to_string(dest.path().join("hello.txt")).unwrap(),
+            "hello lzma zip\n".repeat(40),
+        );
+    }
+}
