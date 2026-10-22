@@ -399,6 +399,9 @@ properties:
 | `zst`     | no       | zstd        |
 | _omitted_ | no       | _none_      |
 
+A `zip` archive can use the store, deflate, or LZMA (method 14) compression
+methods for its entries.
+
 An artifact is either an _archive_ (such as a `.tar` file) or a _single file_.
 
 ### Path
