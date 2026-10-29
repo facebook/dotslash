@@ -1,9 +1,9 @@
 {
   "name": "dotslash",
   "id": "dotslash",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Install the \"dotslash\" binary.",
-  "documentationURL": "https://github.com/facebook/dotslash/tree/main/devcontainer-feature/src",
+  "documentationURL": "https://github.com/meta/dotslash/tree/main/devcontainer-features/src/dotslash",
   "options": {
     "version": {
       "default": "latest",

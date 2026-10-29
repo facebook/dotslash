@@ -27,16 +27,16 @@ download() {
   local version="$1"
   local url
   if [ "${version}" = "latest" ]; then
-    url="https://github.com/facebook/dotslash/releases/latest/download/dotslash-linux-musl.$(uname -m).tar.gz"
+    url="https://github.com/meta/dotslash/releases/latest/download/dotslash-linux-musl.$(uname -m).tar.gz"
   else
-    url="https://github.com/facebook/dotslash/releases/download/${version}/dotslash-linux-musl.$(uname -m).tar.gz"
+    url="https://github.com/meta/dotslash/releases/download/${version}/dotslash-linux-musl.$(uname -m).tar.gz"
   fi
 
   # First, verify the release exists!
   echo "Fetching version ${version} from ${url}..."
   local http_status
-  http_status=$(curl -s -o /dev/null -w '%{http_code}' "${url}")
-  if [ "${http_status}" -ne 200 ] && [ "${http_status}" -ne 302 ]; then
+  http_status=$(curl -s -L -o /dev/null -w '%{http_code}' "${url}")
+  if [ "${http_status}" -ne 200 ]; then
     echo "Failed to download version ${version}!  Does it exist?"
     return 1
   fi

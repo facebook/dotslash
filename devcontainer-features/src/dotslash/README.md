@@ -8,7 +8,7 @@ It is installed at `/usr/local/bin/dotslash`.
 
 ```json
 "features": {
-  "ghcr.io/facebook/dotslash/feature:1": {
+  "ghcr.io/meta/devcontainers/features/dotslash:1": {
     "version": "latest"
   }
 }

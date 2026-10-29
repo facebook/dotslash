@@ -85,7 +85,7 @@ automatically install the latest version of DotSlash to `/usr/local/bin`.
 
 ```json
 "features": {
-  "ghcr.io/facebook/devcontainers/features/dotslash:latest": {}
+  "ghcr.io/meta/devcontainers/features/dotslash:latest": {}
 }
 ```
 
